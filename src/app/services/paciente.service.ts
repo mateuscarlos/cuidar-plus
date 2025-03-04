@@ -4,41 +4,41 @@ import { Observable } from 'rxjs';
 
 export interface Paciente {
   id: number;
-  nome: string;
-  email: string;
-  senha: string;
+  nome_completo: string;
+  cpf: string;
+  cep: string;
+  rua: string;
+  numero: number;
+  complemento: string;
+  operadora: string;
+  cid_primario: string;
 }
 
 @Injectable({
   providedIn: 'root' // Serviço standalone
 })
 export class PacienteService {
-  private apiUrl = 'http://localhost:5000/pacientes'; // URL da API
+  private apiUrl = 'http://localhost:5001/api/'; // Endpoint correto
 
   constructor(private http: HttpClient) {}
 
   // Obter todos os Pacientes
   getPacientes(): Observable<Paciente[]> {
-    return this.http.get<Paciente[]>(this.apiUrl);
-  }
-
-  // Obter um Paciente por ID
-  getPaciente(id: number): Observable<Paciente> {
-    return this.http.get<Paciente>(`${this.apiUrl}/${id}`);
+    return this.http.get<Paciente[]>(`${this.apiUrl}/exibe_pacientes`);
   }
 
   // Criar um novo Paciente
   criarPaciente(paciente: Paciente): Observable<Paciente> {
-    return this.http.post<Paciente>(this.apiUrl, paciente);
+    return this.http.post<Paciente>(`${this.apiUrl}/criar_paciente`, paciente);
   }
 
   // Atualizar um Paciente existente
-  atualizarPaciente(id: number, paciente: Paciente): Observable<Paciente> {
-    return this.http.put<Paciente>(`${this.apiUrl}/${id}`, paciente);
+  atualizarPaciente(cpf: string, paciente: Paciente): Observable<Paciente> {
+    return this.http.put<Paciente>(`${this.apiUrl}/atualizar_paciente/${cpf}`, paciente);
   }
 
   // Deletar um Paciente
-  deletarPaciente(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deletarPaciente(cpf: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/excluir_paciente/${cpf}`);
   }
 }

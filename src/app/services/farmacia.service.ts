@@ -15,7 +15,7 @@ export interface Insumo {
   providedIn: 'root' // Serviço standalone
 })
 export class FarmaciaService {
-  private apiUrl = 'http://localhost:3000/insumos'; // URL da API
+  private apiUrl = 'http://localhost:5001/api/insumos'; // Ajuste para o endpoint correto
 
   constructor(private http: HttpClient) {}
 
