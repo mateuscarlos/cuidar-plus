@@ -16,7 +16,7 @@ export interface Usuario {
   providedIn: 'root' // Serviço standalone
 })
 export class UsuarioService {
-  private apiUrl = 'http://localhost:3000/usuarios'; // URL da API
+  private apiUrl = 'http://localhost:5001/usuarios'; // URL da API
 
   constructor(private http: HttpClient) {}
 

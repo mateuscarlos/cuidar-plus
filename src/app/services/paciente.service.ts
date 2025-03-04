@@ -13,7 +13,7 @@ export interface Paciente {
   providedIn: 'root' // Serviço standalone
 })
 export class PacienteService {
-  private apiUrl = 'http://localhost:8000/pacientes'; // URL da API
+  private apiUrl = 'http://localhost:5000/pacientes'; // URL da API
 
   constructor(private http: HttpClient) {}
 
