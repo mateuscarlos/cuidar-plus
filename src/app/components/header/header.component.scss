@@ -1,10 +1,19 @@
 .header-card {
-    background-color: #2196F3;
-    color: white;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-  
-  mat-card-title {
-    font-size: 2rem !important;
-  }
+  background-color: #2196F3; // Azul do Material
+  color: white;
+  padding: 1rem;
+  margin-bottom: 0; // Remove a margem inferior
+  border-radius: 0; // Remove bordas arredondadas
+}
+
+.logo {
+  font-size: 2.5rem; // Tamanho maior
+  font-weight: bold; // Negrito
+  color: white; // Cor branca
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8); // Subtítulo mais claro
+  margin-left: 0.5rem; // Espaçamento entre o logo e o subtítulo
+}

@@ -1,32 +1,24 @@
 .navbar {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f7f7f763;
-    color: #000;
-    padding: 1rem;
-    position: relative;
-    width: 100%;
-    top: 0;
-    margin-top: -1px;
-    height: 2.5rem;
-  
-    ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-    }
-  
-    li {
-      margin: 0 1rem;
-    }
-  
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-  
-    a:hover {
-      text-decoration: underline;
-    }
-  }
+  background-color: #757575; // Cinza mais claro
+  color: white; // Texto branco
+  padding: 0 1rem; // Espaçamento interno
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Sombra sutil
+  border-radius: 0; // Remove bordas arredondadas
+  margin-bottom: 0; // Remove margem inferior
+  display: flex;
+  justify-content: center; // Centraliza os botões
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem; // Espaçamento entre os botões
+}
+
+button.mat-button {
+  color: white; // Cor do texto dos botões
+  font-weight: 500; // Peso da fonte
+}
+
+button.mat-button:hover {
+  background-color: rgba(87, 59, 59, 0.1); // Efeito hover sutil
+}

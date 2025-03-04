@@ -11,7 +11,7 @@ import { RouterOutlet } from '@angular/router';
   template: `
     <app-header></app-header>
     <app-navbar></app-navbar>
-    <main id="app" class="container my-5">
+    <main id="app" class="container my-4">
       <router-outlet></router-outlet>
     </main>
     <app-footer></app-footer>
