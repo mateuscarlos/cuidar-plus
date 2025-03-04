@@ -1,12 +1,21 @@
 import { Component } from '@angular/core';
+import { HeaderComponent } from './components/header/header.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
+import { FooterComponent } from './components/footer/footer.component';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  standalone: true,
+  imports: [HeaderComponent, NavbarComponent, FooterComponent, RouterOutlet],
+  template: `
+    <app-header></app-header>
+    <app-navbar></app-navbar>
+    <main id="app" class="container my-5">
+      <router-outlet></router-outlet>
+    </main>
+    <app-footer></app-footer>
+  `,
+  styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
-  title = 'cuidar-plus';
-}
+export class AppComponent {}
