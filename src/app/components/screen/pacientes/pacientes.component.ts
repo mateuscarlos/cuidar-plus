@@ -40,8 +40,7 @@ export class PacientesComponent implements OnInit {
   }
 
   acompanharPaciente(id: number): void {
-    // Implementar lógica de acompanhamento de paciente
-    console.log('Acompanhando paciente com ID:', id);
+    this.router.navigate(['/acompanha-paciente', id]);
   }
 
   excluirPaciente(cpf: string): void {
