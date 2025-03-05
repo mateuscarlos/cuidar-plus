@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 export interface Paciente {
   id: number;
@@ -26,10 +25,8 @@ export class PacienteService {
 
   constructor(private http: HttpClient) {}
 
-  getPacientes(): Observable<Paciente[]> {
-    return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/exibe_pacientes`).pipe(
-      map(response => response.pacientes)
-    );
+  getPacientes(): Observable<{ pacientes: Paciente[] }> { // Ajuste o tipo da resposta aqui
+    return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/exibe_pacientes`);
   }
 
   criarPaciente(paciente: Paciente): Observable<Paciente> {
@@ -42,6 +39,11 @@ export class PacienteService {
 
   deletarPaciente(cpf: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/excluir_paciente/${cpf}`);
+  }
+
+  buscarPaciente(campo: string, valor: string): Observable<Paciente> {
+    const params = new HttpParams().set('campo', campo).set('valor', valor);
+    return this.http.get<Paciente>(`${this.apiUrl}/buscar_paciente`, { params });
   }
 
   buscarEndereco(cep: string): Observable<any> {

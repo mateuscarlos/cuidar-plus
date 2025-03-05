@@ -4,16 +4,18 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ModalBuscaPacienteComponent } from '../../modal/modal-busca-paciente/modal-busca-paciente.component';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatDialogModule, HttpClientModule],
   templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.scss']
 })
 export class PacientesComponent implements OnInit {
   pacientes: Paciente[] = [];
+  mensagemBusca: string = '';
 
   constructor(private pacienteService: PacienteService, private router: Router, public dialog: MatDialog) {}
 
@@ -23,8 +25,9 @@ export class PacientesComponent implements OnInit {
 
   carregarPacientes(): void {
     this.pacienteService.getPacientes().subscribe(
-      (data: Paciente[]) => {
-        this.pacientes = data;
+      (data: { pacientes: Paciente[] }) => { // Ajuste o tipo da resposta aqui
+        this.pacientes = data.pacientes; // Acesse a chave 'pacientes' corretamente
+        this.mensagemBusca = '';
       },
       (error) => {
         console.error('Erro ao carregar pacientes:', error);
@@ -55,12 +58,24 @@ export class PacientesComponent implements OnInit {
 
   abrirModalBusca(): void {
     const dialogRef = this.dialog.open(ModalBuscaPacienteComponent, {
-      width: '600px'
+      width: '50%' // Ajuste o tamanho do modal conforme necessário
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('O modal de busca foi fechado');
-      // Implementar lógica de busca aqui
+      if (result) {
+        console.log('Paciente encontrado:', result);
+        // Atualizar a lista de pacientes com o resultado da busca
+        this.pacientes = [result];
+        this.mensagemBusca = '';
+      } else {
+        console.log('O modal de busca foi fechado sem resultado');
+        this.pacientes = [];
+        this.mensagemBusca = 'Nenhum paciente foi encontrado com esse critério, tente novamente';
+      }
     });
+  }
+
+  listarPacientes(): void {
+    this.carregarPacientes();
   }
 }
