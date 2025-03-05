@@ -1,24 +1,54 @@
 .card {
-    transition: transform 0.2s;
-    &:hover {
-      transform: scale(1.02);
-    }
+  transition: transform 0.2s;
+  &:hover {
+    transform: scale(1.02);
   }
-  
-  .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    &:hover {
-      background-color: #0056b3;
-      border-color: #004085;
-    }
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  &:hover {
+    background-color: #0056b3;
+    border-color: #004085;
   }
-  
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  &:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
+}
+
+.table-responsive {
+  overflow-x: auto; // Garante que a tabela seja rolável em dispositivos móveis
+}
+
+.table {
+  width: 100%;
+  margin: 20px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+  }
+
+  td, th {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+  }
+
   .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    &:hover {
-      background-color: #c82333;
-      border-color: #bd2130;
-    }
+    padding: 5px 10px;
+    font-size: 14px;
   }
+}
+
+.text-center {
+  text-align: center;
+}

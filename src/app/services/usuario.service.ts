@@ -12,8 +12,12 @@ export interface Usuario {
   registro_categoria?: string;
 }
 
+interface ApiResponse {
+  usuarios: Usuario[]; // A API retorna um objeto com a propriedade "usuarios"
+}
+
 @Injectable({
-  providedIn: 'root' // Serviço standalone
+  providedIn: 'root', // Serviço standalone
 })
 export class UsuarioService {
   private apiUrl = 'http://localhost:5001/api'; // URL base da API
@@ -21,8 +25,8 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   // Obter todos os usuários
-  getUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(`${this.apiUrl}/exibe_usuarios`);
+  getUsuarios(): Observable<ApiResponse> {
+    return this.http.get<ApiResponse>(`${this.apiUrl}/exibe_usuarios`);
   }
 
   // Criar um novo usuário
