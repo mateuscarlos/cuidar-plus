@@ -1,50 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { UsuarioService } from '../../../services/usuario.service';
+import { Usuario } from '../../../models/usuario.model';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router'; // Importe o Router
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <h2 class="text-center mb-4">Bem-vindo à Gestão de Usuários</h2>
-    <section class="row justify-content-center text-center">
-      <article class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 shadow">
-          <header class="card-header">
-            <h2 class="card-title text-primary">Cadastro de Usuários</h2>
-          </header>
-          <div class="card-body">
-            <p class="card-text">Realize o cadastro de novos usuários no sistema.</p>
-            <button class="btn btn-primary" (click)="navegarPara('cadastro-usuarios')">Acessar</button>
-          </div>
-        </div>
-      </article>
-      <h2 class="text-center mt-5">Lista de Usuários</h2>
-      <table id="tabela-usuarios" class="table table-striped">
-        <tr *ngFor="let usuario of usuarios">
-          <td>{{ usuario.nome }}</td>
-          <td>{{ usuario.cpf }}</td>
-          <td>{{ usuario.setor }}</td>
-          <td>{{ usuario.funcao }}</td>
-          <td><button class="btn btn-danger" (click)="removerUsuario(usuario.cpf)">Excluir</button></td>
-        </tr>
-      </table>
-    </section>
-    <div class="d-flex justify-content-center mt-4">
-      <button class="btn btn-primary" (click)="navegarPara('home')">Voltar à Página Inicial</button>
-    </div>
-  `,
-  styleUrls: ['./usuarios.component.scss']
+  imports: [CommonModule], // Importe o CommonModule
+  templateUrl: './usuarios.component.html',
+  styleUrls: ['./usuarios.component.scss'],
 })
 export class UsuariosComponent implements OnInit {
-  usuarios: any[] = [];
+  usuarios: Usuario[] = [];
 
-  constructor(
-    private usuarioService: UsuarioService,
-    private router: Router // Injete o Router
-  ) {}
+  constructor(private usuarioService: UsuarioService, private router: Router) {}
 
   ngOnInit(): void {
     this.carregarUsuarios();
@@ -53,7 +23,12 @@ export class UsuariosComponent implements OnInit {
   carregarUsuarios(): void {
     this.usuarioService.getUsuarios().subscribe(
       (data) => {
-        this.usuarios = data;
+        console.log('Dados recebidos:', data); // Depuração
+        if (data.usuarios && Array.isArray(data.usuarios)) {
+          this.usuarios = data.usuarios; // Acessa a propriedade "usuarios" do objeto
+        } else {
+          console.error('Formato de dados inválido:', data);
+        }
       },
       (error) => {
         console.error('Erro ao carregar usuários:', error);
@@ -61,20 +36,20 @@ export class UsuariosComponent implements OnInit {
     );
   }
 
-  removerUsuario(cpf: string): void {
-    this.usuarioService.deletarUsuario(cpf).subscribe(
-      () => {
-        alert('Usuário removido com sucesso!');
-        this.carregarUsuarios();
-      },
-      (error) => {
-        console.error('Erro ao remover usuário:', error);
-      }
-    );
+  navegarPara(caminho: string): void {
+    this.router.navigate([caminho]);
   }
 
-  // Método para navegar entre as páginas
-  navegarPara(pagina: string): void {
-    this.router.navigate([pagina]);
+  removerUsuario(cpf: string): void {
+    if (confirm('Tem certeza que deseja remover este usuário?')) {
+      this.usuarioService.deletarUsuario(cpf).subscribe(
+        () => {
+          this.usuarios = this.usuarios.filter((usuario) => usuario.cpf !== cpf); // Atualiza a lista
+        },
+        (error) => {
+          console.error('Erro ao remover usuário:', error);
+        }
+      );
+    }
   }
 }

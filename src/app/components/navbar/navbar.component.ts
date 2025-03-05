@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
   standalone: true,
   imports: [MatToolbarModule, MatButtonModule],
   template: `
-    <mat-toolbar class="navbar">
+    <mat-toolbar class="navbar navbar-dark">
       <div class="nav-buttons">
         <button mat-button (click)="navegarPara('home')">Cuidar+</button>
         <button mat-button (click)="navegarPara('usuarios')">Usuários</button>
