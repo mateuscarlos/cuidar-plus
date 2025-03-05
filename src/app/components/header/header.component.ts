@@ -1,4 +1,3 @@
-// header.component.ts
 import { Component } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 
@@ -9,8 +8,10 @@ import { MatCardModule } from '@angular/material/card';
   template: `
     <mat-card class="header-card">
       <mat-card-header>
-        <mat-card-title>Cuidar+</mat-card-title>
-        <mat-card-subtitle>Simplificando a Gestão da Saúde</mat-card-subtitle>
+        <mat-card-title>
+          <span class="logo">Cuidar+</span>
+          <span class="subtitle">Simplificando a Gestão da Saúde</span>
+        </mat-card-title>
       </mat-card-header>
     </mat-card>
   `,

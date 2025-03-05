@@ -1,5 +1,5 @@
 # Use a imagem oficial do Node.js como base
-FROM node:18-alpine AS build
+FROM node:18-alpine as build
 
 # Definir o diretório de trabalho dentro do container
 WORKDIR /app
@@ -20,8 +20,8 @@ RUN ng build cuidar-plus --configuration production
 # Use uma imagem leve do Nginx para servir a aplicação
 FROM nginx:alpine
 
-# Copiar o arquivo de configuração personalizado do Nginx
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Copiar o arquivo de configuração do Nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copiar os arquivos construídos (da subpasta browser) para o diretório raiz do Nginx
 COPY --from=build /app/dist/cuidar-plus/browser /usr/share/nginx/html

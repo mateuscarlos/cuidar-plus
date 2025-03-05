@@ -1,44 +1,50 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Paciente {
   id: number;
-  nome: string;
-  email: string;
-  senha: string;
+  nome_completo: string;
+  cpf: string;
+  cep: string;
+  rua: string;
+  numero: number;
+  complemento: string;
+  operadora: string;
+  cid_primario: string;
+  cidade: string;
+  estado: string;
+  updated_at: string;
 }
 
 @Injectable({
-  providedIn: 'root' // Serviço standalone
+  providedIn: 'root'
 })
 export class PacienteService {
-  private apiUrl = 'http://localhost:8000/pacientes'; // URL da API
+  private apiUrl = 'http://localhost:5001/api';
 
   constructor(private http: HttpClient) {}
 
-  // Obter todos os Pacientes
   getPacientes(): Observable<Paciente[]> {
-    return this.http.get<Paciente[]>(this.apiUrl);
+    return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/exibe_pacientes`).pipe(
+      map(response => response.pacientes)
+    );
   }
 
-  // Obter um Paciente por ID
-  getPaciente(id: number): Observable<Paciente> {
-    return this.http.get<Paciente>(`${this.apiUrl}/${id}`);
-  }
-
-  // Criar um novo Paciente
   criarPaciente(paciente: Paciente): Observable<Paciente> {
-    return this.http.post<Paciente>(this.apiUrl, paciente);
+    return this.http.post<Paciente>(`${this.apiUrl}/criar_paciente`, paciente);
   }
 
-  // Atualizar um Paciente existente
-  atualizarPaciente(id: number, paciente: Paciente): Observable<Paciente> {
-    return this.http.put<Paciente>(`${this.apiUrl}/${id}`, paciente);
+  atualizarPaciente(cpf: string, paciente: Paciente): Observable<Paciente> {
+    return this.http.put<Paciente>(`${this.apiUrl}/atualizar_paciente/${cpf}`, paciente);
   }
 
-  // Deletar um Paciente
-  deletarPaciente(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deletarPaciente(cpf: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/excluir_paciente/${cpf}`);
+  }
+
+  buscarEndereco(cep: string): Observable<any> {
+    return this.http.get<any>(`https://viacep.com.br/ws/${cep}/json/`);
   }
 }

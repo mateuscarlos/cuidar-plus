@@ -1,10 +1,9 @@
 services:
-  cuidar-plus:
-    image: cuidar-plus
-    container_name: cuidar-plus
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    container_name: cuidar-plus-frontend
     restart: unless-stopped

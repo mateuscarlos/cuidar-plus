@@ -1,33 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { PacienteService } from '../../../services/paciente.service';
+import { PacienteService, Paciente } from '../../../services/paciente.service';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ModalBuscaPacienteComponent } from '../../modal/modal-busca-paciente/modal-busca-paciente.component';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <h2 class="text-center mb-4">Bem-vindo à Gestão de Pacientes</h2>
-    <section class="row justify-content-center text-center">
-      <article class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 shadow">
-          <header class="card-header">
-            <h2 class="card-title text-danger">Cadastro de Pacientes</h2>
-          </header>
-          <div class="card-body">
-            <p class="card-text">Realize o cadastro de novos pacientes no sistema.</p>
-            <button class="btn btn-danger">Acessar</button>
-          </div>
-        </div>
-      </article>
-    </section>
-  `,
+  templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.scss']
 })
 export class PacientesComponent implements OnInit {
-  pacientes: any[] = [];
+  pacientes: Paciente[] = [];
 
-  constructor(private pacienteService: PacienteService) {}
+  constructor(private pacienteService: PacienteService, private router: Router, public dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.carregarPacientes();
@@ -35,12 +23,44 @@ export class PacientesComponent implements OnInit {
 
   carregarPacientes(): void {
     this.pacienteService.getPacientes().subscribe(
-      (data) => {
+      (data: Paciente[]) => {
         this.pacientes = data;
       },
       (error) => {
         console.error('Erro ao carregar pacientes:', error);
       }
     );
+  }
+
+  navegarParaCadastro(): void {
+    this.router.navigate(['/cadastro-pacientes']);
+  }
+
+  acompanharPaciente(id: number): void {
+    // Implementar lógica de acompanhamento de paciente
+    console.log('Acompanhando paciente com ID:', id);
+  }
+
+  excluirPaciente(cpf: string): void {
+    this.pacienteService.deletarPaciente(cpf).subscribe(
+      () => {
+        this.pacientes = this.pacientes.filter(paciente => paciente.cpf !== cpf);
+        console.log('Paciente excluído com sucesso');
+      },
+      (error) => {
+        console.error('Erro ao excluir paciente:', error);
+      }
+    );
+  }
+
+  abrirModalBusca(): void {
+    const dialogRef = this.dialog.open(ModalBuscaPacienteComponent, {
+      width: '600px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('O modal de busca foi fechado');
+      // Implementar lógica de busca aqui
+    });
   }
 }

@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
   selector: 'app-footer',
   standalone: true,
   template: `
-    <footer class="rodape">
+    <footer class="footer">
       <p>&copy; 2024 Cuidar+. Todos os direitos reservados.</p>
     </footer>
   `,
