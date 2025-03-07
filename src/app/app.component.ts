@@ -8,14 +8,7 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-root',
   standalone: true,
   imports: [HeaderComponent, NavbarComponent, FooterComponent, RouterOutlet],
-  template: `
-    <app-header></app-header>
-    <app-navbar></app-navbar>
-    <main id="app" class="container my-4">
-      <router-outlet></router-outlet>
-    </main>
-    <app-footer></app-footer>
-  `,
+  templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {}

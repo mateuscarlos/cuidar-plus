@@ -1,0 +1,39 @@
+@use "~@angular/material/prebuilt-themes/azure-blue.css" as *;
+
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #f8f9fa;
+  z-index: 1000;
+}
+
+.navbar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 200px;
+  height: calc(100% - 120px);
+  background-color: #343a40;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.main-content {
+  margin-top: 60px;
+  margin-left: 200px;
+  padding: 20px;
+  height: calc(100% - 120px);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #f8f9fa;
+  z-index: 1000;
+}

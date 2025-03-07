@@ -1,17 +1,18 @@
-<h2 class="text-center mb-4">Bem-vindo à Gestão de Usuários</h2>
-<section class="row justify-content-center text-center">
-  <article class="col-md-6 col-lg-4 mb-4">
-    <div class="card h-100 shadow">
-      <header class="card-header">
-        <h2 class="card-title text-primary">Cadastro de Usuários</h2>
-      </header>
-      <div class="card-body">
-        <p class="card-text">Realize o cadastro de novos usuários no sistema.</p>
-        <button class="btn btn-primary" (click)="navegarPara('cadastro-usuarios')">Acessar</button>
+<main class="main-content">
+  <section class="row text-center">
+    <article class="col-md-6 col-lg-3 mb-4">
+      <div class="card h-100 shadow">
+        <header class="card-header">
+          <h2 class="card-title text-primary">Usuários</h2>
+        </header>
+        <div class="card-body">
+          <p class="card-text">Gerencie o cadastro e edição de usuários do sistema.</p>
+          <button class="btn btn-primary" (click)="navegarPara('usuarios')">Acessar</button>
+        </div>
       </div>
-    </div>
-  </article>
-</section>
+    </article>
+    <!-- Outros artigos... -->
+  </section>
 
   <!-- Listagem de Usuários Cadastrados -->
   <div class="container mt-4">
@@ -56,3 +57,4 @@
       </div>
     </div>
   </div>
+</main>

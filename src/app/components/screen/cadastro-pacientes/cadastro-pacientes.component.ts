@@ -13,18 +13,27 @@ import { FormsModule } from '@angular/forms';
 })
 export class CadastroPacientesComponent {
   paciente: Paciente = {
-    id: 0, // Inicialize com um valor padrão
+    id: 0,
     nome_completo: '',
     cpf: '',
     operadora: '',
+    identificador_prestadora: '',
+    acomodacao: '',
+    telefone: '',
+    alergias: '',
     cid_primario: '',
-    cep: '',
+    cid_secundario: '',
+    data_nascimento: '',
     rua: '',
-    numero: 0, // Inicialize com um valor padrão do tipo number
+    numero: '',
     complemento: '',
+    cep: '',
+    bairro: '',
     cidade: '',
     estado: '',
-    updated_at: '' // Inicialize com um valor padrão
+    created_at: '',
+    updated_at: '',
+    status: 'em-avaliacao' // Adiciona o campo de status
   };
 
   constructor(public pacienteService: PacienteService, public router: Router) {}
@@ -45,14 +54,33 @@ export class CadastroPacientesComponent {
   }
 
   cadastrarPaciente(): void {
-    this.pacienteService.criarPaciente(this.paciente).subscribe(
-      () => {
-        alert('Paciente cadastrado com sucesso!');
-        this.router.navigate(['/pacientes']);
-      },
-      (error) => {
-        console.error('Erro ao cadastrar paciente:', error);
-      }
-    );
+    if (this.validarCamposObrigatorios()) {
+      this.pacienteService.criarPaciente(this.paciente).subscribe(
+        () => {
+          alert('Paciente cadastrado com sucesso!');
+          this.router.navigate(['/pacientes']);
+        },
+        (error) => {
+          console.error('Erro ao cadastrar paciente:', error);
+        }
+      );
+    } else {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+  }
+
+  validarCamposObrigatorios(): boolean {
+    return this.paciente.nome_completo !== '' &&
+           this.paciente.cpf !== '' &&
+           this.paciente.operadora !== '' &&
+           this.paciente.identificador_prestadora !== '' &&
+           this.paciente.acomodacao !== '' &&
+           this.paciente.telefone !== '' &&
+           this.paciente.cid_primario !== '' &&
+           this.paciente.data_nascimento !== '' &&
+           this.paciente.cep !== '' &&
+           this.paciente.bairro !== '' &&
+           this.paciente.cidade !== '' &&
+           this.paciente.estado !== '';
   }
 }
