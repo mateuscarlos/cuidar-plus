@@ -1,11 +1,11 @@
 :host ::ng-deep .btn-spacing {
-    margin-left: 1.5rem; /* Ajuste o valor conforme necessário */
-  }
-  
-  :host ::ng-deep .table thead {
-    background-color: #f8f9fa; /* Cinza claro para o cabeçalho */
-  }
-  
-  :host ::ng-deep .table tbody tr {
-    background-color: #ffffff; /* Cor de fundo para todas as linhas */
-  }
+  margin-left: 1.5rem; /* Ajuste o valor conforme necessário */
+}
+
+:host ::ng-deep .table thead {
+  background-color: #f8f9fa; /* Cinza claro para o cabeçalho */
+}
+
+:host ::ng-deep .table tbody tr {
+  background-color: #ffffff; /* Cor de fundo para todas as linhas */
+}

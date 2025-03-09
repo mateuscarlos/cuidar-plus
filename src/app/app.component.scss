@@ -1,4 +1,4 @@
-@use "~@angular/material/prebuilt-themes/azure-blue.css" as *;
+@use "@angular/material/prebuilt-themes/indigo-pink.css" as *;
 
 .header {
   position: fixed;
@@ -7,6 +7,10 @@
   height: 60px;
   background-color: #f8f9fa;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
 .navbar {
@@ -14,17 +18,18 @@
   top: 60px;
   left: 0;
   width: 200px;
-  height: calc(100% - 120px);
+  height: calc(100% - 60px); // Ajustar a altura para ocupar todo o espaço disponível
   background-color: #343a40;
   z-index: 1000;
-  overflow-y: auto;
+  overflow-y: hidden; // Remover a barra de rolagem
+  padding: 20px;
 }
 
 .main-content {
   margin-top: 60px;
   margin-left: 200px;
   padding: 20px;
-  height: calc(100% - 120px);
+  height: calc(100% - 60px); // Ajustar a altura para ocupar todo o espaço disponível
   overflow-y: auto;
   box-sizing: border-box;
 }
@@ -36,4 +41,22 @@
   height: 60px;
   background-color: #f8f9fa;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    margin-top: 60px;
+  }
 }

@@ -4,6 +4,9 @@
   padding: 1rem;
   margin-bottom: 0; // Remove a margem inferior
   border-radius: 0; // Remove bordas arredondadas
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
