@@ -40,30 +40,33 @@ export class CadastroPacientesComponent {
 
   buscarEndereco(): void {
     if (this.paciente.cep.length === 8) {
-      this.pacienteService.buscarEndereco(this.paciente.cep).subscribe(
-        (data) => {
+      this.pacienteService.buscarEndereco(this.paciente.cep).subscribe({
+        next: (data) => {
           this.paciente.rua = data.logradouro;
+          this.paciente.bairro = data.bairro;
           this.paciente.cidade = data.localidade;
           this.paciente.estado = data.uf;
         },
-        (error) => {
+        error: (error) => {
           console.error('Erro ao buscar endereço:', error);
         }
-      );
+      });
     }
   }
 
   cadastrarPaciente(): void {
+    console.log('Paciente:', this.paciente); // Adiciona este log para verificar o objeto paciente
+
     if (this.validarCamposObrigatorios()) {
-      this.pacienteService.criarPaciente(this.paciente).subscribe(
-        () => {
+      this.pacienteService.criarPaciente(this.paciente).subscribe({
+        next: () => {
           alert('Paciente cadastrado com sucesso!');
           this.router.navigate(['/pacientes']);
         },
-        (error) => {
+        error: (error) => {
           console.error('Erro ao cadastrar paciente:', error);
         }
-      );
+      });
     } else {
       alert('Por favor, preencha todos os campos obrigatórios.');
     }

@@ -141,28 +141,54 @@ export class CadastroUsuariosComponent implements OnInit {
     this.exibirRegistroCategoria = funcoesComRegistro.includes(this.usuario.funcao);
   }
 
+  verificarUsuarioExistente(cpf: string): void {
+    this.usuarioService.listarUsuarios().subscribe(
+      (usuarios) => {
+        const usuarioExistente = usuarios.find(u => u.cpf === cpf);
+        if (usuarioExistente) {
+          if (confirm('Usuário já existe. Deseja atualizar as informações?')) {
+            this.atualizarUsuario();
+          }
+        } else {
+          this.criarUsuario();
+        }
+      },
+      (error) => {
+        console.error('Erro ao verificar usuário:', error);
+      }
+    );
+  }
+
   cadastrarUsuario(): void {
     if (this.usuario.cpf) {
-      this.usuarioService.atualizarUsuario(this.usuario.cpf, this.usuario).subscribe(
-        () => {
-          alert('Usuário atualizado com sucesso!');
-          this.router.navigate(['/usuarios']);
-        },
-        (error) => {
-          console.error('Erro ao atualizar usuário:', error);
-        }
-      );
+      this.verificarUsuarioExistente(this.usuario.cpf);
     } else {
-      this.usuarioService.criarUsuario(this.usuario).subscribe(
-        () => {
-          alert('Usuário cadastrado com sucesso!');
-          this.router.navigate(['/usuarios']);
-        },
-        (error) => {
-          console.error('Erro ao cadastrar usuário:', error);
-        }
-      );
+      this.criarUsuario();
     }
+  }
+
+  criarUsuario(): void {
+    this.usuarioService.criarUsuario(this.usuario).subscribe(
+      () => {
+        alert('Usuário cadastrado com sucesso!');
+        this.router.navigate(['/usuarios']);
+      },
+      (error) => {
+        console.error('Erro ao cadastrar usuário:', error);
+      }
+    );
+  }
+
+  atualizarUsuario(): void {
+    this.usuarioService.atualizarUsuario(this.usuario.cpf, this.usuario).subscribe(
+      () => {
+        alert('Usuário atualizado com sucesso!');
+        this.router.navigate(['/usuarios']);
+      },
+      (error) => {
+        console.error('Erro ao atualizar usuário:', error);
+      }
+    );
   }
 
   navegarPara(pagina: string): void {
