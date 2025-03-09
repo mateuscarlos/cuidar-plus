@@ -141,27 +141,24 @@ export class CadastroUsuariosComponent implements OnInit {
     this.exibirRegistroCategoria = funcoesComRegistro.includes(this.usuario.funcao);
   }
 
-  verificarUsuarioExistente(cpf: string): void {
-    this.usuarioService.listarUsuarios().subscribe(
-      (usuarios) => {
-        const usuarioExistente = usuarios.find(u => u.cpf === cpf);
-        if (usuarioExistente) {
-          if (confirm('Usuário já existe. Deseja atualizar as informações?')) {
-            this.atualizarUsuario();
-          }
-        } else {
-          this.criarUsuario();
-        }
-      },
-      (error) => {
-        console.error('Erro ao verificar usuário:', error);
-      }
-    );
-  }
-
   cadastrarUsuario(): void {
     if (this.usuario.cpf) {
-      this.verificarUsuarioExistente(this.usuario.cpf);
+      this.usuarioService.listarUsuarios().subscribe(
+        (usuarios) => {
+          const usuarioExistente = usuarios.find(u => u.cpf === this.usuario.cpf);
+          if (usuarioExistente) {
+            if (confirm('Usuário já existe. Deseja atualizar as informações?')) {
+              this.atualizarUsuario();
+            }
+          } else {
+            this.criarUsuario();
+          }
+        },
+        (error) => {
+          console.error('Erro ao verificar usuário:', error);
+          this.criarUsuario(); // Tenta criar o usuário mesmo se houver um erro na verificação
+        }
+      );
     } else {
       this.criarUsuario();
     }

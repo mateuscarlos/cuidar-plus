@@ -3,13 +3,15 @@ import { Router } from '@angular/router';
 import { PacienteService, Paciente } from '../../../services/paciente.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
 
 @Component({
   selector: 'app-cadastro-pacientes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgxMaskDirective],
   templateUrl: './cadastro-pacientes.component.html',
-  styleUrls: ['./cadastro-pacientes.component.scss']
+  styleUrls: ['./cadastro-pacientes.component.scss'],
+  providers: [provideNgxMask()]
 })
 export class CadastroPacientesComponent {
   paciente: Paciente = {
@@ -58,6 +60,13 @@ export class CadastroPacientesComponent {
     console.log('Paciente:', this.paciente); // Adiciona este log para verificar o objeto paciente
 
     if (this.validarCamposObrigatorios()) {
+      // Remover sinais gráficos do CPF e CEP
+      this.paciente.cpf = this.paciente.cpf.replace(/\D/g, '');
+      this.paciente.cep = this.paciente.cep.replace(/\D/g, '');
+
+      // Formatar a data de nascimento para o formato YYYY-MM-DD
+      this.paciente.data_nascimento = this.formatarData(this.paciente.data_nascimento);
+
       this.pacienteService.criarPaciente(this.paciente).subscribe({
         next: () => {
           alert('Paciente cadastrado com sucesso!');
@@ -85,6 +94,15 @@ export class CadastroPacientesComponent {
            this.paciente.bairro !== '' &&
            this.paciente.cidade !== '' &&
            this.paciente.estado !== '';
+  }
+
+  formatarData(data: string): string {
+    const partes = data.split('/');
+    if (partes.length === 3) {
+      const ano = partes[2].length === 2 ? `19${partes[2]}` : partes[2];
+      return `${ano}-${partes[1]}-${partes[0]}`;
+    }
+    return data;
   }
 
   navegarPara(pagina: string): void {

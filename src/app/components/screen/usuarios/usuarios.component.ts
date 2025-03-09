@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UsuarioService, Usuario } from '../../../services/usuario.service';
 import { CommonModule } from '@angular/common';
@@ -14,7 +14,7 @@ import { ModalConfirmacaoComponent } from '../../modal/modal-confirmacao/modal-c
   templateUrl: './usuarios.component.html',
   styleUrls: ['./usuarios.component.scss']
 })
-export class UsuariosComponent {
+export class UsuariosComponent implements OnInit {
   usuarios: Usuario[] = [];
   mensagemBusca: string = 'Nenhum usuário encontrado.';
 
@@ -22,12 +22,39 @@ export class UsuariosComponent {
     private usuarioService: UsuarioService,
     private router: Router,
     public dialog: MatDialog
-  ) {
-    this.listarUsuarios();
+  ) {}
+
+  ngOnInit(): void {
+    this.carregarUsuarios();
   }
 
-  navegarPara(pagina: string): void {
-    this.router.navigate([pagina]);
+  carregarUsuarios(): void {
+    this.usuarioService.listarUsuarios().subscribe(
+      (usuarios) => {
+        this.usuarios = usuarios;
+      },
+      (error) => {
+        console.error('Erro ao carregar usuários:', error);
+      }
+    );
+  }
+
+  editarUsuario(cpf: string): void {
+    this.router.navigate(['/cadastro-usuarios', cpf]);
+  }
+
+  confirmarRemocao(cpf: string): void {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+      this.usuarioService.deletarUsuario(cpf).subscribe(
+        () => {
+          alert('Usuário excluído com sucesso!');
+          this.carregarUsuarios();
+        },
+        (error) => {
+          console.error('Erro ao excluir usuário:', error);
+        }
+      );
+    }
   }
 
   abrirModalBusca(): void {
@@ -42,42 +69,7 @@ export class UsuariosComponent {
     });
   }
 
-  listarUsuarios(): void {
-    this.usuarioService.listarUsuarios().subscribe(
-      (data) => {
-        this.usuarios = data;
-      },
-      (error) => {
-        console.error('Erro ao listar usuários:', error);
-      }
-    );
-  }
-
-  editarUsuario(cpf: string): void {
-    this.router.navigate(['/cadastro-usuarios', { cpf }]);
-  }
-
-  confirmarRemocao(cpf: string): void {
-    const dialogRef = this.dialog.open(ModalConfirmacaoComponent, {
-      width: '30%',
-      data: { mensagem: 'Tem certeza que deseja excluir este usuário?' }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.removerUsuario(cpf);
-      }
-    });
-  }
-
-  removerUsuario(cpf: string): void {
-    this.usuarioService.deletarUsuario(cpf).subscribe(
-      () => {
-        this.listarUsuarios();
-      },
-      (error) => {
-        console.error('Erro ao remover usuário:', error);
-      }
-    );
+  navegarPara(pagina: string): void {
+    this.router.navigate([pagina]);
   }
 }

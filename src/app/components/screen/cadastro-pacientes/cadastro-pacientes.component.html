@@ -1,32 +1,32 @@
 <form (ngSubmit)="cadastrarPaciente()" class="form-user p-4 shadow rounded container mt-4">
   <div class="mb-3">
-    <label for="nome_completo" class="form-label">Nome Completo:</label>
+    <label for="nome_completo" class="form-label">Nome Completo: *</label>
     <input id="nome_completo" [(ngModel)]="paciente.nome_completo" name="nome_completo" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="cpf" class="form-label">CPF:</label>
-    <input id="cpf" [(ngModel)]="paciente.cpf" name="cpf" class="form-control" required>
+    <label for="cpf" class="form-label">CPF (somente números): *</label>
+    <input id="cpf" [(ngModel)]="paciente.cpf" name="cpf" class="form-control" required mask="000.000.000-00">
   </div>
 
   <div class="mb-3">
-    <label for="operadora" class="form-label">Operadora:</label>
+    <label for="operadora" class="form-label">Operadora: *</label>
     <input id="operadora" [(ngModel)]="paciente.operadora" name="operadora" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="identificador_prestadora" class="form-label">Identificador Prestadora:</label>
+    <label for="identificador_prestadora" class="form-label">Identificador Prestadora: *</label>
     <input id="identificador_prestadora" [(ngModel)]="paciente.identificador_prestadora" name="identificador_prestadora" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="acomodacao" class="form-label">Acomodação:</label>
+    <label for="acomodacao" class="form-label">Acomodação: *</label>
     <input id="acomodacao" [(ngModel)]="paciente.acomodacao" name="acomodacao" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="telefone" class="form-label">Telefone:</label>
-    <input id="telefone" [(ngModel)]="paciente.telefone" name="telefone" class="form-control" required>
+    <label for="telefone" class="form-label">Telefone: *</label>
+    <input id="telefone" [(ngModel)]="paciente.telefone" name="telefone" class="form-control" required mask="(00) 00000-0000">
   </div>
 
   <div class="mb-3">
@@ -35,7 +35,7 @@
   </div>
 
   <div class="mb-3">
-    <label for="cid_primario" class="form-label">CID Primário:</label>
+    <label for="cid_primario" class="form-label">CID Primário: *</label>
     <input id="cid_primario" [(ngModel)]="paciente.cid_primario" name="cid_primario" class="form-control" required>
   </div>
 
@@ -45,13 +45,13 @@
   </div>
 
   <div class="mb-3">
-    <label for="data_nascimento" class="form-label">Data de Nascimento:</label>
+    <label for="data_nascimento" class="form-label">Data de Nascimento: *</label>
     <input id="data_nascimento" [(ngModel)]="paciente.data_nascimento" name="data_nascimento" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="cep" class="form-label">CEP:</label>
-    <input id="cep" [(ngModel)]="paciente.cep" name="cep" class="form-control" required (blur)="buscarEndereco()">
+    <label for="cep" class="form-label">CEP (somente números): *</label>
+    <input id="cep" [(ngModel)]="paciente.cep" name="cep" class="form-control" required mask="00000-000" (blur)="buscarEndereco()">
   </div>
 
   <div class="mb-3">
@@ -70,22 +70,22 @@
   </div>
 
   <div class="mb-3">
-    <label for="bairro" class="form-label">Bairro:</label>
+    <label for="bairro" class="form-label">Bairro: *</label>
     <input id="bairro" [(ngModel)]="paciente.bairro" name="bairro" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="cidade" class="form-label">Cidade:</label>
+    <label for="cidade" class="form-label">Cidade: *</label>
     <input id="cidade" [(ngModel)]="paciente.cidade" name="cidade" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="estado" class="form-label">Estado:</label>
+    <label for="estado" class="form-label">Estado: *</label>
     <input id="estado" [(ngModel)]="paciente.estado" name="estado" class="form-control" required>
   </div>
 
   <div class="mb-3">
-    <label for="status" class="form-label">Status:</label>
+    <label for="status" class="form-label">Status: *</label>
     <select id="status" [(ngModel)]="paciente.status" name="status" class="form-select" required>
       <option value="em-avaliacao">Em Avaliação</option>
       <option value="ativo">Ativo</option>

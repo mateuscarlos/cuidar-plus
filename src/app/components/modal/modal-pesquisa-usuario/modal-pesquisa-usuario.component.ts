@@ -12,8 +12,8 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./modal-pesquisa-usuario.component.scss']
 })
 export class ModalPesquisaUsuarioComponent {
-  usuarios: Usuario[] = [];
   nome: string = '';
+  usuarios: Usuario[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<ModalPesquisaUsuarioComponent>,
@@ -22,11 +22,11 @@ export class ModalPesquisaUsuarioComponent {
 
   pesquisar(): void {
     this.usuarioService.listarUsuarios().subscribe(
-      (data) => {
-        this.usuarios = data.filter(usuario => usuario.nome.includes(this.nome));
+      (usuarios) => {
+        this.usuarios = usuarios.filter(u => u.nome.includes(this.nome));
       },
-      (error) => {
-        console.error('Erro ao pesquisar usuários:', error);
+      (error: any): void => {
+        console.error('Erro ao buscar usuários:', error);
       }
     );
   }
