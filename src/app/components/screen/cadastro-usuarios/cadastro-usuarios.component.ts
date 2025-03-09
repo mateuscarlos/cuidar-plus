@@ -97,25 +97,29 @@ export class CadastroUsuariosComponent implements OnInit {
   ngOnInit(): void {
     const cpf = this.route.snapshot.paramMap.get('cpf');
     if (cpf) {
-      this.usuarioService.listarUsuarios().subscribe(
-        (usuarios) => {
-          const usuario = usuarios.find(u => u.cpf === cpf);
-          if (usuario) {
-            this.usuario = {
-              ...usuario,
-              setor: usuario.setor as Setor,
-              especialidade: usuario.especialidade || '',
-              registroCategoria: usuario.registroCategoria || ''
-            };
-            this.carregarFuncoes();
-            this.verificarCamposEspeciais();
-          }
-        },
-        (error) => {
-          console.error('Erro ao carregar usuário:', error);
-        }
-      );
+      this.carregarUsuario(cpf);
     }
+  }
+
+  carregarUsuario(cpf: string): void {
+    this.usuarioService.listarUsuarios().subscribe(
+      (usuarios) => {
+        const usuario = usuarios.find(u => u.cpf === cpf);
+        if (usuario) {
+          this.usuario = {
+            ...usuario,
+            setor: usuario.setor as Setor,
+            especialidade: usuario.especialidade || '',
+            registroCategoria: usuario.registroCategoria || ''
+          };
+          this.carregarFuncoes();
+          this.verificarCamposEspeciais();
+        }
+      },
+      (error) => {
+        console.error('Erro ao carregar usuário:', error);
+      }
+    );
   }
 
   carregarFuncoes(): void {
@@ -190,5 +194,9 @@ export class CadastroUsuariosComponent implements OnInit {
 
   navegarPara(pagina: string): void {
     this.router.navigate([pagina]);
+  }
+
+  onSubmit(): void {
+    this.cadastrarUsuario();
   }
 }

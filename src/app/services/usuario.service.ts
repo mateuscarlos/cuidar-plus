@@ -22,17 +22,28 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   listarUsuarios(): Observable<Usuario[]> {
-    return this.http.get<{ usuarios: Usuario[] }>(`${this.apiUrl}/exibe_usuarios`).pipe(
-      map(response => response.usuarios)
+    return this.http.get<{ usuarios: any[] }>(`${this.apiUrl}/exibe_usuarios`).pipe(
+      map(response => response.usuarios.map(usuario => ({
+        ...usuario,
+        registroCategoria: usuario.registro_categoria // Ajuste para o campo registroCategoria
+      })))
     );
   }
 
   criarUsuario(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/criar_usuario`, usuario);
+    const payload = {
+      ...usuario,
+      registro_categoria: usuario.registroCategoria // Ajuste para o campo registroCategoria
+    };
+    return this.http.post<Usuario>(`${this.apiUrl}/criar_usuario`, payload);
   }
 
   atualizarUsuario(cpf: string, usuario: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/atualizar_usuario/${cpf}`, usuario);
+    const payload = {
+      ...usuario,
+      registro_categoria: usuario.registroCategoria // Ajuste para o campo registroCategoria
+    };
+    return this.http.put<Usuario>(`${this.apiUrl}/atualizar_usuario/${cpf}`, payload);
   }
 
   deletarUsuario(cpf: string): Observable<void> {

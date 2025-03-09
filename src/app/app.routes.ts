@@ -6,7 +6,7 @@ export const routes: Routes = [
   { path: '', redirectTo: '/home', pathMatch: 'full' }, // Redireciona para a home
   { path: 'home', component: HomeComponent },
   { path: 'usuarios', component: UsuariosComponent },
-  { path: 'cadastro-usuarios', loadComponent: () => import('./components/screen/cadastro-usuarios/cadastro-usuarios.component').then(m => m.CadastroUsuariosComponent) },
+  { path: 'cadastro-usuarios/:cpf', loadComponent: () => import('./components/screen/cadastro-usuarios/cadastro-usuarios.component').then(m => m.CadastroUsuariosComponent) },
   { path: 'cadastro-pacientes', loadComponent: () => import('./components/screen/cadastro-pacientes/cadastro-pacientes.component').then(m => m.CadastroPacientesComponent) },
   { path: 'pacientes', loadComponent: () => import('./components/screen/pacientes/pacientes.component').then(m => m.PacientesComponent) },
   { path: 'acompanha-paciente', loadComponent: () => import('./components/screen/acompanha-paciente/acompanha-paciente.component').then(m => m.AcompanhaPacienteComponent) },
