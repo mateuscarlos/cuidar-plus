@@ -1,17 +1,4 @@
 <h2 class="text-center mb-4">Bem-vindo à Gestão de Pacientes</h2>
-<section class="row justify-content-center text-center">
-  <article class="col-md-6 col-lg-4 mb-4">
-    <div class="card h-100 shadow">
-      <header class="card-header">
-        <h2 class="card-title text-danger">Cadastro de Pacientes</h2>
-      </header>
-      <div class="card-body">
-        <p class="card-text">Realize o cadastro de novos pacientes no sistema.</p>
-        <button class="btn btn-danger" (click)="navegarParaCadastro()">Cadastrar</button>
-      </div>
-    </div>
-  </article>
-</section>
 <div class="container mt-4">
   <div class="row mt-4">
     <div class="col-md-12">
@@ -19,12 +6,19 @@
         <h3 class="text-center mb-4">Usuários Cadastrados</h3>
         <div>
           <button class="btn btn-primary btn-spacing" (click)="abrirModalBusca()">Pesquisar Paciente</button>
-          <button class="btn btn-secondary btn-spacing" (click)="listarPacientes()">Listar Pacientes</button>
         </div>
       </div>
       <div class="row">
         <div class="col-12">
-          <table class="table table-striped" *ngIf="pacientes.length > 0">
+          <div>
+            <input type="text" placeholder="Buscar paciente..." [(ngModel)]="filtroNome" (input)="filtrarPacientes()" />
+            <select [(ngModel)]="ordenacao" (ngModelChange)="ordenarPacientes()">
+              <option value="nome">Ordem Alfabética</option>
+              <option value="atualizacaoRecente">Mais Recentes</option>
+              <option value="atualizacaoAntiga">Mais Antigos</option>
+            </select>
+          </div>
+          <table class="table table-striped" *ngIf="pacientesFiltrados.length > 0">
             <thead>
               <tr>
                 <th>Nome</th>
@@ -33,18 +27,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let paciente of pacientes">
+              <tr *ngFor="let paciente of pacientesFiltrados">
                 <td>{{ paciente.nome_completo }}</td>
                 <td>{{ paciente.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td>
                   <button class="btn btn-primary" (click)="acompanharPaciente(paciente.id)">Acompanhamento</button>
-                  <button class="btn btn-danger btn-spacing" (click)="excluirPaciente(paciente.cpf)">Excluir</button>
                 </td>
               </tr>
             </tbody>
           </table>
-          <div *ngIf="pacientes.length === 0" class="text-center">
-            {{ mensagemBusca }}
+          <div *ngIf="pacientesFiltrados.length === 0" class="text-center">
+            Nenhum paciente encontrado.
           </div>
         </div>
       </div>

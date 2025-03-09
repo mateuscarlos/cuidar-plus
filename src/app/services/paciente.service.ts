@@ -10,13 +10,13 @@ export interface Paciente {
   identificador_prestadora: string;
   acomodacao: string;
   telefone: string;
-  alergias?: string;
+  alergias: string;
   cid_primario: string;
-  cid_secundario?: string;
+  cid_secundario: string;
   data_nascimento: string;
-  rua?: string;
-  numero?: string;
-  complemento?: string;
+  rua: string;
+  numero: string;
+  complemento: string;
   cep: string;
   bairro: string;
   cidade: string;
@@ -36,6 +36,10 @@ export class PacienteService {
 
   getPacientes(): Observable<{ pacientes: Paciente[] }> {
     return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/exibe_pacientes`);
+  }
+
+  getPacienteById(id: number): Observable<Paciente> {
+    return this.http.get<Paciente>(`${this.apiUrl}/paciente/${id}`);
   }
 
   criarPaciente(paciente: Paciente): Observable<Paciente> {

@@ -9,14 +9,14 @@ import { CadastroPacientesComponent } from './components/screen/cadastro-pacient
 import { AcompanhaPacienteComponent } from './components/screen/acompanha-paciente/acompanha-paciente.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' }, // Redireciona para a home
   { path: 'home', component: HomeComponent },
   { path: 'usuarios', component: UsuariosComponent },
   { path: 'cadastro-usuarios', component: CadastroUsuariosComponent },
   { path: 'cadastro-pacientes', component: CadastroPacientesComponent },
   { path: 'pacientes', component: PacientesComponent },
-  { path: 'acompanha-paciente/:id', component: AcompanhaPacienteComponent },
+  { path: 'acompanha-paciente', component: AcompanhaPacienteComponent },
   { path: 'farmacia', component: FarmaciaComponent },
   { path: 'relatorios', component: RelatoriosComponent },
-  { path: '**', redirectTo: 'home' }
+  { path: '**', redirectTo: '/home' } // Redireciona para a home em caso de rota não encontrada
 ];

@@ -83,4 +83,11 @@ export class CadastroPacientesComponent {
            this.paciente.cidade !== '' &&
            this.paciente.estado !== '';
   }
+
+  navegarPara(pagina: string): void {
+    this.router.navigate([pagina]);
+  }
 }
+
+
+
