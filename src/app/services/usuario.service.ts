@@ -9,11 +9,7 @@ export interface Usuario {
   setor: string;
   funcao: string;
   especialidade?: string;
-  registro_categoria?: string;
-}
-
-interface ApiResponse {
-  usuarios: Usuario[]; // A API retorna um objeto com a propriedade "usuarios"
+  registroCategoria?: string; // Atualizado para incluir registroCategoria
 }
 
 @Injectable({
@@ -25,8 +21,8 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   // Obter todos os usuários
-  getUsuarios(): Observable<ApiResponse> {
-    return this.http.get<ApiResponse>(`${this.apiUrl}/exibe_usuarios`);
+  listarUsuarios(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(`${this.apiUrl}/exibe_usuarios`);
   }
 
   // Criar um novo usuário

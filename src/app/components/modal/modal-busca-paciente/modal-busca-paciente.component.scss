@@ -1,22 +1,40 @@
 .modal-header {
-    padding: 1.5rem 1.5rem 1rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .modal-body {
-    padding: 1rem 1.5rem;
-  }
-  
-  .modal-footer {
-    padding: 1rem 1.5rem;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-  
-  .btn + .btn {
-    margin-left: 1rem; /* Espaçamento entre os botões */
-  }
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.btn + .btn {
+  margin-left: 1rem; /* Espaçamento entre os botões */
+}
+
+:host ::ng-deep .btn-spacing {
+  margin-left: 1.5rem; /* Ajuste o valor conforme necessário */
+}
+
+:host ::ng-deep .table thead {
+  background-color: #f8f9fa; /* Cinza claro para o cabeçalho */
+}
+
+:host ::ng-deep .table tbody tr {
+  background-color: #ffffff; /* Cor de fundo para todas as linhas */
+}
+
+:host ::ng-deep .btn-separator {
+  margin-left: 1rem; /* Ajuste o valor conforme necessário */
+}
