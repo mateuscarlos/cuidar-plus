@@ -54,6 +54,10 @@ export class PacienteService {
     return this.http.delete<void>(`${this.apiUrl}/excluir_paciente/${cpf}`);
   }
 
+  adicionarAcompanhamento(acompanhamento: { pacienteId: number, descricao: string, data: Date }): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/adicionar_acompanhamento`, acompanhamento);
+  }
+
   buscarPaciente(campo: string, valor: string): Observable<Paciente> {
     const params = new HttpParams().set('campo', campo).set('valor', valor);
     return this.http.get<Paciente>(`${this.apiUrl}/buscar_paciente`, { params });

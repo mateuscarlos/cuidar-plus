@@ -18,6 +18,7 @@ export class PacientesComponent implements OnInit {
   pacientesFiltrados: Paciente[] = [];
   filtroNome: string = '';
   ordenacao: string = 'nome';
+  ordemAscendente: boolean = true;
 
   constructor(private pacienteService: PacienteService, private router: Router, public dialog: MatDialog) {}
 
@@ -41,16 +42,21 @@ export class PacientesComponent implements OnInit {
     this.pacientesFiltrados = this.pacientes.filter(paciente =>
       paciente.nome_completo.toLowerCase().includes(this.filtroNome.toLowerCase())
     );
-    this.ordenarPacientes();
+    this.ordenarPacientes(this.ordenacao);
   }
 
-  ordenarPacientes(): void {
+  ordenarPacientes(coluna: string): void {
+    if (this.ordenacao === coluna) {
+      this.ordemAscendente = !this.ordemAscendente;
+    } else {
+      this.ordenacao = coluna;
+      this.ordemAscendente = true;
+    }
+
     if (this.ordenacao === 'nome') {
-      this.pacientesFiltrados.sort((a, b) => a.nome_completo.localeCompare(b.nome_completo));
-    } else if (this.ordenacao === 'atualizacaoRecente') {
-      this.pacientesFiltrados.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-    } else if (this.ordenacao === 'atualizacaoAntiga') {
-      this.pacientesFiltrados.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
+      this.pacientesFiltrados.sort((a, b) => this.ordemAscendente ? a.nome_completo.localeCompare(b.nome_completo) : b.nome_completo.localeCompare(a.nome_completo));
+    } else if (this.ordenacao === 'atualizacao') {
+      this.pacientesFiltrados.sort((a, b) => this.ordemAscendente ? new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime() : new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
     }
   }
 
@@ -73,5 +79,9 @@ export class PacientesComponent implements OnInit {
 
   acompanharPaciente(id: number): void {
     this.router.navigate(['/acompanha-paciente', id]);
+  }
+
+  navegarPara(destino: string): void {
+    this.router.navigate([`/${destino}`]);
   }
 }

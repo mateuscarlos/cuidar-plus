@@ -38,6 +38,7 @@ export class AcompanhaPacienteComponent implements OnInit {
     updated_at: '',
     status: '',
   };
+  novoAcompanhamento: string = '';
 
   constructor(private route: ActivatedRoute, private pacienteService: PacienteService, private router: Router, public dialog: MatDialog) {}
 
@@ -88,5 +89,26 @@ export class AcompanhaPacienteComponent implements OnInit {
         console.error('Erro ao excluir paciente:', error);
       }
     );
+  }
+
+  adicionarAcompanhamento(): void {
+    if (this.novoAcompanhamento.trim()) {
+      const acompanhamento = {
+        pacienteId: this.paciente.id,
+        descricao: this.novoAcompanhamento,
+        data: new Date()
+      };
+
+      this.pacienteService.adicionarAcompanhamento(acompanhamento).subscribe(
+        () => {
+          console.log('Acompanhamento adicionado com sucesso');
+          this.novoAcompanhamento = '';
+          this.carregarPaciente();
+        },
+        (error) => {
+          console.error('Erro ao adicionar acompanhamento:', error);
+        }
+      );
+    }
   }
 }
