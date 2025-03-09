@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Usuario {
   nome: string;
@@ -9,37 +10,42 @@ export interface Usuario {
   setor: string;
   funcao: string;
   especialidade?: string;
-  registro_categoria?: string;
-}
-
-interface ApiResponse {
-  usuarios: Usuario[]; // A API retorna um objeto com a propriedade "usuarios"
+  registroCategoria?: string;
 }
 
 @Injectable({
-  providedIn: 'root', // Serviço standalone
+  providedIn: 'root',
 })
 export class UsuarioService {
-  private apiUrl = 'http://localhost:5001/api'; // URL base da API
+  private apiUrl = 'http://localhost:5001/api';
 
   constructor(private http: HttpClient) {}
 
-  // Obter todos os usuários
-  getUsuarios(): Observable<ApiResponse> {
-    return this.http.get<ApiResponse>(`${this.apiUrl}/exibe_usuarios`);
+  listarUsuarios(): Observable<Usuario[]> {
+    return this.http.get<{ usuarios: any[] }>(`${this.apiUrl}/exibe_usuarios`).pipe(
+      map(response => response.usuarios.map(usuario => ({
+        ...usuario,
+        registroCategoria: usuario.registro_categoria // Ajuste para o campo registroCategoria
+      })))
+    );
   }
 
-  // Criar um novo usuário
   criarUsuario(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/criar_usuario`, usuario);
+    const payload = {
+      ...usuario,
+      registro_categoria: usuario.registroCategoria // Ajuste para o campo registroCategoria
+    };
+    return this.http.post<Usuario>(`${this.apiUrl}/criar_usuario`, payload);
   }
 
-  // Atualizar um usuário existente
   atualizarUsuario(cpf: string, usuario: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/atualizar_usuario/${cpf}`, usuario);
+    const payload = {
+      ...usuario,
+      registro_categoria: usuario.registroCategoria // Ajuste para o campo registroCategoria
+    };
+    return this.http.put<Usuario>(`${this.apiUrl}/atualizar_usuario/${cpf}`, payload);
   }
 
-  // Deletar um usuário
   deletarUsuario(cpf: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/excluir_usuario/${cpf}`);
   }

@@ -1,29 +1,36 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { ModalBuscaPacienteComponent } from '../modal/modal-busca-paciente/modal-busca-paciente.component';
+import { MatDialogModule } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [MatToolbarModule, MatButtonModule],
-  template: `
-    <mat-toolbar class="navbar navbar-dark">
-      <div class="nav-buttons">
-        <button mat-button (click)="navegarPara('home')">Cuidar+</button>
-        <button mat-button (click)="navegarPara('usuarios')">Usuários</button>
-        <button mat-button (click)="navegarPara('farmacia')">Farmácia</button>
-        <button mat-button (click)="navegarPara('pacientes')">Pacientes</button>
-        <button mat-button (click)="navegarPara('relatorios')">Relatórios</button>
-      </div>
-    </mat-toolbar>
-  `,
+  imports: [CommonModule, MatDialogModule],
+  templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  constructor(private router: Router) {}
+  constructor(private router: Router, public dialog: MatDialog) {}
 
   navegarPara(pagina: string): void {
     this.router.navigate([pagina]);
+  }
+
+  abrirModalBusca(): void {
+    const dialogRef = this.dialog.open(ModalBuscaPacienteComponent, {
+      width: '50%' // Ajuste o tamanho do modal conforme necessário
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Paciente encontrado:', result);
+        // Atualizar a lista de pacientes com o resultado da busca
+      } else {
+        console.log('O modal de busca foi fechado sem resultado');
+      }
+    });
   }
 }

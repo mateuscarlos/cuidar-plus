@@ -14,11 +14,26 @@ import { PacienteService, Paciente } from '../../../services/paciente.service';
 export class ModalBuscaPacienteComponent {
   campoBusca: string = 'id';
   valorBusca: string = '';
+  labelValorBusca: string = 'Matrícula do Paciente';
 
   constructor(
     public dialogRef: MatDialogRef<ModalBuscaPacienteComponent>,
     private pacienteService: PacienteService
   ) {}
+
+  onCampoBuscaChange() {
+    switch (this.campoBusca) {
+      case 'id':
+        this.labelValorBusca = 'Digite a matrícula do Paciente';
+        break;
+      case 'nome_completo':
+        this.labelValorBusca = 'Digite o nome do Paciente';
+        break;
+      case 'cpf':
+        this.labelValorBusca = 'Digite o CPF do Paciente';
+        break;
+    }
+  }
 
   onClose(): void {
     this.dialogRef.close();

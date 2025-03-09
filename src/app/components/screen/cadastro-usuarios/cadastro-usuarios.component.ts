@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { UsuarioService } from '../../../services/usuario.service';
+import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { UsuarioService, Usuario } from '../../../services/usuario.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -68,59 +68,17 @@ type Setor = keyof typeof FUNCOES_POR_SETOR;
   selector: 'app-cadastro-usuarios',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <form (ngSubmit)="cadastrarUsuario()" class="form-user p-4 shadow rounded">
-      <div class="mb-3">
-        <label for="nome" class="form-label">Nome Completo</label>
-        <input type="text" id="nome" class="form-control" [(ngModel)]="usuario.nome" name="nome" required>
-      </div>
-      <div class="mb-3">
-        <label for="cpf" class="form-label">CPF</label>
-        <input type="text" id="cpf" class="form-control" [(ngModel)]="usuario.cpf" name="cpf" required>
-      </div>
-      <div class="mb-3">
-        <label for="endereco" class="form-label">Endereço</label>
-        <input type="text" id="endereco" class="form-control" [(ngModel)]="usuario.endereco" name="endereco">
-      </div>
-      <div class="mb-3">
-        <label for="setor" class="form-label">Setor</label>
-        <select id="setor" class="form-select" [(ngModel)]="usuario.setor" name="setor" (change)="carregarFuncoes()" required>
-          <option value="">Selecione...</option>
-          <option *ngFor="let setor of setores" [value]="setor">{{ setor }}</option>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label for="funcao" class="form-label">Função</label>
-        <select id="funcao" class="form-select" [(ngModel)]="usuario.funcao" name="funcao" (change)="verificarCamposEspeciais()" required>
-          <option value="">Selecione...</option>
-          <option *ngFor="let funcao of funcoes" [value]="funcao">{{ funcao }}</option>
-        </select>
-      </div>
-      <div class="mb-3" *ngIf="exibirEspecialidade">
-        <label for="especialidade" class="form-label">Especialidade</label>
-        <input type="text" id="especialidade" class="form-control" [(ngModel)]="usuario.especialidade" name="especialidade">
-      </div>
-      <div class="mb-3" *ngIf="exibirRegistroCategoria">
-        <label for="registro" class="form-label">Número de Registro da Categoria</label>
-        <input type="text" id="registro" class="form-control" [(ngModel)]="usuario.registroCategoria" name="registro">
-      </div>
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary">Salvar</button>
-        <button type="reset" class="btn btn-secondary">Cancelar</button>
-      </div>
-    </form>
-    <button class="btn btn-secondary mt-4" (click)="navegarPara('usuarios')">Voltar</button>
-  `,
+  templateUrl: './cadastro-usuarios.component.html',
   styleUrls: ['./cadastro-usuarios.component.scss']
 })
-export class CadastroUsuariosComponent {
+export class CadastroUsuariosComponent implements OnInit {
   FUNCOES_POR_SETOR = FUNCOES_POR_SETOR;
-  setores: Setor[] = Object.keys(FUNCOES_POR_SETOR) as Setor[]; // Armazena as chaves do objeto
+  setores: Setor[] = Object.keys(FUNCOES_POR_SETOR) as Setor[];
   funcoes: string[] = [];
   exibirEspecialidade = false;
   exibirRegistroCategoria = false;
 
-  usuario = {
+  usuario: Usuario = {
     nome: '',
     cpf: '',
     endereco: '',
@@ -130,13 +88,45 @@ export class CadastroUsuariosComponent {
     registroCategoria: ''
   };
 
-  constructor(private usuarioService: UsuarioService, private router: Router) {}
+  constructor(
+    private usuarioService: UsuarioService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    const cpf = this.route.snapshot.paramMap.get('cpf');
+    if (cpf) {
+      this.carregarUsuario(cpf);
+    }
+  }
+
+  carregarUsuario(cpf: string): void {
+    this.usuarioService.listarUsuarios().subscribe(
+      (usuarios) => {
+        const usuario = usuarios.find(u => u.cpf === cpf);
+        if (usuario) {
+          this.usuario = {
+            ...usuario,
+            setor: usuario.setor as Setor,
+            especialidade: usuario.especialidade || '',
+            registroCategoria: usuario.registroCategoria || ''
+          };
+          this.carregarFuncoes();
+          this.verificarCamposEspeciais();
+        }
+      },
+      (error) => {
+        console.error('Erro ao carregar usuário:', error);
+      }
+    );
+  }
 
   carregarFuncoes(): void {
-    const setorSelecionado = this.usuario.setor;
+    const setorSelecionado = this.usuario.setor as Setor;
     this.funcoes = this.FUNCOES_POR_SETOR[setorSelecionado] || [];
-    this.usuario.funcao = ''; // Limpa a função selecionada ao mudar o setor
-    this.verificarCamposEspeciais(); // Verifica os campos especiais
+    this.usuario.funcao = '';
+    this.verificarCamposEspeciais();
   }
 
   verificarCamposEspeciais(): void {
@@ -156,6 +146,29 @@ export class CadastroUsuariosComponent {
   }
 
   cadastrarUsuario(): void {
+    if (this.usuario.cpf) {
+      this.usuarioService.listarUsuarios().subscribe(
+        (usuarios) => {
+          const usuarioExistente = usuarios.find(u => u.cpf === this.usuario.cpf);
+          if (usuarioExistente) {
+            if (confirm('Usuário já existe. Deseja atualizar as informações?')) {
+              this.atualizarUsuario();
+            }
+          } else {
+            this.criarUsuario();
+          }
+        },
+        (error) => {
+          console.error('Erro ao verificar usuário:', error);
+          this.criarUsuario(); // Tenta criar o usuário mesmo se houver um erro na verificação
+        }
+      );
+    } else {
+      this.criarUsuario();
+    }
+  }
+
+  criarUsuario(): void {
     this.usuarioService.criarUsuario(this.usuario).subscribe(
       () => {
         alert('Usuário cadastrado com sucesso!');
@@ -167,7 +180,23 @@ export class CadastroUsuariosComponent {
     );
   }
 
+  atualizarUsuario(): void {
+    this.usuarioService.atualizarUsuario(this.usuario.cpf, this.usuario).subscribe(
+      () => {
+        alert('Usuário atualizado com sucesso!');
+        this.router.navigate(['/usuarios']);
+      },
+      (error) => {
+        console.error('Erro ao atualizar usuário:', error);
+      }
+    );
+  }
+
   navegarPara(pagina: string): void {
     this.router.navigate([pagina]);
+  }
+
+  onSubmit(): void {
+    this.cadastrarUsuario();
   }
 }

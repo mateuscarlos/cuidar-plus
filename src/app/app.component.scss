@@ -1,0 +1,77 @@
+@use "bootstrap/scss/bootstrap" as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header, footer {
+  flex: 0 0 auto;
+}
+
+main {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 5rem;
+}
+
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 2rem;
+  background-color: #f8f9fa;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.navbar {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  width: 200px;
+  height: calc(100% - 120px); // Ajustar a altura para ocupar todo o espaço disponível
+  z-index: 1000;
+  overflow-y: auto; // Permitir rolagem na navbar
+  padding: 20px;
+}
+
+.main-content {
+  margin-left: 10rem;
+  margin-right: 10rem;
+  padding: 5rem;
+  height: calc(100% - 5rem); // Ajustar a altura para ocupar todo o espaço disponível
+  overflow-y: auto; // Permitir rolagem no conteúdo principal
+  box-sizing: border-box;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 2rem;
+  background-color: #f8f9fa;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    top: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    margin-top: 60px;
+  }
+}
