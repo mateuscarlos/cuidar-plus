@@ -15,10 +15,7 @@ import { ModalBuscaPacienteComponent } from '../../modal/modal-busca-paciente/mo
 })
 export class PacientesComponent implements OnInit {
   pacientes: Paciente[] = [];
-  pacientesFiltrados: Paciente[] = [];
   filtroNome: string = '';
-  ordenacao: string = 'nome';
-  ordemAscendente: boolean = true;
 
   constructor(private pacienteService: PacienteService, private router: Router, public dialog: MatDialog) {}
 
@@ -30,34 +27,11 @@ export class PacientesComponent implements OnInit {
     this.pacienteService.getPacientes().subscribe(
       (data: { pacientes: Paciente[] }) => {
         this.pacientes = data.pacientes;
-        this.filtrarPacientes();
       },
       (error) => {
         console.error('Erro ao carregar pacientes:', error);
       }
     );
-  }
-
-  filtrarPacientes(): void {
-    this.pacientesFiltrados = this.pacientes.filter(paciente =>
-      paciente.nome_completo.toLowerCase().includes(this.filtroNome.toLowerCase())
-    );
-    this.ordenarPacientes(this.ordenacao);
-  }
-
-  ordenarPacientes(coluna: string): void {
-    if (this.ordenacao === coluna) {
-      this.ordemAscendente = !this.ordemAscendente;
-    } else {
-      this.ordenacao = coluna;
-      this.ordemAscendente = true;
-    }
-
-    if (this.ordenacao === 'nome') {
-      this.pacientesFiltrados.sort((a, b) => this.ordemAscendente ? a.nome_completo.localeCompare(b.nome_completo) : b.nome_completo.localeCompare(a.nome_completo));
-    } else if (this.ordenacao === 'atualizacao') {
-      this.pacientesFiltrados.sort((a, b) => this.ordemAscendente ? new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime() : new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-    }
   }
 
   abrirModalBusca(): void {
@@ -68,8 +42,7 @@ export class PacientesComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         console.log('Paciente encontrado:', result);
-        this.pacientes = [result];
-        this.filtrarPacientes();
+        this.pacientes = result.pacientes;
       } else {
         console.log('O modal de busca foi fechado sem resultado');
         this.pacientes = [];
@@ -78,7 +51,15 @@ export class PacientesComponent implements OnInit {
   }
 
   acompanharPaciente(id: number): void {
-    this.router.navigate(['/acompanha-paciente', id]);
+    this.pacienteService.getPacienteById(id).subscribe(
+      (data: { paciente: Paciente }) => {
+        const paciente = data.paciente;
+        this.router.navigate(['/acompanha-paciente', id], { state: { paciente } });
+      },
+      (error) => {
+        console.error('Erro ao carregar paciente:', error);
+      }
+    );
   }
 
   navegarPara(destino: string): void {

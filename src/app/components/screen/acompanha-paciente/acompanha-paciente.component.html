@@ -21,6 +21,10 @@
             <option value="encerrado">Encerrado</option>
           </select>
         </div>
+        <div class="col-md-6">
+          <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+          <input type="text" id="dataNascimento" class="form-control" [(ngModel)]="paciente.data_nascimento" name="data_nascimento">
+        </div>
       </div>
       <div class="row mb-3">
         <div class="col-md-4">
@@ -31,41 +35,46 @@
           <label for="telefone" class="form-label">Telefone</label>
           <input type="text" id="telefone" class="form-control" [(ngModel)]="paciente.telefone" name="telefone">
         </div>
-        <div class="col-md-4">
-          <label for="cep" class="form-label">CEP</label>
-          <input type="text" id="cep" class="form-control" [(ngModel)]="paciente.cep" name="cep">
-        </div>
       </div>
-      <div class="row mb-3">
-        <div class="col-md-12">
-          <label for="rua" class="form-label">Rua</label>
-          <input type="text" id="rua" class="form-control" [(ngModel)]="paciente.rua" name="rua">
+
+      <!-- Endereço -->
+      <fieldset id="endereco" class="mb-4">
+        <legend>Endereço</legend>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="cep" class="form-label">CEP</label>
+            <input type="text" id="cep" class="form-control" [(ngModel)]="paciente.cep" name="cep" (blur)="buscarEndereco()">
+          </div>
+          <div class="col-md-8">
+            <label for="rua" class="form-label">Rua</label>
+            <input type="text" id="rua" class="form-control" [(ngModel)]="paciente.rua" name="rua">
+          </div>
         </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-md-4">
-          <label for="numero" class="form-label">Número</label>
-          <input type="text" id="numero" class="form-control" [(ngModel)]="paciente.numero" name="numero">
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label for="numero" class="form-label">Número</label>
+            <input type="text" id="numero" class="form-control" [(ngModel)]="paciente.numero" name="numero">
+          </div>
+          <div class="col-md-4">
+            <label for="complemento" class="form-label">Complemento</label>
+            <input type="text" id="complemento" class="form-control" [(ngModel)]="paciente.complemento" name="complemento">
+          </div>
+          <div class="col-md-4">
+            <label for="bairro" class="form-label">Bairro</label>
+            <input type="text" id="bairro" class="form-control" [(ngModel)]="paciente.bairro" name="bairro">
+          </div>
         </div>
-        <div class="col-md-4">
-          <label for="complemento" class="form-label">Complemento</label>
-          <input type="text" id="complemento" class="form-control" [(ngModel)]="paciente.complemento" name="complemento">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="cidade" class="form-label">Cidade</label>
+            <input type="text" id="cidade" class="form-control" [(ngModel)]="paciente.cidade" name="cidade">
+          </div>
+          <div class="col-md-6">
+            <label for="estado" class="form-label">Estado</label>
+            <input type="text" id="estado" class="form-control" [(ngModel)]="paciente.estado" name="estado">
+          </div>
         </div>
-        <div class="col-md-4">
-          <label for="bairro" class="form-label">Bairro</label>
-          <input type="text" id="bairro" class="form-control" [(ngModel)]="paciente.bairro" name="bairro">
-        </div>
-      </div>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="cidade" class="form-label">Cidade</label>
-          <input type="text" id="cidade" class="form-control" [(ngModel)]="paciente.cidade" name="cidade">
-        </div>
-        <div class="col-md-6">
-          <label for="estado" class="form-label">Estado</label>
-          <input type="text" id="estado" class="form-control" [(ngModel)]="paciente.estado" name="estado">
-        </div>
-      </div>
+      </fieldset>
     </fieldset>
 
     <!-- Informações de Saúde -->
@@ -129,5 +138,6 @@
   <div class="d-flex justify-content-between">
     <button class="btn btn-primary" (click)="editarPaciente()">Editar Paciente</button>
     <button class="btn btn-danger" (click)="confirmarExclusao()">Excluir Paciente</button>
+    <button class="btn btn-success" (click)="salvarPaciente()">Salvar</button>
   </div>
 </div>

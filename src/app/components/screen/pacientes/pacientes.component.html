@@ -10,28 +10,18 @@
         <div class="row">
           <div class="col-12">
             <div class="input-group mb-3">
-              <input type="text" class="form-control" placeholder="Buscar paciente..." [(ngModel)]="filtroNome" (input)="filtrarPacientes()" />
+              <input type="text" class="form-control" placeholder="Buscar paciente..." [(ngModel)]="filtroNome" />
             </div>
-            <table class="table table-striped" *ngIf="pacientesFiltrados.length > 0">
+            <table class="table table-striped" *ngIf="pacientes.length > 0">
               <thead>
                 <tr>
-                  <th>
-                    Nome
-                    <button class="btn btn-link p-0" (click)="ordenarPacientes('nome')">
-                      <i class="bi bi-arrow-down-up"></i>
-                    </button>
-                  </th>
-                  <th>
-                    Atualização
-                    <button class="btn btn-link p-0" (click)="ordenarPacientes('atualizacao')">
-                      <i class="bi bi-arrow-down-up"></i>
-                    </button>
-                  </th>
+                  <th>Nome</th>
+                  <th>Atualização</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let paciente of pacientesFiltrados">
+                <tr *ngFor="let paciente of pacientes">
                   <td>{{ paciente.nome_completo }}</td>
                   <td>{{ paciente.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td>
@@ -40,7 +30,7 @@
                 </tr>
               </tbody>
             </table>
-            <div *ngIf="pacientesFiltrados.length === 0" class="text-center">
+            <div *ngIf="pacientes.length === 0" class="text-center">
               Nenhum paciente encontrado.
             </div>
           </div>

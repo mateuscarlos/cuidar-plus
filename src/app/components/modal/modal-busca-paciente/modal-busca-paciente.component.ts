@@ -41,9 +41,9 @@ export class ModalBuscaPacienteComponent {
 
   buscarPaciente(): void {
     this.pacienteService.buscarPaciente(this.campoBusca, this.valorBusca).subscribe(
-      (response: Paciente) => {
-        console.log('Paciente encontrado:', response);
-        this.dialogRef.close(response);
+      (response: { pacientes: Paciente[] }) => {
+        console.log('Paciente encontrado:', response.pacientes[0]);
+        this.dialogRef.close(response.pacientes[0]);
       },
       (error) => {
         console.error('Erro ao buscar paciente:', error);

@@ -9,7 +9,7 @@ export const routes: Routes = [
   { path: 'cadastro-usuarios/:cpf', loadComponent: () => import('./components/screen/cadastro-usuarios/cadastro-usuarios.component').then(m => m.CadastroUsuariosComponent) },
   { path: 'cadastro-pacientes', loadComponent: () => import('./components/screen/cadastro-pacientes/cadastro-pacientes.component').then(m => m.CadastroPacientesComponent) },
   { path: 'pacientes', loadComponent: () => import('./components/screen/pacientes/pacientes.component').then(m => m.PacientesComponent) },
-  { path: 'acompanha-paciente', loadComponent: () => import('./components/screen/acompanha-paciente/acompanha-paciente.component').then(m => m.AcompanhaPacienteComponent) },
+  { path: 'acompanha-paciente/:id', loadComponent: () => import('./components/screen/acompanha-paciente/acompanha-paciente.component').then(m => m.AcompanhaPacienteComponent) },
   { path: 'farmacia', loadComponent: () => import('./components/screen/farmacia/farmacia.component').then(m => m.FarmaciaComponent) },
   { path: 'relatorios', loadComponent: () => import('./components/screen/relatorios/relatorios.component').then(m => m.RelatoriosComponent) },
   {

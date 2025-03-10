@@ -38,16 +38,16 @@ export class PacienteService {
     return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/exibe_pacientes`);
   }
 
-  getPacienteById(id: number): Observable<Paciente> {
-    return this.http.get<Paciente>(`${this.apiUrl}/paciente/${id}`);
+  getPacienteById(id: number): Observable<{ paciente: Paciente }> {
+    return this.http.get<{ paciente: Paciente }>(`${this.apiUrl}/paciente/${id}`);
   }
 
-  criarPaciente(paciente: Paciente): Observable<Paciente> {
-    return this.http.post<Paciente>(`${this.apiUrl}/criar_paciente`, paciente);
+  criarPaciente(paciente: Paciente): Observable<{ pacientes: Paciente[] }> {
+    return this.http.post<{ pacientes: Paciente[] }>(`${this.apiUrl}/criar_paciente`, { pacientes: [paciente] });
   }
 
-  atualizarPaciente(cpf: string, paciente: Paciente): Observable<Paciente> {
-    return this.http.put<Paciente>(`${this.apiUrl}/atualizar_paciente/${cpf}`, paciente);
+  atualizarPaciente(cpf: string, paciente: Paciente): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/atualizar_paciente/${cpf}`, paciente);
   }
 
   deletarPaciente(cpf: string): Observable<void> {
@@ -55,12 +55,12 @@ export class PacienteService {
   }
 
   adicionarAcompanhamento(acompanhamento: { pacienteId: number, descricao: string, data: Date }): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/adicionar_acompanhamento`, acompanhamento);
+    return this.http.post<void>(`${this.apiUrl}/adicionar_acompanhamento`, { pacientes: [acompanhamento] });
   }
 
-  buscarPaciente(campo: string, valor: string): Observable<Paciente> {
+  buscarPaciente(campo: string, valor: string): Observable<{ pacientes: Paciente[] }> {
     const params = new HttpParams().set('campo', campo).set('valor', valor);
-    return this.http.get<Paciente>(`${this.apiUrl}/buscar_paciente`, { params });
+    return this.http.get<{ pacientes: Paciente[] }>(`${this.apiUrl}/buscar_paciente`, { params });
   }
 
   buscarEndereco(cep: string): Observable<any> {

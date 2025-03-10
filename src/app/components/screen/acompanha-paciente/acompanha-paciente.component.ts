@@ -52,8 +52,8 @@ export class AcompanhaPacienteComponent implements OnInit {
   carregarPaciente(): void {
     if (this.pacienteId) {
       this.pacienteService.getPacienteById(this.pacienteId).subscribe(
-        (paciente: Paciente) => {
-          this.paciente = paciente;
+        (response: { paciente: Paciente }) => {  
+          this.paciente = response.paciente;  
         },
         (error) => {
           console.error('Erro ao carregar paciente:', error);
@@ -63,7 +63,15 @@ export class AcompanhaPacienteComponent implements OnInit {
   }
 
   editarPaciente(): void {
-    this.router.navigate(['/cadastro-pacientes', this.paciente.id]);
+    this.pacienteService.atualizarPaciente(this.paciente.cpf, this.paciente).subscribe(
+      () => {
+        console.log('Paciente atualizado com sucesso');
+        this.router.navigate(['/pacientes']);
+      },
+      (error) => {
+        console.error('Erro ao atualizar paciente:', error);
+      }
+    );
   }
 
   confirmarExclusao(): void {
@@ -110,5 +118,33 @@ export class AcompanhaPacienteComponent implements OnInit {
         }
       );
     }
+  }
+
+  buscarEndereco(): void {
+    if (this.paciente.cep.length === 8) {
+      this.pacienteService.buscarEndereco(this.paciente.cep).subscribe({
+        next: (data) => {
+          this.paciente.rua = data.logradouro;
+          this.paciente.bairro = data.bairro;
+          this.paciente.cidade = data.localidade;
+          this.paciente.estado = data.uf;
+        },
+        error: (error) => {
+          console.error('Erro ao buscar endereço:', error);
+        }
+      });
+    }
+  }
+
+  salvarPaciente(): void {
+    this.pacienteService.atualizarPaciente(this.paciente.cpf, this.paciente).subscribe(
+      () => {
+        console.log('Paciente atualizado com sucesso');
+        this.router.navigate(['/pacientes']);
+      },
+      (error) => {
+        console.error('Erro ao atualizar paciente:', error);
+      }
+    );
   }
 }

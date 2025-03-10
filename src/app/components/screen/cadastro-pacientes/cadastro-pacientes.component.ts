@@ -35,7 +35,7 @@ export class CadastroPacientesComponent {
     estado: '',
     created_at: '',
     updated_at: '',
-    status: 'em-avaliacao' // Adiciona o campo de status
+    status: ''
   };
 
   constructor(public pacienteService: PacienteService, public router: Router) {}
