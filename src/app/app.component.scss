@@ -1,0 +1,20 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* Ensures header stays on top */
+}
+
+main {
+  flex: 1;
+  padding-top: 1.5rem; /* Add extra space below header */
+}
+
+footer {
+  margin-top: auto;
+}

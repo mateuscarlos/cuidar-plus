@@ -1,0 +1,75 @@
+:host {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.header-toolbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0.75rem 1.5rem;
+}
+
+.app-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3B82F6;
+  
+  .plus-symbol {
+    color: #22C55E;
+  }
+}
+
+.notification-container {
+  position: relative;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  
+  &:hover {
+    color: #3B82F6;
+  }
+}
+
+.user-profile-container {
+  cursor: pointer;
+  
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    
+    .user-name {
+      font-weight: 600;
+      color: #495057;
+    }
+  }
+  
+  &:hover .user-name {
+    color: #3B82F6;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 56px; /* Set a minimum height for consistency */
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+// Optional custom styling for the notification badge
+.badge {
+  font-size: 0.6rem;
+  padding: 0.25em 0.4em;
+}
