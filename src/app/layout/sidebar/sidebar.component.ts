@@ -18,31 +18,36 @@ export class SidebarComponent implements OnInit {
       title: 'Home', 
       icon: 'bi-house-fill', 
       route: '/home',
-      active: false
+      active: false,
+      inConstruction: false
     },
     { 
       title: 'Pacientes', 
       icon: 'bi-people-fill', 
       route: '/pacientes',
-      active: false
+      active: false,
+      inConstruction: false
     },
     { 
       title: 'Farmácia', 
       icon: 'bi-capsule', 
       route: '/farmacia',
-      active: false
+      active: false,
+      inConstruction: true
     },
     { 
       title: 'Relatórios', 
       icon: 'bi-file-earmark-bar-graph', 
       route: '/relatorios',
-      active: false
+      active: false,
+      inConstruction: true
     },
     { 
       title: 'Configurações', 
       icon: 'bi-gear-fill', 
       route: '/configuracoes',
-      active: false
+      active: false,
+      inConstruction: false
     }
   ];
   

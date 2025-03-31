@@ -2,20 +2,113 @@
   <div class="row">
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Relatórios</h1>
-        <div class="btn-group">
-          <button class="btn btn-outline-primary">
-            <i class="bi bi-download me-2"></i>Exportar
-          </button>
-          <button class="btn btn-outline-primary">
-            <i class="bi bi-printer me-2"></i>Imprimir
-          </button>
+        <h1 class="mb-0">
+          Relatórios
+          <span class="badge bg-warning text-dark ms-2">Em construção</span>
+        </h1>
+      </div>
+      
+      <div class="card border-warning mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-3">
+            <div class="construction-icon me-3">
+              <i class="bi bi-clipboard-data fs-1 text-warning"></i>
+            </div>
+            <div>
+              <h4 class="mb-1">Módulo em desenvolvimento</h4>
+              <p class="text-muted mb-0">Estamos trabalhando para disponibilizar o módulo de Relatórios com análises detalhadas e visualizações de dados.</p>
+            </div>
+          </div>
+          
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Previsão de lançamento: <strong>Junho 2025</strong>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <h5 class="mb-0">Relatórios Previstos</h5>
+            </div>
+            <div class="card-body">
+              <ul class="feature-list">
+                <li *ngFor="let report of expectedReports">
+                  <i class="bi bi-check-circle-fill text-success me-2"></i>
+                  {{ report }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">
+              <h5 class="mb-0">Progresso do Desenvolvimento</h5>
+            </div>
+            <div class="card-body">
+              <div class="progress-item mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span>Backend</span>
+                  <span>50%</span>
+                </div>
+                <div class="progress">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: 50%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              <div class="progress-item mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span>Frontend</span>
+                  <span>25%</span>
+                </div>
+                <div class="progress">
+                  <div class="progress-bar bg-primary" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              <div class="progress-item">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span>Integração de Dados</span>
+                  <span>35%</span>
+                </div>
+                <div class="progress">
+                  <div class="progress-bar bg-info" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
       <div class="card">
-        <div class="card-body">
-          <p>Conteúdo da página de relatórios será implementado aqui.</p>
+        <div class="card-header">
+          <h5 class="mb-0">Visualizações Previstas</h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="row">
+            <div class="col-md-4 mb-4 mb-md-0">
+              <div class="preview-box">
+                <i class="bi bi-bar-chart-fill preview-icon text-primary"></i>
+                <h6 class="mt-3">Gráficos Estatísticos</h6>
+                <p class="text-muted small">Análise visual de tendências e desempenho</p>
+              </div>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+              <div class="preview-box">
+                <i class="bi bi-pie-chart-fill preview-icon text-success"></i>
+                <h6 class="mt-3">Dashboards Interativos</h6>
+                <p class="text-muted small">Painéis personalizáveis com métricas-chave</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="preview-box">
+                <i class="bi bi-table preview-icon text-info"></i>
+                <h6 class="mt-3">Relatórios Exportáveis</h6>
+                <p class="text-muted small">Exportação em múltiplos formatos (PDF, Excel)</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

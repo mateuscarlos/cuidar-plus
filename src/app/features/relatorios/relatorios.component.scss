@@ -1,0 +1,45 @@
+.construction-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.feature-list {
+  list-style: none;
+  padding-left: 0;
+  
+  li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.preview-box {
+  padding: 30px 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: #f0f2f5;
+    transform: translateY(-5px);
+  }
+}
+
+.preview-icon {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}

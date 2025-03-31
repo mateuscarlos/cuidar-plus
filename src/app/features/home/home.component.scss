@@ -85,3 +85,34 @@
     }
   }
 }
+
+// Estilo para os cards em construção
+.construction-indicator {
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  padding-top: 0.75rem;
+}
+
+// Adicionar um pequeno efeito visual nos cards em construção
+.card:has(.construction-indicator) {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255, 193, 7, 0.1),
+      rgba(255, 193, 7, 0.1) 10px,
+      rgba(255, 193, 7, 0.2) 10px,
+      rgba(255, 193, 7, 0.2) 20px
+    );
+    transform: rotate(45deg) translate(35px, -50px);
+    z-index: 1;
+    pointer-events: none;
+  }
+}

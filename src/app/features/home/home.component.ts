@@ -17,7 +17,8 @@ export class HomeComponent {
       icon: 'bi-people-fill',
       route: '/pacientes',
       count: 158,
-      color: 'primary'
+      color: 'primary',
+      inConstruction: false
     },
     {
       title: 'Farmácia',
@@ -25,7 +26,8 @@ export class HomeComponent {
       icon: 'bi-capsule',
       route: '/farmacia',
       count: 72,
-      color: 'success'
+      color: 'success',
+      inConstruction: true
     },
     {
       title: 'Relatórios',
@@ -33,7 +35,8 @@ export class HomeComponent {
       icon: 'bi-file-earmark-bar-graph',
       route: '/relatorios',
       count: 25,
-      color: 'info'
+      color: 'info',
+      inConstruction: true
     },
     {
       title: 'Configurações',
@@ -41,7 +44,8 @@ export class HomeComponent {
       icon: 'bi-gear-fill',
       route: '/configuracoes',
       count: null,
-      color: 'secondary'
+      color: 'secondary',
+      inConstruction: false
     }
   ];
 }

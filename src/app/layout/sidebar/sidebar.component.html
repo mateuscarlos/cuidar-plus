@@ -1,10 +1,9 @@
 <nav class="sidebar bg-white">
-  <!-- Logo no topo da sidebar -->
+  <!-- Header do sidebar -->
   <div class="sidebar-header d-flex align-items-center justify-content-between">
     <a href="/" class="text-decoration-none">
       <h5 class="text-primary m-0 p-3">Cuidar<span class="text-success">+</span></h5>
     </a>
-    <!-- Botão para fechar a sidebar em dispositivos móveis -->
     <button class="btn d-lg-none" (click)="onToggleSidebar()">
       <i class="bi bi-x-lg"></i>
     </button>
@@ -18,13 +17,15 @@
            [routerLink]="item.route" 
            routerLinkActive="active" 
            [class.active]="item.active">
-          <i class="bi {{ item.icon }} me-2"></i>
+          <i class="bi {{ item.icon }} me-3"></i>
           <span>{{ item.title }}</span>
+          <span class="badge bg-warning text-dark ms-2 small" *ngIf="item.inConstruction">Em construção</span>
         </a>
       </li>
     </ul>
   </div>
   
+  <!-- Sidebar footer -->
   <!-- Área inferior da sidebar com informações extras -->
   <div class="sidebar-footer">
     <div class="p-3 border-top">
