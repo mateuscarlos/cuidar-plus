@@ -15,33 +15,15 @@ export class SidebarComponent implements OnInit {
   
   menuItems = [
     { 
-      title: 'Dashboard', 
-      icon: 'bi-speedometer2', 
-      route: '/dashboard',
-      active: false
-    },
-    { 
       title: 'Pacientes', 
-      icon: 'bi-people', 
+      icon: 'bi-people-fill', 
       route: '/pacientes',
       active: false
     },
     { 
-      title: 'Consultas', 
-      icon: 'bi-calendar-check', 
-      route: '/consultas',
-      active: false
-    },
-    { 
-      title: 'Exames', 
-      icon: 'bi-clipboard2-plus', 
-      route: '/exames',
-      active: false
-    },
-    { 
-      title: 'Medicamentos', 
+      title: 'Farmácia', 
       icon: 'bi-capsule', 
-      route: '/medicamentos',
+      route: '/farmacia',
       active: false
     },
     { 
@@ -52,7 +34,7 @@ export class SidebarComponent implements OnInit {
     },
     { 
       title: 'Configurações', 
-      icon: 'bi-gear', 
+      icon: 'bi-gear-fill', 
       route: '/configuracoes',
       active: false
     }
@@ -76,8 +58,7 @@ export class SidebarComponent implements OnInit {
     const currentUrl = this.router.url;
     this.menuItems.forEach(item => {
       // Verifica se a rota atual corresponde a este item
-      item.active = currentUrl === item.route || 
-                    (item.route !== '/dashboard' && currentUrl.startsWith(item.route));
+      item.active = currentUrl === item.route || currentUrl.startsWith(item.route);
     });
   }
   
