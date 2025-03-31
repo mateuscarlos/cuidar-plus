@@ -1,22 +1,26 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent {
+  @Output() toggleSidebar = new EventEmitter<void>();
+  
   userName: string = 'João Silva';
   hasNotifications: boolean = true;
   
   logout() {
     // Implement logout logic here
     console.log('Logout clicked');
+  }
+  
+  onToggleSidebar() {
+    this.toggleSidebar.emit();
   }
 }
 

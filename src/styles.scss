@@ -1,35 +1,37 @@
-/* You can add global styles to this file, and also import other style files */
-
+/* Reset globals */
 html, body {
   height: 100%;
   margin: 0;
+  padding: 0;
   font-family: var(--bs-body-font-family);
 }
 
-/* Reset default margins to avoid unexpected spacing */
 body {
-  padding: 0;
   overflow-x: hidden;
+  padding-top: 0 !important; /* Garante que não há padding automático do Bootstrap */
 }
 
-/* Add smooth scrolling for better UX */
+/* Elementos de conteúdo principal */
+.container, .container-fluid {
+  width: 100%;
+}
+
+/* Espaçamento entre componentes principais */
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Melhorar a legibilidade em dispositivos móveis */
+@media (max-width: 768px) {
+  main {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
-
-/* Ensure content doesn't have unwanted margins at top */
-.container, .container-fluid {
-  padding-top: 0;
 }
-
-// Optional: Add any Bootstrap customizations here
-// For example:
-// $primary: #0075c9;
-// $secondary: #6c757d;
-
-// Import Bootstrap functions, variables, and mixins if you need to use them
-// @import "~bootstrap/scss/functions";
-// @import "~bootstrap/scss/variables";
-// @import "~bootstrap/scss/mixins";
-
-// Add any other global styles below

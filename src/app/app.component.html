@@ -1,18 +1,22 @@
-<div class="app-container">
-  <!-- Header -->
-  <header>
-    <app-header></app-header>
-  </header>
+<div class="app-container" [class.sidebar-expanded]="isSidebarVisible">
+  <!-- Sidebar -->
+  <app-sidebar *ngIf="isSidebarVisible" (toggleSidebar)="toggleSidebar()"></app-sidebar>
   
-  <!-- Main Content - properly positioned below the header -->
-  <main class="container-fluid py-4">
-    <router-outlet></router-outlet>
-  </main>
+  <!-- Overlay para dispositivos móveis -->
+  <div class="sidebar-overlay" [class.show]="isSidebarVisible && isMobile" (click)="toggleSidebar()"></div>
   
-  <!-- Footer (optional) -->
-  <footer class="bg-light py-3 text-center">
-    <div class="container">
-      <p class="mb-0">© 2025 Cuidar+ - Todos os direitos reservados</p>
-    </div>
-  </footer>
+  <div class="main-content">
+    <!-- Header -->
+    <header>
+      <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="container-fluid py-4">
+      <router-outlet></router-outlet>
+    </main>
+    
+    <!-- Footer -->
+    <app-footer></app-footer>
+  </div>
 </div>

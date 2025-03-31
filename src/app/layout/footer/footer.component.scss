@@ -1,0 +1,30 @@
+.footer {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.text-primary {
+  font-weight: 600;
+}
+
+a:hover {
+  color: #3B82F6 !important;
+  transition: color 0.2s ease;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+}
+
+.input-group {
+  max-width: 300px;
+}
