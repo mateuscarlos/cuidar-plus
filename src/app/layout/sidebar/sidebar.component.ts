@@ -15,6 +15,12 @@ export class SidebarComponent implements OnInit {
   
   menuItems = [
     { 
+      title: 'Home', 
+      icon: 'bi-house-fill', 
+      route: '/home',
+      active: false
+    },
+    { 
       title: 'Pacientes', 
       icon: 'bi-people-fill', 
       route: '/pacientes',
@@ -58,7 +64,8 @@ export class SidebarComponent implements OnInit {
     const currentUrl = this.router.url;
     this.menuItems.forEach(item => {
       // Verifica se a rota atual corresponde a este item
-      item.active = currentUrl === item.route || currentUrl.startsWith(item.route);
+      item.active = currentUrl === item.route || 
+                  (item.route !== '/home' && currentUrl.startsWith(item.route));
     });
   }
   

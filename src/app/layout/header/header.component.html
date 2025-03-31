@@ -1,11 +1,12 @@
 <nav class="navbar navbar-expand navbar-light bg-light">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Cuidar+</a>
-    
     <!-- Toggle button for sidebar -->
     <button class="btn btn-link sidebar-toggle d-lg-none" (click)="onToggleSidebar()">
       <i class="bi bi-list fs-5"></i>
     </button>
+    
+    <!-- Logo - alterado para usar routerLink para /home -->
+    <a [routerLink]="['/home']" class="navbar-brand d-none d-lg-block">Cuidar+</a>
     
     <!-- Espaçador para empurrar os itens para direita -->
     <div class="flex-grow-1"></div>

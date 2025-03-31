@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
+import { HomeComponent } from './features/home/home.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'pacientes', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: 'home', component: HomeComponent },
   { 
     path: 'pacientes', 
     loadChildren: () => import('./features/pacientes/pacientes.routes')
@@ -22,5 +24,5 @@ export const routes: Routes = [
     loadChildren: () => import('./features/configuracoes/configuracoes.routes')
       .then(m => m.CONFIGURACOES_ROUTES) 
   },
-  { path: '**', redirectTo: 'pacientes' }
+  { path: '**', redirectTo: 'home' }
 ];
