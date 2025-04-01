@@ -13,20 +13,41 @@
   <div class="sidebar-content">
     <ul class="nav flex-column">
       <li class="nav-item" *ngFor="let item of menuItems">
-        <a class="nav-link" 
-           [routerLink]="item.route" 
+        <!-- Menu item principal -->
+        <a class="nav-link d-flex justify-content-between align-items-center"
+           [routerLink]="item.subItems.length ? null : item.route"
            routerLinkActive="active" 
-           [class.active]="item.active">
-          <i class="bi {{ item.icon }} me-3"></i>
-          <span>{{ item.title }}</span>
-          <span class="badge bg-warning text-dark ms-2 small" *ngIf="item.inConstruction">Em construção</span>
+           [class.active]="item.active"
+           (click)="item.subItems.length ? toggleExpand(item) : null">
+          <div>
+            <i class="bi {{ item.icon }} me-3"></i>
+            <span>{{ item.title }}</span>
+            <span class="badge bg-warning text-dark ms-2 small" *ngIf="item.inConstruction">Em construção</span>
+          </div>
+          <i class="bi" *ngIf="item.subItems && item.subItems.length > 0"
+             [class.bi-chevron-down]="!item.expanded"
+             [class.bi-chevron-up]="item.expanded"></i>
         </a>
+        
+        <!-- Submenu items -->
+        <div *ngIf="item.subItems && item.subItems.length > 0" [ngClass]="{'submenu': true, 'show': item.expanded}">
+          <ul class="nav flex-column">
+            <li class="nav-item" *ngFor="let subItem of item.subItems">
+              <a class="nav-link" 
+                [routerLink]="subItem.route" 
+                routerLinkActive="active" 
+                [class.active]="subItem.active">
+                <i class="bi {{ subItem.icon }} me-2"></i>
+                <span>{{ subItem.title }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       </li>
     </ul>
   </div>
   
   <!-- Sidebar footer -->
-  <!-- Área inferior da sidebar com informações extras -->
   <div class="sidebar-footer">
     <div class="p-3 border-top">
       <div class="d-flex align-items-center">
