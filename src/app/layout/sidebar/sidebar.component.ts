@@ -34,20 +34,13 @@ export class SidebarComponent implements OnInit {
       title: 'Home', 
       icon: 'bi-house-fill', 
       route: '/home',
-<<<<<<< HEAD
       active: false
-=======
-      active: false,
-      inConstruction: false,
-      subItems: []
->>>>>>> 70d77e0d97e6326bdf4b6810d5cee047faef5178
     },
     { 
       title: 'Pacientes', 
       icon: 'bi-people-fill', 
       route: '/pacientes',
       active: false,
-<<<<<<< HEAD
       subItems: [
         {
           title: 'Lista de Pacientes',
@@ -58,34 +51,6 @@ export class SidebarComponent implements OnInit {
           title: 'Cadastrar Paciente',
           route: '/pacientes/cadastrar',
           icon: 'bi-person-plus'
-=======
-      inConstruction: false,
-      expanded: false,
-      subItems: [
-        {
-          title: 'Cadastrar Paciente',
-          icon: 'bi-person-plus-fill',
-          route: '/pacientes/cadastrar',
-          active: false
-        },
-        {
-          title: 'Visualizar Paciente',
-          icon: 'bi-person-lines-fill',
-          route: '/pacientes/visualizar',
-          active: false
-        },
-        {
-          title: 'Editar Paciente',
-          icon: 'bi-pencil-square',
-          route: '/pacientes/editar',
-          active: false
-        },
-        {
-          title: 'Acompanhar Paciente',
-          icon: 'bi-heart-pulse-fill',
-          route: '/pacientes/acompanhar',
-          active: false
->>>>>>> 70d77e0d97e6326bdf4b6810d5cee047faef5178
         }
       ]
     },
@@ -110,32 +75,7 @@ export class SidebarComponent implements OnInit {
       icon: 'bi-gear-fill', 
       route: '/configuracoes',
       active: false,
-<<<<<<< HEAD
       inConstruction: true
-=======
-      inConstruction: false,
-      expanded: false,
-      subItems: [
-        {
-          title: 'Cadastrar Usuário',
-          icon: 'bi-person-plus',
-          route: '/configuracoes/cadastrar-usuario',
-          active: false
-        },
-        {
-          title: 'Visualizar Usuário',
-          icon: 'bi-person-badge',
-          route: '/configuracoes/visualizar-usuario',
-          active: false
-        },
-        {
-          title: 'Alterar Senha',
-          icon: 'bi-key-fill',
-          route: '/configuracoes/alterar-senha',
-          active: false
-        }
-      ]
->>>>>>> 70d77e0d97e6326bdf4b6810d5cee047faef5178
     }
   ];
   
@@ -155,7 +95,6 @@ export class SidebarComponent implements OnInit {
     const currentUrl = this.router.url;
     
     this.menuItems.forEach(item => {
-<<<<<<< HEAD
       // Verificar se o item atual é o caminho ativo ou um subcaminho
       const baseRoute = item.route === '/home' ? '/' : item.route;
       const isExactMatch = currentUrl === baseRoute;
@@ -167,30 +106,6 @@ export class SidebarComponent implements OnInit {
   
   onToggleSidebar(): void {
     this.showOverlay = !this.showOverlay;
-=======
-      // Verifica se a rota atual corresponde a este item
-      item.active = currentUrl === item.route || 
-                  (item.route !== '/home' && currentUrl.startsWith(item.route));
-      
-      // Verifica subitems se existirem
-      if (item.subItems && item.subItems.length > 0) {
-        item.subItems.forEach(subItem => {
-          subItem.active = currentUrl === subItem.route;
-          // Se algum subitem estiver ativo, expande o menu pai
-          if (subItem.active) {
-            item.expanded = true;
-          }
-        });
-      }
-    });
-  }
-  
-  toggleExpand(item: any) {
-    item.expanded = !item.expanded;
-  }
-  
-  onToggleSidebar() {
->>>>>>> 70d77e0d97e6326bdf4b6810d5cee047faef5178
     this.toggleSidebar.emit();
   }
 }
