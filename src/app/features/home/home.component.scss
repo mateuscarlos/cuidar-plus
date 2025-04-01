@@ -1,0 +1,118 @@
+// Estilos para os cards
+.hover-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+.icon-bg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+}
+
+// Timeline
+.timeline {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 100px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+  }
+  
+  .timeline-item {
+    position: relative;
+    padding-left: 125px;
+    padding-bottom: 25px;
+    
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+  
+  .timeline-date {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 90px;
+    text-align: right;
+    color: #6c757d;
+    font-size: 0.85rem;
+  }
+  
+  .timeline-content {
+    position: relative;
+    padding-left: 20px;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #0d6efd;
+    }
+  }
+}
+
+// Responsividade para timeline
+@media (max-width: 576px) {
+  .timeline {
+    &::before {
+      left: 70px;
+    }
+    
+    .timeline-item {
+      padding-left: 95px;
+    }
+    
+    .timeline-date {
+      width: 60px;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// Estilo para os cards em construção
+.construction-indicator {
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
+  padding-top: 0.75rem;
+}
+
+// Adicionar um pequeno efeito visual nos cards em construção
+.card:has(.construction-indicator) {
+  position: relative;
+  overflow: hidden;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: repeating-linear-gradient(
+      45deg,
+      rgba(255, 193, 7, 0.1),
+      rgba(255, 193, 7, 0.1) 10px,
+      rgba(255, 193, 7, 0.2) 10px,
+      rgba(255, 193, 7, 0.2) 20px
+    );
+    transform: rotate(45deg) translate(35px, -50px);
+    z-index: 1;
+    pointer-events: none;
+  }
+}

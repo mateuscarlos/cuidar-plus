@@ -1,0 +1,38 @@
+.construction-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.feature-list {
+  list-style: none;
+  padding-left: 0;
+  
+  li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.preview-image {
+  filter: grayscale(30%);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    filter: grayscale(0%);
+    opacity: 0.8 !important;
+  }
+}

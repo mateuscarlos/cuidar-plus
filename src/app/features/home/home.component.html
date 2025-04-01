@@ -1,0 +1,107 @@
+<div class="container-fluid">
+  <!-- Seção de boas-vindas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-light border-0">
+        <div class="card-body p-4">
+          <h1 class="display-6 fw-bold mb-3">Bem-vindo ao Cuidar+</h1>
+          <p class="lead">Sistema integrado para gestão de cuidados médicos e assistência à saúde.</p>
+          <p class="text-muted mb-0">Escolha uma das opções abaixo para começar a utilizar o sistema.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Cards de navegação rápida -->
+  <div class="row g-4 mb-5">
+    <div class="col-sm-6 col-md-6 col-lg-3" *ngFor="let card of cards">
+      <div class="card h-100 border-0 shadow-sm hover-card" [routerLink]="card.route">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="icon-bg bg-light rounded-3 p-3 me-3">
+              <i class="bi {{card.icon}} fs-3 text-{{card.color}}"></i>
+            </div>
+            <div>
+              <h5 class="card-title mb-0">
+                {{card.title}}
+                <span class="badge bg-warning text-dark ms-2" *ngIf="card.inConstruction">Em construção</span>
+              </h5>
+              <small class="text-muted" *ngIf="card.count">{{card.count}} itens</small>
+            </div>
+          </div>
+          <p class="card-text text-muted">{{card.description}}</p>
+          <div class="mt-3">
+            <a [routerLink]="card.route" class="text-{{card.color}} text-decoration-none fw-semibold">
+              Acessar <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+          
+          <!-- Indicador de "Em construção" no rodapé do card -->
+          <div class="construction-indicator mt-3" *ngIf="card.inConstruction">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+              <small class="text-muted">Funcionalidade em desenvolvimento</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Informações e estatísticas -->
+  <div class="row mb-4">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Atividades Recentes</h5>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <span class="timeline-date">Hoje, 10:45</span>
+              <div class="timeline-content">
+                <h6 class="mb-1">Nova consulta agendada</h6>
+                <p class="mb-0 text-muted">Dr. Paulo Menezes com paciente Maria Silva</p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-date">Hoje, 09:15</span>
+              <div class="timeline-content">
+                <h6 class="mb-1">Medicamento adicionado</h6>
+                <p class="mb-0 text-muted">Dipirona 500mg adicionado ao estoque</p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-date">Ontem, 14:30</span>
+              <div class="timeline-content">
+                <h6 class="mb-1">Paciente cadastrado</h6>
+                <p class="mb-0 text-muted">João Pereira foi cadastrado no sistema</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Resumo</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h6 class="text-muted mb-2">Consultas hoje</h6>
+            <h2 class="fw-bold">12</h2>
+          </div>
+          <div class="mb-4">
+            <h6 class="text-muted mb-2">Pacientes ativos</h6>
+            <h2 class="fw-bold">158</h2>
+          </div>
+          <div>
+            <h6 class="text-muted mb-2">Medicamentos em baixa</h6>
+            <h2 class="fw-bold">5</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
