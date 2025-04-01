@@ -1,0 +1,21 @@
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #555;
+  border: 1px solid #dee2e6;
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+}
+
+.btn-group .btn {
+  border-radius: 4px;
+  margin: 0 2px;
+}
