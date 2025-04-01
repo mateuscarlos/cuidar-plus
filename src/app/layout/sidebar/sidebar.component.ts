@@ -51,6 +51,11 @@ export class SidebarComponent implements OnInit {
           title: 'Cadastrar Paciente',
           route: '/pacientes/cadastrar',
           icon: 'bi-person-plus'
+        },
+        {
+          title: 'Editar Paciente',
+          route: '/pacientes/editar',
+          icon: 'bi-pencil-square'
         }
       ]
     },
