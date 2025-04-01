@@ -1,12 +1,8 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-
-interface ResultadoBusca {
-  tipo: 'cpf' | 'id' | 'nome';
-  valor: string;
-}
+import { ResultadoBusca } from '../models/busca-paciente.model';
 
 @Component({
   selector: 'app-busca-paciente',
@@ -17,15 +13,16 @@ interface ResultadoBusca {
 })
 export class BuscaPacienteComponent implements OnInit {
   @Output() resultadoBusca = new EventEmitter<ResultadoBusca>();
+  
   buscaForm!: FormGroup;
   
   constructor(private fb: FormBuilder) {}
-
+  
   ngOnInit(): void {
     this.initForm();
     this.setupListeners();
   }
-
+  
   initForm(): void {
     this.buscaForm = this.fb.group({
       cpf: [''],
@@ -33,7 +30,7 @@ export class BuscaPacienteComponent implements OnInit {
       nome: ['']
     });
   }
-
+  
   setupListeners(): void {
     // Monitor CPF changes
     this.buscaForm.get('cpf')?.valueChanges.pipe(
@@ -68,7 +65,7 @@ export class BuscaPacienteComponent implements OnInit {
       }
     });
   }
-
+  
   limparOutrosCampos(campoAtual: string): void {
     const campos = ['cpf', 'id', 'nome'];
     campos.forEach(campo => {

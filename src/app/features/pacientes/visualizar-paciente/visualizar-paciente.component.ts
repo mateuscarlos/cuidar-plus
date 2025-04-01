@@ -2,57 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
-
-interface Endereco {
-  logradouro: string;
-  numero: string;
-  complemento?: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  cep: string;
-}
-
-interface Paciente {
-  id: string;
-  nome_completo: string;
-  cpf: string;
-  convenio_id?: number;
-  plano_id?: number;
-  numero_carteirinha?: string;
-  data_validade?: string;
-  acomodacao: string;
-  telefone: string;
-  telefone_secundario?: string;
-  alergias?: string;
-  cid_primario: string;
-  cid_secundario?: string;
-  data_nascimento: string;
-  endereco: Endereco;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  email?: string;
-  telefone_emergencia?: string;
-  contato_emergencia?: string;
-  case_responsavel?: string;
-  medico_responsavel?: string;
-  genero?: string;
-  estado_civil?: string;
-  profissao?: string;
-  nacionalidade?: string;
-}
-
-interface Convenio {
-  id: number;
-  nome: string;
-}
-
-interface Plano {
-  id: number;
-  nome: string;
-  convenio_id: number;
-}
+import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { Convenio, Plano } from '../models/convenio.model';
+import { Endereco } from '../models/endereco.model';
+import { ResultadoBusca } from '../models/busca-paciente.model';
 
 @Component({
   selector: 'app-visualizar-paciente',
@@ -96,6 +49,7 @@ export class VisualizarPacienteComponent implements OnInit {
     'ativo': { texto: 'Ativo', classe: 'bg-success' },
     'inativo': { texto: 'Inativo', classe: 'bg-secondary' },
     'alta': { texto: 'Alta', classe: 'bg-info' },
+    'em-tratamento': { texto: 'Em Tratamento', classe: 'bg-warning text-dark' },
     'obito': { texto: 'Óbito', classe: 'bg-danger' }
   };
   
@@ -249,7 +203,7 @@ export class VisualizarPacienteComponent implements OnInit {
     this.isLoading = false;
   }
   
-  buscarPaciente(resultado: {tipo: 'cpf' | 'id' | 'nome', valor: string}): void {
+  buscarPaciente(resultado: ResultadoBusca): void {
     this.isLoading = true;
     this.error = null;
     this.modoVisualizacao = false;
