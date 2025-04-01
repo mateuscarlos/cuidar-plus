@@ -1,7 +1,22 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
+
+interface MenuItem {
+  title: string;
+  icon: string;
+  route: string;
+  active: boolean;
+  inConstruction?: boolean;
+  subItems?: SubMenuItem[];
+}
+
+interface SubMenuItem {
+  title: string;
+  route: string;
+  icon?: string;
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -12,69 +27,100 @@ import { filter } from 'rxjs/operators';
 })
 export class SidebarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
+  showOverlay = false;
   
-  menuItems = [
+  menuItems: MenuItem[] = [
     { 
       title: 'Home', 
       icon: 'bi-house-fill', 
       route: '/home',
-      active: false,
-      inConstruction: false
+      active: false
     },
     { 
       title: 'Pacientes', 
       icon: 'bi-people-fill', 
       route: '/pacientes',
       active: false,
-      inConstruction: false
+      subItems: [
+        {
+          title: 'Lista de Pacientes',
+          route: '/pacientes',
+          icon: 'bi-list-ul'
+        },
+        {
+          title: 'Cadastrar Paciente',
+          route: '/pacientes/cadastrar',
+          icon: 'bi-person-plus'
+        },
+        {
+          title: 'Editar Paciente',
+          route: '/pacientes/editar',
+          icon: 'bi-pencil-square'
+        },
+        {
+          title: 'Acompanhamento',
+          route: '/pacientes/acompanhamento',
+          icon: 'bi-clipboard-pulse'
+        },
+        {
+          title: 'Visualizar Paciente',
+          route: '/pacientes/visualizar',
+          icon: 'bi-eye'
+        }
+      ]
     },
     { 
       title: 'Farmácia', 
       icon: 'bi-capsule', 
       route: '/farmacia',
       active: false,
-      inConstruction: true
+      inConstruction: true,
+      subItems: []
     },
     { 
       title: 'Relatórios', 
-      icon: 'bi-file-earmark-bar-graph', 
+      icon: 'bi-bar-chart-fill', 
       route: '/relatorios',
       active: false,
-      inConstruction: true
+      inConstruction: true,
+      subItems: []
     },
     { 
       title: 'Configurações', 
       icon: 'bi-gear-fill', 
       route: '/configuracoes',
       active: false,
-      inConstruction: false
+      inConstruction: true
     }
   ];
   
   constructor(private router: Router) {}
   
-  ngOnInit() {
-    // Atualizar item ativo baseado na rota atual
+  ngOnInit(): void {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updateActiveMenuItem();
     });
     
-    // Inicializar item ativo
     this.updateActiveMenuItem();
   }
   
-  updateActiveMenuItem() {
+  updateActiveMenuItem(): void {
     const currentUrl = this.router.url;
+    
     this.menuItems.forEach(item => {
-      // Verifica se a rota atual corresponde a este item
-      item.active = currentUrl === item.route || 
-                  (item.route !== '/home' && currentUrl.startsWith(item.route));
+      // Verificar se o item atual é o caminho ativo ou um subcaminho
+      const baseRoute = item.route === '/home' ? '/' : item.route;
+      const isExactMatch = currentUrl === baseRoute;
+      const isSubPath = currentUrl.startsWith(baseRoute + '/');
+      
+      item.active = isExactMatch || isSubPath;
     });
   }
   
-  onToggleSidebar() {
+  onToggleSidebar(): void {
+    this.showOverlay = !this.showOverlay;
     this.toggleSidebar.emit();
   }
 }

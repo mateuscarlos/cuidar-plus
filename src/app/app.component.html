@@ -1,18 +1,20 @@
-<div class="app-container" [class.sidebar-expanded]="isSidebarVisible">
+<div class="app-container d-flex">
   <!-- Sidebar -->
-  <app-sidebar *ngIf="isSidebarVisible" (toggleSidebar)="toggleSidebar()"></app-sidebar>
+  <div class="sidebar-wrapper" [class.d-none]="!isSidebarVisible">
+    <app-sidebar (toggleSidebar)="toggleSidebar()"></app-sidebar>
+  </div>
   
   <!-- Overlay para dispositivos móveis -->
   <div class="sidebar-overlay" [class.show]="isSidebarVisible && isMobile" (click)="toggleSidebar()"></div>
   
-  <div class="main-content">
+  <div class="main-content flex-grow-1">
     <!-- Header -->
     <header>
       <app-header (toggleSidebar)="toggleSidebar()"></app-header>
     </header>
     
     <!-- Main Content -->
-    <main class="container-fluid py-4">
+    <main class="p-3 p-md-4">
       <router-outlet></router-outlet>
     </main>
     
