@@ -1,0 +1,31 @@
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+h6 {
+  color: #555;
+  font-weight: 600;
+}
+
+// Estilizando os campos obrigatórios
+.form-label::after {
+  content: "*";
+  color: red;
+  margin-left: 2px;
+}
+
+// Remover * dos campos não obrigatórios
+.form-label:not([for="nome_completo"]):not([for="cpf"]):not([for="data_nascimento"]):not([for="telefone"]):not([for="cep"]):not([for="logradouro"]):not([for="numero"]):not([for="bairro"]):not([for="cidade"]):not([for="estado"]):not([for="cid_primario"]):not([for="acomodacao"])::after {
+  content: none;
+}
+
+// Estilização dos botões
+button.btn {
+  padding: 8px 20px;
+}

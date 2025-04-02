@@ -1,0 +1,67 @@
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+h6 {
+  color: #555;
+  font-weight: 600;
+}
+
+// Estilizando os campos obrigatórios
+.form-label::after {
+  content: "*";
+  color: red;
+  margin-left: 2px;
+}
+
+// Remover * dos campos não obrigatórios
+.form-label:not([for="nome_completo"]):not([for="cpf"]):not([for="data_nascimento"]):not([for="telefone"]):not([for="cep"]):not([for="logradouro"]):not([for="numero"]):not([for="bairro"]):not([for="cidade"]):not([for="estado"]):not([for="cid_primario"]):not([for="acomodacao"])::after {
+  content: none;
+}
+
+// Estilização dos botões
+button.btn {
+  padding: 8px 20px;
+}
+
+// Estilização da tabela
+.table {
+  margin-bottom: 0;
+}
+
+.table tr {
+  transition: background-color 0.2s ease;
+}
+
+.table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #555;
+  border: 1px solid #dee2e6;
+}
+
+// Estilos para os resultados da busca
+.table-responsive {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+// Estilos para o avatar grande no cabeçalho do formulário
+.avatar-circle.bg-light {
+  background-color: #f0f0f0 !important;
+}

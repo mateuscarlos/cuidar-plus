@@ -3,9 +3,14 @@
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Pacientes</h1>
-        <button class="btn btn-primary">
-          <i class="bi bi-plus-lg me-2"></i>Novo Paciente
-        </button>
+        <div>
+          <button class="btn btn-success me-2" (click)="cadastrarNovoPaciente()">
+            <i class="bi bi-person-plus me-2"></i>Novo Paciente
+          </button>
+          <button class="btn btn-info" (click)="acompanharPaciente('')">
+            <i class="bi bi-clipboard-pulse me-2"></i>Criar Acompanhamento
+          </button>
+        </div>
       </div>
       
       <div class="card">
@@ -24,9 +29,7 @@
                 <tr>
                   <td>
                     <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-light me-3">
-                        <span>MR</span>
-                      </div>
+                      <app-paciente-avatar [nome]="'Maria Rodrigues'" class="me-3"></app-paciente-avatar>
                       <div>
                         <p class="mb-0 fw-medium">Maria Rodrigues</p>
                         <small class="text-muted">ID: 12345</small>
@@ -34,18 +37,21 @@
                     </div>
                   </td>
                   <td>
-                    <span class="badge bg-success">Ativo</span>
+                    <app-status-badge [status]="'ativo'"></app-status-badge>
                   </td>
                   <td>15/03/2025</td>
                   <td class="text-end">
                     <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar">
+                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
+                            (click)="visualizarPaciente('12345'); $event.stopPropagation()">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-primary" title="Editar">
+                      <button class="btn btn-sm btn-outline-primary" title="Editar" 
+                            (click)="editarPaciente('12345'); $event.stopPropagation()">
                         <i class="bi bi-pencil"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-info" title="Acompanhar">
+                      <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
+                            (click)="acompanharPaciente('12345'); $event.stopPropagation()">
                         <i class="bi bi-clipboard-pulse"></i>
                       </button>
                     </div>
@@ -69,13 +75,16 @@
                   <td>28/03/2025</td>
                   <td class="text-end">
                     <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar">
+                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
+                            (click)="visualizarPaciente('12346'); $event.stopPropagation()">
                         <i class="bi bi-eye"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-primary" title="Editar">
+                      <button class="btn btn-sm btn-outline-primary" title="Editar" 
+                            (click)="editarPaciente('12346'); $event.stopPropagation()">
                         <i class="bi bi-pencil"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-info" title="Acompanhar">
+                      <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
+                            (click)="acompanharPaciente('12346'); $event.stopPropagation()">
                         <i class="bi bi-clipboard-pulse"></i>
                       </button>
                     </div>

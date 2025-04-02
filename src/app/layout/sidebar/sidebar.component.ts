@@ -1,7 +1,23 @@
-import { Component, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { DeviceDetectorService } from '../../core/services/device-detector.service';
+
+interface MenuItem {
+  title: string;
+  icon: string;
+  route: string;
+  active: boolean;
+  inConstruction?: boolean;
+  subItems?: SubMenuItem[];
+}
+
+interface SubMenuItem {
+  title: string;
+  route: string;
+  icon?: string;
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -12,69 +28,136 @@ import { filter } from 'rxjs/operators';
 })
 export class SidebarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
+  showOverlay = false;
+  isMobile = false;
   
-  menuItems = [
+  menuItems: MenuItem[] = [
     { 
       title: 'Home', 
       icon: 'bi-house-fill', 
       route: '/home',
-      active: false,
-      inConstruction: false
+      active: false
     },
     { 
       title: 'Pacientes', 
       icon: 'bi-people-fill', 
       route: '/pacientes',
       active: false,
-      inConstruction: false
+      subItems: [
+        {
+          title: 'Lista de Pacientes',
+          route: '/pacientes',
+          icon: 'bi-list-ul'
+        },
+        {
+          title: 'Cadastrar Paciente',
+          route: '/pacientes/cadastrar',
+          icon: 'bi-person-plus'
+        },
+        {
+          title: 'Editar Paciente',
+          route: '/pacientes/editar',
+          icon: 'bi-pencil-square'
+        },
+        {
+          title: 'Acompanhamento',
+          route: '/pacientes/acompanhamento',
+          icon: 'bi-clipboard-pulse'
+        },
+        {
+          title: 'Visualizar Paciente',
+          route: '/pacientes/visualizar',
+          icon: 'bi-eye'
+        }
+      ]
     },
     { 
       title: 'Farmácia', 
       icon: 'bi-capsule', 
       route: '/farmacia',
       active: false,
-      inConstruction: true
+      inConstruction: true,
+      subItems: []
     },
     { 
       title: 'Relatórios', 
-      icon: 'bi-file-earmark-bar-graph', 
+      icon: 'bi-bar-chart-fill', 
       route: '/relatorios',
       active: false,
-      inConstruction: true
+      inConstruction: true,
+      subItems: []
     },
     { 
       title: 'Configurações', 
       icon: 'bi-gear-fill', 
       route: '/configuracoes',
       active: false,
-      inConstruction: false
+      inConstruction: true
     }
   ];
   
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private deviceDetectorService: DeviceDetectorService
+  ) {}
   
-  ngOnInit() {
-    // Atualizar item ativo baseado na rota atual
+  ngOnInit(): void {
+    // Detectar se é dispositivo móvel
+    this.deviceDetectorService.isMobile$.subscribe(isMobile => {
+      this.isMobile = isMobile;
+    });
+
+    // Monitora mudanças de rota
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updateActiveMenuItem();
     });
     
-    // Inicializar item ativo
     this.updateActiveMenuItem();
   }
   
-  updateActiveMenuItem() {
+  updateActiveMenuItem(): void {
     const currentUrl = this.router.url;
+    
     this.menuItems.forEach(item => {
-      // Verifica se a rota atual corresponde a este item
-      item.active = currentUrl === item.route || 
-                  (item.route !== '/home' && currentUrl.startsWith(item.route));
+      // Item principal
+      if (item.route === '/home') {
+        // Para home, só ativar se estiver na rota exata ou na raiz
+        item.active = currentUrl === '/home' || currentUrl === '/';
+      } else {
+        // Para outros itens, verificar se começa com a rota
+        item.active = currentUrl.startsWith(item.route);
+      }
+      
+      // Se tem subitems, verificar se algum está ativo
+      if (item.subItems && item.subItems.length > 0) {
+        const hasActiveSubitem = item.subItems.some(subitem => 
+          currentUrl === subitem.route || 
+          (subitem.route !== item.route && currentUrl.startsWith(subitem.route))
+        );
+        
+        if (hasActiveSubitem) {
+          item.active = true;
+        }
+      }
     });
   }
   
-  onToggleSidebar() {
+  toggleMenuItem(item: MenuItem): void {
+    // Para dispositivos móveis, fechar sidebar ao clicar em item sem subitems
+    if (this.isMobile && (!item.subItems || item.subItems.length === 0)) {
+      this.onToggleSidebar();
+    }
+    
+    // Se o item tem subitems, alternar estado ativo
+    if (item.subItems && item.subItems.length > 0) {
+      item.active = !item.active;
+    }
+  }
+  
+  onToggleSidebar(): void {
+    this.showOverlay = !this.showOverlay;
     this.toggleSidebar.emit();
   }
 }
