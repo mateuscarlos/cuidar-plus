@@ -1,0 +1,69 @@
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <h6 class="card-title mb-3">Buscar Paciente</h6>
+    
+    <form [formGroup]="buscaForm">
+      <div class="row g-3">
+        <!-- CPF -->
+        <div class="col-md-4">
+          <label for="cpf" class="form-label">CPF</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-card-text"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="cpf" 
+              formControlName="cpf" 
+              placeholder="000.000.000-00"
+              maxlength="14"
+            >
+          </div>
+          <small class="form-text text-muted">Digite o CPF sem pontuação</small>
+        </div>
+        
+        <!-- ID/Matrícula -->
+        <div class="col-md-4">
+          <label for="id" class="form-label">Matrícula/ID</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-hash"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="id" 
+              formControlName="id" 
+              placeholder="Ex: 12345"
+            >
+          </div>
+        </div>
+        
+        <!-- Nome -->
+        <div class="col-md-4">
+          <label for="nome" class="form-label">Nome</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-person"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="nome" 
+              formControlName="nome" 
+              placeholder="Nome do paciente"
+            >
+          </div>
+          <small class="form-text text-muted">Busca por nome parcial</small>
+        </div>
+      </div>
+      
+      <div class="d-flex justify-content-end mt-3">
+        <button type="button" class="btn btn-outline-secondary" (click)="limparBusca()">
+          <i class="bi bi-eraser me-1"></i> Limpar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,275 @@
+<div class="container-fluid py-4">
+  <!-- Loader que será exibido durante o carregamento -->
+  <div class="d-flex justify-content-center my-5" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+  
+  <!-- Modo de busca - exibido quando não estiver no modo de visualização -->
+  <div *ngIf="!modoVisualizacao && !isLoading">
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Visualizar Paciente</h5>
+      </div>
+      <div class="card-body">
+        <!-- Componente de busca -->
+        <app-busca-paciente (resultadoBusca)="buscarPaciente($event)"></app-busca-paciente>
+
+        <!-- Resultados da busca - exibidos apenas quando houver resultados -->
+        <div class="card border-0 shadow-sm mb-4" *ngIf="resultadosBusca.length > 0">
+          <div class="card-body">
+            <h6 class="card-title mb-3">Resultados da Busca</h6>
+            
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Data de Nasc.</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let paciente of resultadosBusca" (click)="selecionarPaciente(paciente)" style="cursor: pointer;">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <app-paciente-avatar [nome]="paciente.nome_completo" class="me-3"></app-paciente-avatar>
+                        <div>
+                          <p class="mb-0 fw-medium">{{ paciente.nome_completo }}</p>
+                          <small class="text-muted">ID: {{ paciente.id }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ paciente.cpf }}</td>
+                    <td>{{ formatarData(paciente.data_nascimento) }}</td>
+                    <td>
+                      <app-status-badge [status]="paciente.status"></app-status-badge>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm btn-info" (click)="selecionarPaciente(paciente); $event.stopPropagation();">
+                        <i class="bi bi-eye me-1"></i> Visualizar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mensagem caso não encontre resultados -->
+            <div class="alert alert-info" *ngIf="resultadosBusca.length === 0">
+              Nenhum paciente encontrado com os critérios de busca informados.
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerta de erro -->
+        <div class="alert alert-danger" *ngIf="error">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{ error }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modo de visualização - exibido quando o paciente for selecionado -->
+  <div *ngIf="modoVisualizacao && paciente && !isLoading">
+    <!-- Botões de navegação -->
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
+        </button>
+        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
+        </button>
+      </div>
+      <button class="btn btn-info" (click)="irParaAcompanhamento()">
+        <i class="bi bi-clipboard-pulse me-2"></i>Acompanhamento
+      </button>
+    </div>
+    
+    <!-- Cabeçalho do Paciente -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap">
+          <!-- Informações básicas do paciente -->
+          <div class="d-flex align-items-center mb-3 mb-md-0">
+            <app-paciente-avatar [nome]="paciente.nome_completo" size="lg" class="me-3"></app-paciente-avatar>
+            <div>
+              <h4 class="mb-0">{{ paciente.nome_completo }}</h4>
+              <p class="text-muted mb-0">
+                <app-status-badge [status]="paciente.status" class="me-2"></app-status-badge>
+                ID: {{ paciente.id }} | CPF: {{ paciente.cpf }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Informações de cadastro -->
+          <div class="text-md-end">
+            <p class="mb-0 text-muted small">
+              <strong>Data de Cadastro:</strong> {{ formatarData(paciente.created_at) }}
+            </p>
+            <p class="mb-0 text-muted small">
+              <strong>Última Atualização:</strong> {{ formatarData(paciente.updated_at) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Abas de informações -->
+    <div class="row">
+      <!-- Informações Pessoais -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações Pessoais" icon="person-vcard-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Data de Nascimento:</span>
+              <strong>{{ formatarData(paciente.data_nascimento) }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Gênero:</span>
+              <strong>{{ paciente.genero || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Estado Civil:</span>
+              <strong>{{ paciente.estado_civil || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Profissão:</span>
+              <strong>{{ paciente.profissao || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Nacionalidade:</span>
+              <strong>{{ paciente.nacionalidade || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Informações de Contato -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Contato" icon="telephone-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone Principal:</span>
+              <strong>{{ paciente.telefone }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone Secundário:</span>
+              <strong>{{ paciente.telefone_secundario || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Email:</span>
+              <strong>{{ paciente.email || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Contato de Emergência:</span>
+              <strong>{{ paciente.contato_emergencia || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone de Emergência:</span>
+              <strong>{{ paciente.telefone_emergencia || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Endereço -->
+      <div class="col-md-12 mb-4">
+        <app-info-card title="Endereço" icon="house-fill">
+          <p class="mb-0">{{ formatarEndereco(paciente.endereco) }}</p>
+        </app-info-card>
+      </div>
+      
+      <!-- Informações Médicas -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações Médicas" icon="heart-pulse-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">CID Primário:</span>
+              <strong>{{ paciente.cid_primario }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">CID Secundário:</span>
+              <strong>{{ paciente.cid_secundario || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Acomodação:</span>
+              <strong>{{ paciente.acomodacao }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Médico Responsável:</span>
+              <strong>{{ paciente.medico_responsavel || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item">
+              <span class="text-muted">Alergias:</span>
+              <div class="mt-1">
+                <strong>{{ paciente.alergias || 'Nenhuma alergia informada' }}</strong>
+              </div>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Case Responsável:</span>
+              <strong>{{ paciente.case_responsavel || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Informações de Convênio -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Convênio" icon="wallet2">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Convênio:</span>
+              <strong>{{ convenio }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Plano:</span>
+              <strong>{{ plano }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Nº da Carteirinha:</span>
+              <strong>{{ paciente.numero_carteirinha || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Validade:</span>
+              <strong>{{ paciente.data_validade ? formatarData(paciente.data_validade) : 'Não informada' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Acompanhamento Médico -->
+      <div class="col-md-12 mb-4">
+        <app-info-card title="Acompanhamento Médico" icon="file-medical-fill">
+          <div class="text-center p-4">
+            <i class="bi bi-clipboard-pulse fs-1 text-muted"></i>
+            <p class="mt-3 mb-1">Clique no botão abaixo para registrar um novo acompanhamento para este paciente.</p>
+            <button class="btn btn-info mt-3" (click)="irParaAcompanhamento()">
+              <i class="bi bi-clipboard-plus me-2"></i>Registrar Acompanhamento
+            </button>
+          </div>
+        </app-info-card>
+      </div>
+    </div>
+    
+    <!-- Botões de navegação (rodapé) -->
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
+        </button>
+        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
+        </button>
+      </div>
+      <button class="btn btn-info" (click)="irParaAcompanhamento()">
+        <i class="bi bi-clipboard-pulse me-2"></i>Acompanhamento
+      </button>
+    </div>
+  </div>
+</div>
