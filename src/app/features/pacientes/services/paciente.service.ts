@@ -1,31 +1,28 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { delay } from 'rxjs/operators';
 import { Paciente } from '../models/paciente.model';
 import { environment } from '../../../../environments/environment';
+import { PACIENTES_MOCK } from '../../../core/mocks/pacientes.mock';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PacienteService {
-  // Mock de dados para desenvolvimento
-  private pacientesMock: Paciente[] = [
-    // Seus dados mockados aqui
-  ];
+  // Usando os mocks centralizados
+  private pacientesMock = [...PACIENTES_MOCK]; // Criar uma cópia para evitar mutações
 
   constructor(private http: HttpClient) {}
 
   // Buscar pacientes com diferentes critérios
   buscarPacientes(filtro: { tipo: 'cpf' | 'id' | 'nome', valor: string }): Observable<Paciente[]> {
-    // Em produção, substituir por chamada real à API
     if (environment.production) {
       return this.http.get<Paciente[]>(`${environment.apiUrl}/pacientes/buscar`, {
         params: { tipo: filtro.tipo, valor: filtro.valor }
       });
     }
 
-    // Versão mockada para desenvolvimento
     let resultados: Paciente[] = [];
     
     if (filtro.tipo === 'cpf') {
@@ -38,7 +35,7 @@ export class PacienteService {
       );
     }
     
-    return of(resultados).pipe(delay(500)); // Simular latência de rede
+    return of(resultados).pipe(delay(500));
   }
 
   // Obter um paciente pelo ID
@@ -47,9 +44,8 @@ export class PacienteService {
       return this.http.get<Paciente>(`${environment.apiUrl}/pacientes/${id}`);
     }
     
-    // Versão mockada
     const paciente = this.pacientesMock.find(p => p.id === id) || null;
-    return of(paciente).pipe(delay(800));
+    return of(paciente).pipe(delay(500));
   }
 
   // Criar um novo paciente
@@ -58,7 +54,6 @@ export class PacienteService {
       return this.http.post<Paciente>(`${environment.apiUrl}/pacientes`, paciente);
     }
     
-    // Versão mockada
     const novoPaciente: Paciente = {
       ...paciente as any,
       id: Math.random().toString(36).substring(2, 10),
@@ -66,7 +61,10 @@ export class PacienteService {
       updated_at: new Date().toISOString()
     };
     
-    return of(novoPaciente).pipe(delay(1000));
+    // Adicionar ao mock local
+    this.pacientesMock.push(novoPaciente);
+    
+    return of(novoPaciente).pipe(delay(800));
   }
 
   // Atualizar um paciente existente
@@ -75,13 +73,22 @@ export class PacienteService {
       return this.http.put<Paciente>(`${environment.apiUrl}/pacientes/${id}`, paciente);
     }
     
-    // Versão mockada
-    const pacienteAtualizado: Paciente = {
-      ...(this.pacientesMock.find(p => p.id === id) as Paciente),
-      ...paciente,
-      updated_at: new Date().toISOString()
-    };
+    // Encontrar o índice do paciente no array
+    const index = this.pacientesMock.findIndex(p => p.id === id);
     
-    return of(pacienteAtualizado).pipe(delay(1000));
+    if (index !== -1) {
+      const pacienteAtualizado: Paciente = {
+        ...this.pacientesMock[index],
+        ...paciente,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Atualizar o mock local
+      this.pacientesMock[index] = pacienteAtualizado;
+      
+      return of(pacienteAtualizado).pipe(delay(800));
+    }
+    
+    return of(null as any).pipe(delay(800));
   }
 }

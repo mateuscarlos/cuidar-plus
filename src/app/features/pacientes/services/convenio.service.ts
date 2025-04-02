@@ -4,28 +4,15 @@ import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { Convenio, Plano } from '../models/convenio.model';
 import { environment } from '../../../../environments/environment';
+import { CONVENIOS_MOCK, PLANOS_MOCK } from '../../../core/mocks/convenios.mock';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConvenioService {
-  // Mock de dados para desenvolvimento
-  private conveniosMock: Convenio[] = [
-    { id: 1, nome: 'Amil' },
-    { id: 2, nome: 'Bradesco Saúde' },
-    { id: 3, nome: 'SulAmérica' },
-    { id: 4, nome: 'Unimed' }
-  ];
-  
-  private planosMock: Plano[] = [
-    { id: 1, nome: 'Básico', convenio_id: 1 },
-    { id: 2, nome: 'Intermediário', convenio_id: 1 },
-    { id: 3, nome: 'Premium', convenio_id: 1 },
-    { id: 4, nome: 'Essencial', convenio_id: 2 },
-    { id: 5, nome: 'Exclusivo', convenio_id: 2 },
-    { id: 6, nome: 'Total', convenio_id: 3 },
-    { id: 7, nome: 'Nacional', convenio_id: 4 }
-  ];
+  // Usando os mocks centralizados
+  private conveniosMock = CONVENIOS_MOCK;
+  private planosMock = PLANOS_MOCK;
 
   constructor(private http: HttpClient) {}
 

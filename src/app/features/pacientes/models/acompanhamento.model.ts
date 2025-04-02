@@ -72,6 +72,8 @@ export enum CondicaoPaciente {
 }
 
 export interface Acompanhamento {
+  id?: string;
+  created_at?: string;
   paciente_id: number;
   data_hora_atendimento: string;
   tipo_atendimento: TipoAtendimento;

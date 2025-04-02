@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Paciente } from '../models/paciente.model';
 import { PacienteService } from '../services/paciente.service';
@@ -29,7 +29,7 @@ export class PacienteStore {
   carregando = computed(() => this.state().carregando);
   erro = computed(() => this.state().erro);
 
-  constructor(private pacienteService: PacienteService) {}
+  private pacienteService = inject(PacienteService);
 
   // Actions
   buscarPacientes(filtro: { tipo: 'cpf' | 'id' | 'nome', valor: string }) {

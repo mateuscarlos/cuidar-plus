@@ -4,11 +4,15 @@ import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { Acompanhamento } from '../models/acompanhamento.model';
 import { environment } from '../../../../environments/environment';
+import { ACOMPANHAMENTOS_MOCK } from '../../../core/mocks/acompanhamentos.mock';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AcompanhamentoService {
+  // Usando os mocks centralizados
+  private acompanhamentosMock = ACOMPANHAMENTOS_MOCK;
+
   constructor(private http: HttpClient) {}
 
   // Criar um novo acompanhamento
@@ -17,12 +21,16 @@ export class AcompanhamentoService {
       return this.http.post<Acompanhamento>(`${environment.apiUrl}/acompanhamentos`, acompanhamento);
     }
     
-    // Versão mockada
-    return of({
+    const novoAcompanhamento = {
       ...acompanhamento,
-      id: Math.random().toString(36).substring(2, 10),
+      id: `acomp-${Math.floor(Math.random() * 1000)}`,
       created_at: new Date().toISOString()
-    } as any).pipe(delay(1000));
+    };
+    
+    // Adicionar ao mock local
+    this.acompanhamentosMock.push(novoAcompanhamento as any);
+    
+    return of(novoAcompanhamento as any).pipe(delay(800));
   }
 
   // Buscar acompanhamentos de um paciente
@@ -31,7 +39,19 @@ export class AcompanhamentoService {
       return this.http.get<Acompanhamento[]>(`${environment.apiUrl}/pacientes/${pacienteId}/acompanhamentos`);
     }
     
-    // Para desenvolvimento, retornar uma lista vazia
-    return of([]).pipe(delay(500));
+    const acompanhamentos = this.acompanhamentosMock.filter(a => 
+      a.paciente_id.toString() === pacienteId
+    );
+    return of(acompanhamentos).pipe(delay(500));
+  }
+
+  // Obter um acompanhamento específico
+  getAcompanhamento(id: string): Observable<Acompanhamento | null> {
+    if (environment.production) {
+      return this.http.get<Acompanhamento>(`${environment.apiUrl}/acompanhamentos/${id}`);
+    }
+    
+    const acompanhamento = this.acompanhamentosMock.find(a => a.id === id) || null;
+    return of(acompanhamento).pipe(delay(500));
   }
 }

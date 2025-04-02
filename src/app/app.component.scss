@@ -1,6 +1,7 @@
 .app-container {
   display: flex;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 .main-content {
@@ -10,6 +11,8 @@
   width: 100%;
   margin-left: 0;
   transition: margin-left 0.3s ease;
+  overflow-x: hidden;
+  position: relative;
 }
 
 header {
@@ -44,6 +47,20 @@ footer {
   }
 }
 
+.sidebar-container {
+  width: 250px;
+  transition: transform 0.3s ease;
+  height: 100%;
+  position: relative;
+  z-index: 1000;
+  background-color: #fff;
+}
+
+.content-area {
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
 // Ajustes para dispositivos móveis
 @media (max-width: 991.98px) {
   .main-content {
@@ -53,5 +70,42 @@ footer {
   
   .app-container.sidebar-expanded .main-content {
     margin-left: 0;
+  }
+  
+  .sidebar-container {
+    position: fixed;
+    left: 0;
+    top: 60px; // Altura do header
+    bottom: 0;
+    z-index: 1030;
+    transform: translateX(-100%);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  }
+  
+  .sidebar-container.sidebar-open {
+    transform: translateX(0);
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1020;
+  }
+}
+
+// Em dispositivos maiores
+@media (min-width: 992px) {
+  .content-area {
+    margin-left: 0;
+    width: calc(100% - 250px);
+  }
+  
+  .sidebar-container:not(.sidebar-open) + .content-area {
+    margin-left: 0;
+    width: 100%;
   }
 }

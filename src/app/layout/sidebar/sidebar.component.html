@@ -14,7 +14,8 @@
     <ul class="nav flex-column">
       <li class="nav-item" *ngFor="let item of menuItems">
         <a class="nav-link d-flex align-items-center justify-content-between" 
-           [routerLink]="item.route" 
+           [routerLink]="item.subItems && item.subItems.length > 0 ? null : item.route" 
+           (click)="toggleMenuItem(item)"
            routerLinkActive="active"
            [routerLinkActiveOptions]="{exact: item.route === '/home'}"
            [class.active]="item.active" 
@@ -35,6 +36,7 @@
           <li class="nav-item" *ngFor="let subItem of item.subItems">
             <a class="nav-link d-flex align-items-center" 
               [routerLink]="subItem.route" 
+              (click)="isMobile ? onToggleSidebar() : null"
               routerLinkActive="active">
               <i class="bi" [ngClass]="subItem.icon" *ngIf="subItem.icon"></i>
               <span>{{ subItem.title }}</span>

@@ -36,9 +36,7 @@
                   <tr *ngFor="let paciente of resultadosBusca" (click)="selecionarPaciente(paciente)" style="cursor: pointer;">
                     <td>
                       <div class="d-flex align-items-center">
-                        <div class="avatar-circle bg-light me-3">
-                          <span>{{ paciente.nome_completo.split(' ')[0][0] }}{{ paciente.nome_completo.split(' ').length > 1 ? paciente.nome_completo.split(' ')[1][0] : '' }}</span>
-                        </div>
+                        <app-paciente-avatar [nome]="paciente.nome_completo" class="me-3"></app-paciente-avatar>
                         <div>
                           <p class="mb-0 fw-medium">{{ paciente.nome_completo }}</p>
                           <small class="text-muted">ID: {{ paciente.id }}</small>
@@ -48,9 +46,7 @@
                     <td>{{ paciente.cpf }}</td>
                     <td>{{ formatarData(paciente.data_nascimento) }}</td>
                     <td>
-                      <span class="badge rounded-pill" [ngClass]="getStatusInfo(paciente.status).classe">
-                        {{ getStatusInfo(paciente.status).texto }}
-                      </span>
+                      <app-status-badge [status]="paciente.status"></app-status-badge>
                     </td>
                     <td>
                       <button class="btn btn-sm btn-info" (click)="selecionarPaciente(paciente); $event.stopPropagation();">
@@ -61,46 +57,32 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Mensagem caso não encontre resultados -->
+            <div class="alert alert-info" *ngIf="resultadosBusca.length === 0">
+              Nenhum paciente encontrado com os critérios de busca informados.
+            </div>
           </div>
         </div>
 
-        <!-- Mensagem de erro -->
-        <div class="alert alert-info" *ngIf="error">
-          <i class="bi bi-info-circle-fill me-2"></i> {{error}}
-        </div>
-
-        <!-- Botão para voltar à lista de pacientes -->
-        <div class="d-flex justify-content-start mt-4">
-          <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
-            <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
-          </button>
+        <!-- Alerta de erro -->
+        <div class="alert alert-danger" *ngIf="error">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          {{ error }}
         </div>
       </div>
     </div>
   </div>
-
-  <!-- Mensagem de erro global (quando não encontra o paciente pelo ID) -->
-  <div class="alert alert-danger" *ngIf="error && !resultadosBusca.length && !isLoading && modoVisualizacao">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{error}}
-    <div class="mt-3">
-      <button class="btn btn-outline-danger me-2" (click)="voltarParaBusca()">
-        <i class="bi bi-search me-2"></i>Nova Busca
-      </button>
-      <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
-        <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
-      </button>
-    </div>
-  </div>
-
-  <!-- Conteúdo principal - visível apenas quando há dados e não está carregando -->
-  <div *ngIf="paciente && !isLoading && modoVisualizacao">
-    <!-- Botões de ação -->
+  
+  <!-- Modo de visualização - exibido quando o paciente for selecionado -->
+  <div *ngIf="modoVisualizacao && paciente && !isLoading">
+    <!-- Botões de navegação -->
     <div class="d-flex justify-content-between mb-4">
       <div>
-        <button class="btn btn-outline-secondary me-2" (click)="voltarParaBusca()">
-          <i class="bi bi-search me-2"></i>Nova Busca
+        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
         </button>
-        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
         </button>
       </div>
@@ -115,15 +97,11 @@
         <div class="d-flex justify-content-between flex-wrap">
           <!-- Informações básicas do paciente -->
           <div class="d-flex align-items-center mb-3 mb-md-0">
-            <div class="avatar-circle bg-light me-3">
-              <span>{{ paciente.nome_completo.split(' ')[0][0] }}{{ paciente.nome_completo.split(' ').length > 1 ? paciente.nome_completo.split(' ')[1][0] : '' }}</span>
-            </div>
+            <app-paciente-avatar [nome]="paciente.nome_completo" size="lg" class="me-3"></app-paciente-avatar>
             <div>
               <h4 class="mb-0">{{ paciente.nome_completo }}</h4>
               <p class="text-muted mb-0">
-                <span class="badge rounded-pill me-2" [ngClass]="getStatusInfo(paciente.status).classe">
-                  {{ getStatusInfo(paciente.status).texto }}
-                </span>
+                <app-status-badge [status]="paciente.status" class="me-2"></app-status-badge>
                 ID: {{ paciente.id }} | CPF: {{ paciente.cpf }}
               </p>
             </div>
@@ -146,181 +124,146 @@
     <div class="row">
       <!-- Informações Pessoais -->
       <div class="col-md-6 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-person-fill me-2"></i>Informações Pessoais
-            </h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Data de Nascimento:</span>
-                <strong>{{ formatarData(paciente.data_nascimento) }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Gênero:</span>
-                <strong>{{ paciente.genero || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Estado Civil:</span>
-                <strong>{{ paciente.estado_civil || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Profissão:</span>
-                <strong>{{ paciente.profissao || 'Não informada' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Nacionalidade:</span>
-                <strong>{{ paciente.nacionalidade || 'Brasileira' }}</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <app-info-card title="Informações Pessoais" icon="person-vcard-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Data de Nascimento:</span>
+              <strong>{{ formatarData(paciente.data_nascimento) }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Gênero:</span>
+              <strong>{{ paciente.genero || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Estado Civil:</span>
+              <strong>{{ paciente.estado_civil || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Profissão:</span>
+              <strong>{{ paciente.profissao || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Nacionalidade:</span>
+              <strong>{{ paciente.nacionalidade || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
       </div>
       
       <!-- Informações de Contato -->
       <div class="col-md-6 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-telephone-fill me-2"></i>Informações de Contato
-            </h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Telefone Principal:</span>
-                <strong>{{ paciente.telefone }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Telefone Secundário:</span>
-                <strong>{{ paciente.telefone_secundario || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">E-mail:</span>
-                <strong>{{ paciente.email || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Contato de Emergência:</span>
-                <strong>{{ paciente.contato_emergencia || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Telefone de Emergência:</span>
-                <strong>{{ paciente.telefone_emergencia || 'Não informado' }}</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <app-info-card title="Informações de Contato" icon="telephone-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone Principal:</span>
+              <strong>{{ paciente.telefone }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone Secundário:</span>
+              <strong>{{ paciente.telefone_secundario || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Email:</span>
+              <strong>{{ paciente.email || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Contato de Emergência:</span>
+              <strong>{{ paciente.contato_emergencia || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone de Emergência:</span>
+              <strong>{{ paciente.telefone_emergencia || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
       </div>
       
       <!-- Endereço -->
       <div class="col-md-12 mb-4">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-house-fill me-2"></i>Endereço
-            </h5>
-          </div>
-          <div class="card-body">
-            <p class="mb-0">{{ formatarEndereco(paciente.endereco) }}</p>
-          </div>
-        </div>
+        <app-info-card title="Endereço" icon="house-fill">
+          <p class="mb-0">{{ formatarEndereco(paciente.endereco) }}</p>
+        </app-info-card>
       </div>
       
       <!-- Informações Médicas -->
       <div class="col-md-6 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-heart-pulse-fill me-2"></i>Informações Médicas
-            </h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">CID Primário:</span>
-                <strong>{{ paciente.cid_primario }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">CID Secundário:</span>
-                <strong>{{ paciente.cid_secundario || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Alergias:</span>
-                <strong>{{ paciente.alergias || 'Nenhuma registrada' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Acomodação:</span>
-                <strong>{{ paciente.acomodacao }}</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <app-info-card title="Informações Médicas" icon="heart-pulse-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">CID Primário:</span>
+              <strong>{{ paciente.cid_primario }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">CID Secundário:</span>
+              <strong>{{ paciente.cid_secundario || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Acomodação:</span>
+              <strong>{{ paciente.acomodacao }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Médico Responsável:</span>
+              <strong>{{ paciente.medico_responsavel || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item">
+              <span class="text-muted">Alergias:</span>
+              <div class="mt-1">
+                <strong>{{ paciente.alergias || 'Nenhuma alergia informada' }}</strong>
+              </div>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Case Responsável:</span>
+              <strong>{{ paciente.case_responsavel || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
       </div>
       
-      <!-- Informações do Convênio -->
+      <!-- Informações de Convênio -->
       <div class="col-md-6 mb-4">
-        <div class="card h-100 border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-shield-fill-check me-2"></i>Informações do Convênio
-            </h5>
-          </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Convênio:</span>
-                <strong>{{ convenio || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Plano:</span>
-                <strong>{{ plano || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Nº da Carteirinha:</span>
-                <strong>{{ paciente.numero_carteirinha || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Validade:</span>
-                <strong>{{ paciente.data_validade ? formatarData(paciente.data_validade) : 'Não informada' }}</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <app-info-card title="Informações de Convênio" icon="wallet2">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Convênio:</span>
+              <strong>{{ convenio }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Plano:</span>
+              <strong>{{ plano }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Nº da Carteirinha:</span>
+              <strong>{{ paciente.numero_carteirinha || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Validade:</span>
+              <strong>{{ paciente.data_validade ? formatarData(paciente.data_validade) : 'Não informada' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
       </div>
       
       <!-- Acompanhamento Médico -->
       <div class="col-md-12 mb-4">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-light">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-file-medical-fill me-2"></i>Acompanhamento Médico
-            </h5>
+        <app-info-card title="Acompanhamento Médico" icon="file-medical-fill">
+          <div class="text-center p-4">
+            <i class="bi bi-clipboard-pulse fs-1 text-muted"></i>
+            <p class="mt-3 mb-1">Clique no botão abaixo para registrar um novo acompanhamento para este paciente.</p>
+            <button class="btn btn-info mt-3" (click)="irParaAcompanhamento()">
+              <i class="bi bi-clipboard-plus me-2"></i>Registrar Acompanhamento
+            </button>
           </div>
-          <div class="card-body">
-            <ul class="list-group list-group-flush">
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Médico Responsável:</span>
-                <strong>{{ paciente.medico_responsavel || 'Não informado' }}</strong>
-              </li>
-              <li class="list-group-item d-flex justify-content-between">
-                <span class="text-muted">Case Responsável:</span>
-                <strong>{{ paciente.case_responsavel || 'Não informado' }}</strong>
-              </li>
-            </ul>
-          </div>
-        </div>
+        </app-info-card>
       </div>
     </div>
     
-    <!-- Botões de ação (rodapé) -->
-    <div class="d-flex justify-content-between mt-2 mb-5">
+    <!-- Botões de navegação (rodapé) -->
+    <div class="d-flex justify-content-between mb-4">
       <div>
-        <button class="btn btn-outline-secondary me-2" (click)="voltarParaBusca()">
-          <i class="bi bi-search me-2"></i>Nova Busca
+        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
         </button>
-        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
         </button>
       </div>

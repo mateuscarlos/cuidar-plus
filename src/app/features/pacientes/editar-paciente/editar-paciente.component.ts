@@ -1,45 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
-
-// Interface para representar os dados de um paciente
-interface Paciente {
-  id: string;
-  nome_completo: string;
-  cpf: string;
-  data_nascimento: string;
-  genero?: string;
-  estado_civil?: string;
-  profissao?: string;
-  nacionalidade?: string;
-  telefone: string;
-  telefone_secundario?: string;
-  email?: string;
-  endereco: {
-    cep: string;
-    logradouro: string;
-    numero: string;
-    complemento?: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-  };
-  status: string;
-  cid_primario: string;
-  cid_secundario?: string;
-  acomodacao: string;
-  medico_responsavel?: string;
-  alergias?: string;
-  convenio_id?: number;
-  plano_id?: number;
-  numero_carteirinha?: string;
-  data_validade?: string;
-  contato_emergencia?: string;
-  telefone_emergencia?: string;
-  case_responsavel?: string;
-}
+import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { ResultadoBusca } from '../models/busca-paciente.model';
+import { PacienteService } from '../services/paciente.service';
+import { finalize } from 'rxjs/operators';
+import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
+import { CustomValidators } from '../../../shared/validators/custom-validators';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
 
 @Component({
   selector: 'app-editar-paciente',
@@ -50,128 +20,48 @@ interface Paciente {
 })
 export class EditarPacienteComponent implements OnInit {
   pacienteForm!: FormGroup;
-  estadosCivis = ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'União Estável', 'Separado(a)'];
-  generos = ['Masculino', 'Feminino', 'Não-binário', 'Prefiro não informar', 'Outro'];
-  acomodacoes = ['Enfermaria', 'Apartamento', 'UTI', 'Semi-intensiva', 'Home Care'];
+  estadosCivis = ESTADOS_CIVIS;
+  generos = GENEROS;
+  acomodacoes = ACOMODACOES;
   
-  // Mock de pacientes para simular resultados da busca
-  pacientesMock: Paciente[] = [
-    {
-      id: '12345',
-      nome_completo: 'Maria Rodrigues',
-      cpf: '12345678901',
-      data_nascimento: '1980-05-15',
-      genero: 'Feminino',
-      estado_civil: 'Casado(a)',
-      profissao: 'Engenheira',
-      nacionalidade: 'Brasileiro(a)',
-      telefone: '(11) 99999-8888',
-      telefone_secundario: '(11) 3333-4444',
-      email: 'maria@email.com',
-      endereco: {
-        cep: '01234-567',
-        logradouro: 'Rua das Flores',
-        numero: '123',
-        complemento: 'Apto 45',
-        bairro: 'Jardim Primavera',
-        cidade: 'São Paulo',
-        estado: 'SP'
-      },
-      status: 'em-avaliacao',
-      cid_primario: 'J11',
-      cid_secundario: 'E10',
-      acomodacao: 'Apartamento',
-      medico_responsavel: 'Dr. Carlos Silva',
-      alergias: 'Penicilina',
-      convenio_id: 1,
-      plano_id: 2,
-      numero_carteirinha: '987654321',
-      data_validade: '2026-12-31',
-      contato_emergencia: 'João Rodrigues',
-      telefone_emergencia: '(11) 98765-4321',
-      case_responsavel: 'Dra. Ana Paula'
-    },
-    {
-      id: '12346',
-      nome_completo: 'João Silva',
-      cpf: '98765432101',
-      data_nascimento: '1975-08-22',
-      genero: 'Masculino',
-      estado_civil: 'Solteiro(a)',
-      profissao: 'Administrador',
-      nacionalidade: 'Brasileiro(a)',
-      telefone: '(11) 99888-7777',
-      email: 'joao@email.com',
-      endereco: {
-        cep: '04321-567',
-        logradouro: 'Av. Principal',
-        numero: '500',
-        bairro: 'Centro',
-        cidade: 'São Paulo',
-        estado: 'SP'
-      },
-      status: 'ativo',
-      cid_primario: 'I10',
-      acomodacao: 'Enfermaria',
-      medico_responsavel: 'Dra. Marina Costa',
-      alergias: 'Nenhuma'
-    },
-    {
-      id: '12347',
-      nome_completo: 'Maria Santos',
-      cpf: '45678912301',
-      data_nascimento: '1990-03-10',
-      genero: 'Feminino',
-      estado_civil: 'Casado(a)',
-      profissao: 'Professora',
-      nacionalidade: 'Brasileiro(a)',
-      telefone: '(11) 97777-6666',
-      email: 'mariasantos@email.com',
-      endereco: {
-        cep: '06789-123',
-        logradouro: 'Rua dos Girassóis',
-        numero: '789',
-        bairro: 'Jardim Europa',
-        cidade: 'Osasco',
-        estado: 'SP'
-      },
-      status: 'ativo',
-      cid_primario: 'K29',
-      acomodacao: 'Apartamento',
-      convenio_id: 3,
-      plano_id: 1,
-      numero_carteirinha: '123456789',
-      data_validade: '2025-10-15'
-    }
-  ];
-
   resultadosBusca: Paciente[] = [];
   pacienteSelecionado: Paciente | null = null;
   modoEdicao = false;
+  isLoading = false;
+  error: string | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private pacienteService: PacienteService,
+    private notificacaoService: NotificacaoService
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    
+    this.route.queryParams.subscribe(params => {
+      if (params['pacienteId']) {
+        this.carregarPaciente(params['pacienteId']);
+      }
+    });
   }
 
   initForm(): void {
     this.pacienteForm = this.fb.group({
-      nome_completo: ['', [Validators.required, Validators.maxLength(100)]],
-      cpf: ['', [Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      convenio_id: [null],
-      numero_carteirinha: [''],
-      acomodacao: ['', Validators.required],
-      telefone: ['', [Validators.required, Validators.maxLength(15)]],
-      alergias: [''],
-      cid_primario: ['', [Validators.required, Validators.maxLength(10)]],
-      cid_secundario: ['', [Validators.maxLength(10)]],
+      nome_completo: ['', [Validators.required, Validators.minLength(5)]],
+      cpf: ['', [Validators.required, CustomValidators.cpf()]],
       data_nascimento: ['', Validators.required],
+      genero: [''],
+      estado_civil: [''],
+      profissao: [''],
+      nacionalidade: [''],
+      telefone: ['', Validators.required],
+      telefone_secundario: [''],
+      email: ['', Validators.email],
       endereco: this.fb.group({
-        cep: ['', Validators.required],
+        cep: ['', [Validators.required, CustomValidators.cep()]],
         logradouro: ['', Validators.required],
         numero: ['', Validators.required],
         complemento: [''],
@@ -179,44 +69,72 @@ export class EditarPacienteComponent implements OnInit {
         cidade: ['', Validators.required],
         estado: ['', Validators.required]
       }),
-      status: ['em-avaliacao'],
-      email: ['', [Validators.email, Validators.maxLength(100)]],
-      telefone_emergencia: ['', [Validators.maxLength(15)]],
-      contato_emergencia: ['', [Validators.maxLength(100)]],
-      case_responsavel: ['', [Validators.maxLength(100)]],
-      medico_responsavel: ['', [Validators.maxLength(100)]],
-      telefone_secundario: ['', [Validators.maxLength(15)]],
-      genero: [''],
-      estado_civil: [''],
-      profissao: ['', [Validators.maxLength(50)]],
-      nacionalidade: ['Brasileiro(a)', [Validators.maxLength(50)]],
-      plano_id: [null],
-      data_validade: ['']
+      status: ['ativo'],
+      cid_primario: ['', Validators.required],
+      cid_secundario: [''],
+      acomodacao: ['', Validators.required],
+      medico_responsavel: [''],
+      alergias: [''],
+      convenio_id: [''],
+      plano_id: [''],
+      numero_carteirinha: [''],
+      data_validade: [''],
+      contato_emergencia: [''],
+      telefone_emergencia: [''],
+      case_responsavel: ['']
     });
   }
 
-  buscarPaciente(resultado: {tipo: 'cpf' | 'id' | 'nome', valor: string}) {
-    // Simulando uma busca nos dados mockados
-    this.resultadosBusca = [];
-    this.modoEdicao = false;
-    this.pacienteSelecionado = null;
+  carregarPaciente(id: string): void {
+    this.isLoading = true;
+    this.error = null;
     
-    if (resultado.tipo === 'cpf') {
-      this.resultadosBusca = this.pacientesMock.filter(p => p.cpf.includes(resultado.valor));
-    } else if (resultado.tipo === 'id') {
-      this.resultadosBusca = this.pacientesMock.filter(p => p.id.includes(resultado.valor));
-    } else if (resultado.tipo === 'nome') {
-      this.resultadosBusca = this.pacientesMock.filter(p => 
-        p.nome_completo.toLowerCase().includes(resultado.valor.toLowerCase())
-      );
-    }
+    this.pacienteService.getPaciente(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (paciente) => {
+          if (paciente) {
+            this.pacienteSelecionado = paciente;
+            this.modoEdicao = true;
+            this.preencherFormulario(paciente);
+          } else {
+            this.error = 'Paciente não encontrado';
+          }
+        },
+        error: (err) => {
+          this.error = 'Erro ao carregar dados do paciente';
+        }
+      });
   }
 
-  selecionarPaciente(paciente: Paciente) {
+  buscarPaciente(resultado: ResultadoBusca): void {
+    this.isLoading = true;
+    this.error = null;
+    
+    this.pacienteService.buscarPacientes(resultado)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (pacientes) => {
+          this.resultadosBusca = pacientes;
+          
+          if (pacientes.length === 0) {
+            this.error = 'Nenhum paciente encontrado com os critérios informados.';
+          }
+        },
+        error: (err) => {
+          this.error = 'Erro ao buscar pacientes';
+          this.resultadosBusca = [];
+        }
+      });
+  }
+
+  selecionarPaciente(paciente: Paciente): void {
     this.pacienteSelecionado = paciente;
     this.modoEdicao = true;
-    
-    // Preencher o formulário com os dados do paciente
+    this.preencherFormulario(paciente);
+  }
+  
+  preencherFormulario(paciente: Paciente): void {
     this.pacienteForm.patchValue({
       nome_completo: paciente.nome_completo,
       cpf: paciente.cpf,
@@ -254,21 +172,39 @@ export class EditarPacienteComponent implements OnInit {
   }
 
   salvarAlteracoes(): void {
-    if (this.pacienteForm.valid && this.pacienteSelecionado) {
-      // Em um cenário real, aqui faríamos uma chamada à API
-      console.log('Dados do paciente atualizados:', this.pacienteForm.value);
-      alert('Paciente atualizado com sucesso!');
-      this.router.navigate(['/pacientes']);
-    } else {
+    if (this.pacienteForm.invalid) {
       this.markFormGroupTouched(this.pacienteForm);
-      alert('Por favor, preencha corretamente todos os campos obrigatórios.');
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return;
     }
+    
+    if (!this.pacienteSelecionado || !this.pacienteSelecionado.id) {
+      this.notificacaoService.mostrarErro('ID do paciente não encontrado.');
+      return;
+    }
+    
+    this.isLoading = true;
+    
+    this.pacienteService.atualizarPaciente(this.pacienteSelecionado.id, this.pacienteForm.value)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (paciente) => {
+          this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
+          this.router.navigate(['/pacientes/visualizar'], {
+            queryParams: { pacienteId: paciente.id }
+          });
+        },
+        error: (err) => {
+          this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+        }
+      });
   }
 
   cancelarEdicao(): void {
     this.modoEdicao = false;
     this.pacienteSelecionado = null;
     this.pacienteForm.reset();
+    this.pacienteForm.get('status')?.setValue('ativo');
   }
 
   voltarParaLista(): void {
@@ -276,7 +212,7 @@ export class EditarPacienteComponent implements OnInit {
   }
 
   // Função auxiliar para marcar todos os campos como 'touched'
-  markFormGroupTouched(formGroup: FormGroup) {
+  markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
 
@@ -287,13 +223,13 @@ export class EditarPacienteComponent implements OnInit {
   }
 
   // Métodos auxiliares para verificação de campos
-  isFieldValid(field: string) {
+  isFieldValid(field: string): boolean {
     const control = this.pacienteForm.get(field);
-    return control && control.invalid && (control.dirty || control.touched);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
-  isEnderecoFieldValid(field: string) {
+  isEnderecoFieldValid(field: string): boolean {
     const control = this.pacienteForm.get('endereco')?.get(field);
-    return control && control.invalid && (control.dirty || control.touched);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 }

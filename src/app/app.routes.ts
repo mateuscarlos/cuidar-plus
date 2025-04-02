@@ -1,28 +1,58 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './features/home/home.component';
+import { AuthGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },
-  { 
-    path: 'pacientes', 
-    loadChildren: () => import('./features/pacientes/pacientes.routes')
-      .then(m => m.PACIENTES_ROUTES) 
+  {
+    path: '',
+    redirectTo: 'home',
+    pathMatch: 'full'
   },
-  { 
-    path: 'farmacia', 
-    loadChildren: () => import('./features/farmacia/farmacia.routes')
-      .then(m => m.FARMACIA_ROUTES) 
+  {
+    path: 'home',
+    loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
   },
-  { 
-    path: 'relatorios', 
-    loadChildren: () => import('./features/relatorios/relatorios.routes')
-      .then(m => m.RELATORIOS_ROUTES) 
+  {
+    path: 'pacientes',
+    loadComponent: () => import('./features/pacientes/pacientes.component').then(m => m.PacientesComponent),
+    canActivate: [AuthGuard]
   },
-  { 
-    path: 'configuracoes', 
-    loadChildren: () => import('./features/configuracoes/configuracoes.routes')
-      .then(m => m.CONFIGURACOES_ROUTES) 
+  {
+    path: 'pacientes/cadastrar',
+    loadComponent: () => import('./features/pacientes/cadastrar-paciente/cadastrar-paciente.component').then(m => m.CadastrarPacienteComponent),
+    canActivate: [AuthGuard]
   },
-  { path: '**', redirectTo: 'home' }
+  {
+    path: 'pacientes/editar',
+    loadComponent: () => import('./features/pacientes/editar-paciente/editar-paciente.component').then(m => m.EditarPacienteComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'pacientes/visualizar',
+    loadComponent: () => import('./features/pacientes/visualizar-paciente/visualizar-paciente.component').then(m => m.VisualizarPacienteComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'pacientes/acompanhamento',
+    loadComponent: () => import('./features/pacientes/criar-acompanhamento-paciente/criar-acompanhamento-paciente.component').then(m => m.CriarAcompanhamentoPacienteComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'relatorios',
+    loadComponent: () => import('./features/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'farmacia',
+    loadComponent: () => import('./features/farmacia/farmacia.component').then(m => m.FarmaciaComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'configuracoes',
+    loadComponent: () => import('./features/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: '**',
+    redirectTo: 'home'
+  }
 ];

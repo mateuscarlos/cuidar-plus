@@ -2,6 +2,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { DeviceDetectorService } from '../../core/services/device-detector.service';
 
 interface MenuItem {
   title: string;
@@ -28,6 +29,7 @@ interface SubMenuItem {
 export class SidebarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   showOverlay = false;
+  isMobile = false;
   
   menuItems: MenuItem[] = [
     { 
@@ -94,9 +96,18 @@ export class SidebarComponent implements OnInit {
     }
   ];
   
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private deviceDetectorService: DeviceDetectorService
+  ) {}
   
   ngOnInit(): void {
+    // Detectar se é dispositivo móvel
+    this.deviceDetectorService.isMobile$.subscribe(isMobile => {
+      this.isMobile = isMobile;
+    });
+
+    // Monitora mudanças de rota
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
@@ -110,13 +121,39 @@ export class SidebarComponent implements OnInit {
     const currentUrl = this.router.url;
     
     this.menuItems.forEach(item => {
-      // Verificar se o item atual é o caminho ativo ou um subcaminho
-      const baseRoute = item.route === '/home' ? '/' : item.route;
-      const isExactMatch = currentUrl === baseRoute;
-      const isSubPath = currentUrl.startsWith(baseRoute + '/');
+      // Item principal
+      if (item.route === '/home') {
+        // Para home, só ativar se estiver na rota exata ou na raiz
+        item.active = currentUrl === '/home' || currentUrl === '/';
+      } else {
+        // Para outros itens, verificar se começa com a rota
+        item.active = currentUrl.startsWith(item.route);
+      }
       
-      item.active = isExactMatch || isSubPath;
+      // Se tem subitems, verificar se algum está ativo
+      if (item.subItems && item.subItems.length > 0) {
+        const hasActiveSubitem = item.subItems.some(subitem => 
+          currentUrl === subitem.route || 
+          (subitem.route !== item.route && currentUrl.startsWith(subitem.route))
+        );
+        
+        if (hasActiveSubitem) {
+          item.active = true;
+        }
+      }
     });
+  }
+  
+  toggleMenuItem(item: MenuItem): void {
+    // Para dispositivos móveis, fechar sidebar ao clicar em item sem subitems
+    if (this.isMobile && (!item.subItems || item.subItems.length === 0)) {
+      this.onToggleSidebar();
+    }
+    
+    // Se o item tem subitems, alternar estado ativo
+    if (item.subItems && item.subItems.length > 0) {
+      item.active = !item.active;
+    }
   }
   
   onToggleSidebar(): void {
