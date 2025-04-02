@@ -29,9 +29,7 @@
                 <tr>
                   <td>
                     <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-light me-3">
-                        <span>MR</span>
-                      </div>
+                      <app-paciente-avatar [nome]="'Maria Rodrigues'" class="me-3"></app-paciente-avatar>
                       <div>
                         <p class="mb-0 fw-medium">Maria Rodrigues</p>
                         <small class="text-muted">ID: 12345</small>
@@ -39,7 +37,7 @@
                     </div>
                   </td>
                   <td>
-                    <span class="badge bg-success">Ativo</span>
+                    <app-status-badge [status]="'ativo'"></app-status-badge>
                   </td>
                   <td>15/03/2025</td>
                   <td class="text-end">

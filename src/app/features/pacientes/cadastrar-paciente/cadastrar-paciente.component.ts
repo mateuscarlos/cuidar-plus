@@ -1,8 +1,13 @@
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { PacienteService } from '../services/paciente.service';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
+import { CustomValidators } from '../../../shared/validators/custom-validators';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-cadastrar-paciente',
@@ -13,13 +18,16 @@ import { Router } from '@angular/router';
 })
 export class CadastrarPacienteComponent implements OnInit {
   pacienteForm!: FormGroup;
-  estadosCivis = ['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)', 'União Estável', 'Separado(a)'];
-  generos = ['Masculino', 'Feminino', 'Não-binário', 'Prefiro não informar', 'Outro'];
-  acomodacoes = ['Enfermaria', 'Apartamento', 'UTI', 'Semi-intensiva', 'Home Care'];
+  estadosCivis = ESTADOS_CIVIS;
+  generos = GENEROS;
+  acomodacoes = ACOMODACOES;
+  isLoading = false;
   
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private pacienteService: PacienteService,
+    private notificacaoService: NotificacaoService
   ) {}
 
   ngOnInit(): void {
@@ -28,18 +36,18 @@ export class CadastrarPacienteComponent implements OnInit {
 
   initForm(): void {
     this.pacienteForm = this.fb.group({
-      nome_completo: ['', [Validators.required, Validators.maxLength(100)]],
-      cpf: ['', [Validators.required, Validators.minLength(11), Validators.maxLength(11)]],
-      convenio_id: [null],
-      numero_carteirinha: [''],
-      acomodacao: ['', Validators.required],
-      telefone: ['', [Validators.required, Validators.maxLength(15)]],
-      alergias: [''],
-      cid_primario: ['', [Validators.required, Validators.maxLength(10)]],
-      cid_secundario: ['', [Validators.maxLength(10)]],
+      nome_completo: ['', [Validators.required, Validators.minLength(5)]],
+      cpf: ['', [Validators.required, CustomValidators.cpf()]],
       data_nascimento: ['', Validators.required],
+      genero: [''],
+      estado_civil: [''],
+      profissao: [''],
+      nacionalidade: [''],
+      telefone: ['', Validators.required],
+      telefone_secundario: [''],
+      email: ['', Validators.email],
       endereco: this.fb.group({
-        cep: ['', Validators.required],
+        cep: ['', [Validators.required, CustomValidators.cep()]],
         logradouro: ['', Validators.required],
         numero: ['', Validators.required],
         complemento: [''],
@@ -47,36 +55,47 @@ export class CadastrarPacienteComponent implements OnInit {
         cidade: ['', Validators.required],
         estado: ['', Validators.required]
       }),
-      status: ['em-avaliacao'],
-      email: ['', [Validators.email, Validators.maxLength(100)]],
-      telefone_emergencia: ['', [Validators.maxLength(15)]],
-      contato_emergencia: ['', [Validators.maxLength(100)]],
-      case_responsavel: ['', [Validators.maxLength(100)]],
-      medico_responsavel: ['', [Validators.maxLength(100)]],
-      telefone_secundario: ['', [Validators.maxLength(15)]],
-      genero: [''],
-      estado_civil: [''],
-      profissao: ['', [Validators.maxLength(50)]],
-      nacionalidade: ['Brasileiro(a)', [Validators.maxLength(50)]],
+      status: [StatusPaciente.ATIVO],
+      cid_primario: ['', Validators.required],
+      cid_secundario: [''],
+      acomodacao: ['', Validators.required],
+      medico_responsavel: [''],
+      alergias: [''],
+      convenio_id: [null],
       plano_id: [null],
-      data_validade: ['']
+      numero_carteirinha: [''],
+      data_validade: [''],
+      contato_emergencia: [''],
+      telefone_emergencia: [''],
+      case_responsavel: ['']
     });
   }
 
   onSubmit(): void {
-    if (this.pacienteForm.valid) {
-      console.log('Dados do formulário:', this.pacienteForm.value);
-      // Aqui seria feita a integração com a API
-      alert('Paciente cadastrado com sucesso!');
-      this.router.navigate(['/pacientes']);
-    } else {
+    if (this.pacienteForm.invalid) {
       this.markFormGroupTouched(this.pacienteForm);
-      alert('Por favor, preencha corretamente todos os campos obrigatórios.');
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return;
     }
+    
+    this.isLoading = true;
+    
+    this.pacienteService.criarPaciente(this.pacienteForm.value)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (paciente) => {
+          this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
+          this.router.navigate(['/pacientes/visualizar'], {
+            queryParams: { pacienteId: paciente.id }
+          });
+        },
+        error: (err) => {
+          this.notificacaoService.mostrarErro('Erro ao cadastrar paciente. Tente novamente.');
+        }
+      });
   }
 
-  // Função auxiliar para marcar todos os campos como 'touched'
-  markFormGroupTouched(formGroup: FormGroup) {
+  markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
 
@@ -86,21 +105,18 @@ export class CadastrarPacienteComponent implements OnInit {
     });
   }
 
-  // Métodos auxiliares para verificação de campos
-  isFieldValid(field: string) {
+  isFieldValid(field: string): boolean {
     const control = this.pacienteForm.get(field);
-    return control && control.invalid && (control.dirty || control.touched);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
-  isEnderecoFieldValid(field: string) {
+  isEnderecoFieldValid(field: string): boolean {
     const control = this.pacienteForm.get('endereco')?.get(field);
-    return control && control.invalid && (control.dirty || control.touched);
+    return control ? control.invalid && (control.dirty || control.touched) : false;
   }
 
-  limparFormulario() {
-    this.pacienteForm.reset({
-      status: 'em-avaliacao',
-      nacionalidade: 'Brasileiro(a)'
-    });
+  limparFormulario(): void {
+    this.pacienteForm.reset();
+    this.pacienteForm.get('status')?.setValue(StatusPaciente.ATIVO);
   }
 }

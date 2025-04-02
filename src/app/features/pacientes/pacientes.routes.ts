@@ -2,12 +2,12 @@ import { Routes } from '@angular/router';
 import { PacientesComponent } from './pacientes.component';
 import { CadastrarPacienteComponent } from './cadastrar-paciente/cadastrar-paciente.component';
 import { EditarPacienteComponent } from './editar-paciente/editar-paciente.component';
-import { AcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
+import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
 import { VisualizarPacienteComponent } from './visualizar-paciente/visualizar-paciente.component';
 
 export const PACIENTES_ROUTES: Routes = [
   { 
-    path: '', 
+    path: 'pacientes', 
     component: PacientesComponent,
     title: 'Pacientes - Cuidar+'
   },
@@ -23,7 +23,7 @@ export const PACIENTES_ROUTES: Routes = [
   },
   { 
     path: 'acompanhamento', 
-    component: AcompanhamentoPacienteComponent,
+    component: CriarAcompanhamentoPacienteComponent,
     title: 'Acompanhamento de Paciente - Cuidar+'
   },
   { 
