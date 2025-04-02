@@ -67,7 +67,7 @@ export class VisualizarPacienteComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
     
-    this.pacienteService.getPaciente(id)
+    this.pacienteService.obterPacientePorId(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {
@@ -77,12 +77,12 @@ export class VisualizarPacienteComponent implements OnInit {
             
             // Carregar informações de convênio e plano, se disponíveis
             if (paciente.convenio_id) {
-              this.convenioService.getConvenios().subscribe(convenios => {
+              this.convenioService.obterConvenios().subscribe(convenios => {
                 const convenio = convenios.find(c => c.id === paciente.convenio_id);
                 this.convenio = convenio ? convenio.nome : 'Não informado';
                 
-                if (paciente.plano_id) {
-                  this.convenioService.getTodosPlanos().subscribe(planos => {
+                if (paciente.plano_id && paciente.convenio_id) {
+                  this.convenioService.obterPlanosPorConvenio(paciente.convenio_id).subscribe(planos => {
                     const plano = planos.find(p => p.id === paciente.plano_id);
                     this.plano = plano ? plano.nome : 'Não informado';
                   });

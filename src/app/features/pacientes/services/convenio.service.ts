@@ -10,37 +10,47 @@ import { CONVENIOS_MOCK, PLANOS_MOCK } from '../../../core/mocks/convenios.mock'
   providedIn: 'root'
 })
 export class ConvenioService {
-  // Usando os mocks centralizados
-  private conveniosMock = CONVENIOS_MOCK;
-  private planosMock = PLANOS_MOCK;
-
+  private conveniosMock = [...CONVENIOS_MOCK];
+  private planosMock = [...PLANOS_MOCK];
+  
   constructor(private http: HttpClient) {}
-
+  
   // Obter todos os convênios
-  getConvenios(): Observable<Convenio[]> {
+  obterConvenios(): Observable<Convenio[]> {
     if (environment.production) {
-      return this.http.get<Convenio[]>(`${environment.apiUrl}/convenios`);
+      return this.http.get<Convenio[]>(`/convenios`);
     }
     
     return of(this.conveniosMock).pipe(delay(300));
   }
-
-  // Obter planos de um convênio específico
-  getPlanosDoConvenio(convenioId: number): Observable<Plano[]> {
+  
+  // Obter planos por convênio
+  obterPlanosPorConvenio(convenioId: number): Observable<Plano[]> {
     if (environment.production) {
-      return this.http.get<Plano[]>(`${environment.apiUrl}/convenios/${convenioId}/planos`);
+      return this.http.get<Plano[]>(`/convenios/${convenioId}/planos`);
     }
     
     const planos = this.planosMock.filter(p => p.convenio_id === convenioId);
     return of(planos).pipe(delay(300));
   }
-
-  // Obter todos os planos
-  getTodosPlanos(): Observable<Plano[]> {
+  
+  // Obter detalhes de um convênio
+  obterConvenio(id: number): Observable<Convenio> {
     if (environment.production) {
-      return this.http.get<Plano[]>(`${environment.apiUrl}/planos`);
+      return this.http.get<Convenio>(`/convenios/${id}`);
     }
     
-    return of(this.planosMock).pipe(delay(300));
+    const convenio = this.conveniosMock.find(c => c.id === id);
+    return of(convenio as Convenio).pipe(delay(200));
+  }
+  
+  // Obter detalhes de um plano
+  obterPlano(id: number): Observable<Plano> {
+    if (environment.production) {
+      return this.http.get<Plano>(`/planos/${id}`);
+    }
+    
+    const plano = this.planosMock.find(p => p.id === id);
+    return of(plano as Plano).pipe(delay(200));
   }
 }

@@ -8,8 +8,15 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'login',
+    loadComponent: () => import('./core/auth/login/login.component').then(m => m.LoginComponent),
+    title: 'Login - Cuidar+'
+  },
+  {
     path: 'home',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
+    canActivate: [AuthGuard],
+    title: 'Home - Cuidar+'
   },
   {
     path: 'pacientes',

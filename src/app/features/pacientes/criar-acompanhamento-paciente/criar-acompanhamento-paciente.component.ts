@@ -116,7 +116,7 @@ export class CriarAcompanhamentoPacienteComponent implements OnInit { // Alterad
     this.isLoading = true;
     this.error = null;
     
-    this.pacienteService.getPaciente(id)
+    this.pacienteService.obterPacientePorId(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {

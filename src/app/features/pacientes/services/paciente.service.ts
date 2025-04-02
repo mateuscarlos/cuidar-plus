@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map } from 'rxjs/operators';
 import { Paciente } from '../models/paciente.model';
 import { environment } from '../../../../environments/environment';
 import { PACIENTES_MOCK } from '../../../core/mocks/pacientes.mock';
@@ -10,48 +10,50 @@ import { PACIENTES_MOCK } from '../../../core/mocks/pacientes.mock';
   providedIn: 'root'
 })
 export class PacienteService {
-  // Usando os mocks centralizados
-  private pacientesMock = [...PACIENTES_MOCK]; // Criar uma cópia para evitar mutações
-
+  private pacientesMock = [...PACIENTES_MOCK];
+  
   constructor(private http: HttpClient) {}
-
-  // Buscar pacientes com diferentes critérios
+  
+  // Obter paciente por ID
+  obterPacientePorId(id: string): Observable<Paciente> {
+    if (environment.production) {
+      return this.http.get<Paciente>(`/pacientes/${id}`);
+    }
+    
+    // Versão mock para desenvolvimento
+    const paciente = this.pacientesMock.find(p => p.id === id);
+    return of(paciente as Paciente).pipe(delay(300));
+  }
+  
+  // Buscar pacientes por filtro
   buscarPacientes(filtro: { tipo: 'cpf' | 'id' | 'nome', valor: string }): Observable<Paciente[]> {
     if (environment.production) {
-      return this.http.get<Paciente[]>(`${environment.apiUrl}/pacientes/buscar`, {
+      return this.http.get<Paciente[]>(`/pacientes/buscar`, {
         params: { tipo: filtro.tipo, valor: filtro.valor }
       });
     }
-
+    
+    // Versão mock para desenvolvimento
     let resultados: Paciente[] = [];
     
-    if (filtro.tipo === 'cpf') {
-      resultados = this.pacientesMock.filter(p => p.cpf.includes(filtro.valor));
-    } else if (filtro.tipo === 'id') {
-      resultados = this.pacientesMock.filter(p => p.id.includes(filtro.valor));
-    } else if (filtro.tipo === 'nome') {
+    if (filtro.tipo === 'nome') {
       resultados = this.pacientesMock.filter(p => 
-        p.nome_completo.toLowerCase().includes(filtro.valor.toLowerCase())
-      );
+        p.nome_completo.toLowerCase().includes(filtro.valor.toLowerCase()));
+    } else if (filtro.tipo === 'cpf') {
+      resultados = this.pacientesMock.filter(p => 
+        p.cpf.includes(filtro.valor));
+    } else if (filtro.tipo === 'id') {
+      resultados = this.pacientesMock.filter(p => 
+        p.id.includes(filtro.valor));
     }
     
-    return of(resultados).pipe(delay(500));
+    return of(resultados).pipe(delay(300));
   }
-
-  // Obter um paciente pelo ID
-  getPaciente(id: string): Observable<Paciente | null> {
-    if (environment.production) {
-      return this.http.get<Paciente>(`${environment.apiUrl}/pacientes/${id}`);
-    }
-    
-    const paciente = this.pacientesMock.find(p => p.id === id) || null;
-    return of(paciente).pipe(delay(500));
-  }
-
+  
   // Criar um novo paciente
   criarPaciente(paciente: Omit<Paciente, 'id' | 'created_at' | 'updated_at'>): Observable<Paciente> {
     if (environment.production) {
-      return this.http.post<Paciente>(`${environment.apiUrl}/pacientes`, paciente);
+      return this.http.post<Paciente>(`/pacientes`, paciente);
     }
     
     const novoPaciente: Paciente = {
@@ -61,34 +63,26 @@ export class PacienteService {
       updated_at: new Date().toISOString()
     };
     
-    // Adicionar ao mock local
     this.pacientesMock.push(novoPaciente);
-    
     return of(novoPaciente).pipe(delay(800));
   }
-
-  // Atualizar um paciente existente
-  atualizarPaciente(id: string, paciente: Partial<Paciente>): Observable<Paciente> {
+  
+  // Atualizar paciente
+  atualizarPaciente(id: string, dadosAtualizados: Partial<Paciente>): Observable<Paciente> {
     if (environment.production) {
-      return this.http.put<Paciente>(`${environment.apiUrl}/pacientes/${id}`, paciente);
+      return this.http.put<Paciente>(`/pacientes/${id}`, dadosAtualizados);
     }
     
-    // Encontrar o índice do paciente no array
     const index = this.pacientesMock.findIndex(p => p.id === id);
-    
     if (index !== -1) {
-      const pacienteAtualizado: Paciente = {
+      this.pacientesMock[index] = {
         ...this.pacientesMock[index],
-        ...paciente,
+        ...dadosAtualizados,
         updated_at: new Date().toISOString()
       };
-      
-      // Atualizar o mock local
-      this.pacientesMock[index] = pacienteAtualizado;
-      
-      return of(pacienteAtualizado).pipe(delay(800));
+      return of(this.pacientesMock[index]).pipe(delay(500));
     }
     
-    return of(null as any).pipe(delay(800));
+    return of(null as any);
   }
 }
