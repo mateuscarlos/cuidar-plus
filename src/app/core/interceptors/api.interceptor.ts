@@ -33,8 +33,26 @@ export class ApiInterceptor implements HttpInterceptor {
       });
     }
 
+    // Add testing headers if we're in the test environment
+    if (environment.testing) {
+      request = request.clone({
+        setHeaders: {
+          'X-Test-Environment': 'true'
+        }
+      });
+    }
+
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
+        // Enhanced error logging in test environment
+        if (environment.testing && environment.logLevel === 'debug') {
+          console.group('API Error in Test Environment');
+          console.error('Request URL:', request.url);
+          console.error('Status:', error.status);
+          console.error('Error:', error);
+          console.groupEnd();
+        }
+        
         if (error.status === 401) {
           // Redirecionar para login em caso de erro de autenticação
           localStorage.removeItem('auth_token');

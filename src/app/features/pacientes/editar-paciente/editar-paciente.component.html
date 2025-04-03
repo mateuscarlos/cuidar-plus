@@ -170,7 +170,7 @@
           <div class="col-md-3 mb-3">
             <label for="cep" class="form-label">CEP*</label>
             <input type="text" class="form-control" id="cep" formControlName="cep"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('cep')}">
+                  (blur)="onCepChange()" [ngClass]="{'is-invalid': isEnderecoFieldValid('cep')}">
             <div class="invalid-feedback">CEP é obrigatório.</div>
           </div>
           
@@ -325,11 +325,35 @@
               <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
             </button>
           </div>
-          <button type="submit" class="btn btn-success">
-            <i class="bi bi-check-lg me-2"></i>Salvar Alterações
-          </button>
+          <div>
+            <button type="button" class="btn btn-danger me-2" (click)="abrirModalExcluir()">
+              <i class="bi bi-trash me-2"></i>Excluir Paciente
+            </button>
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-check-lg me-2"></i>Salvar Alterações
+            </button>
+          </div>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalExcluirPaciente" tabindex="-1" aria-labelledby="modalExcluirPacienteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalExcluirPacienteLabel">Confirmar Exclusão</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza de que deseja excluir o paciente <strong>{{ pacienteSelecionado?.nome_completo }}</strong>?
+        Esta ação não pode ser desfeita.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" (click)="excluirPaciente()">Excluir</button>
+      </div>
     </div>
   </div>
 </div>

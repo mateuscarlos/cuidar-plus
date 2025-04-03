@@ -66,21 +66,52 @@ export class VisualizarPacienteComponent implements OnInit {
   carregarPaciente(id: string): void {
     this.isLoading = true;
     this.error = null;
-    
+
     this.pacienteService.obterPacientePorId(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {
           if (paciente) {
+            // Desserializar o campo 'endereco' se ele for uma string JSON
+            if (paciente.endereco && typeof paciente.endereco === 'string') {
+              try {
+                paciente.endereco = JSON.parse(paciente.endereco);
+              } catch (e) {
+                console.error('Erro ao desserializar o endereço:', e);
+                paciente.endereco = {
+                  logradouro: '',
+                  rua: '',
+                  numero: '',
+                  complemento: '',
+                  bairro: '',
+                  cidade: '',
+                  estado: '',
+                  cep: ''
+                };
+              }
+            }
+
+            // Garantir que o endereço seja sempre um objeto válido
+            paciente.endereco = paciente.endereco || {
+              logradouro: '',
+              rua: '',
+              numero: '',
+              complemento: '',
+              bairro: '',
+              cidade: '',
+              estado: '',
+              cep: ''
+            };
+
             this.paciente = paciente;
             this.modoVisualizacao = true;
-            
+
             // Carregar informações de convênio e plano, se disponíveis
             if (paciente.convenio_id) {
               this.convenioService.obterConvenios().subscribe(convenios => {
                 const convenio = convenios.find(c => c.id === paciente.convenio_id);
                 this.convenio = convenio ? convenio.nome : 'Não informado';
-                
+
                 if (paciente.plano_id && paciente.convenio_id) {
                   this.convenioService.obterPlanosPorConvenio(paciente.convenio_id).subscribe(planos => {
                     const plano = planos.find(p => p.id === paciente.plano_id);
@@ -160,15 +191,18 @@ export class VisualizarPacienteComponent implements OnInit {
 
   formatarEndereco(endereco: Endereco): string {
     if (!endereco) return 'Não informado';
-    
-    let enderecoCompleto = `${endereco.logradouro}, ${endereco.numero}`;
-    
+
+    // Usar 'logradouro' ou 'rua', dependendo de qual estiver disponível
+    const logradouroOuRua = endereco.logradouro || endereco.rua || 'Logradouro não informado';
+
+    let enderecoCompleto = `${logradouroOuRua}, ${endereco.numero || 'S/N'}`;
+
     if (endereco.complemento) {
       enderecoCompleto += ` - ${endereco.complemento}`;
     }
-    
-    enderecoCompleto += ` - ${endereco.bairro}, ${endereco.cidade}/${endereco.estado} - ${this.formatarCep(endereco.cep)}`;
-    
+
+    enderecoCompleto += ` - ${endereco.bairro || 'Bairro não informado'}, ${endereco.cidade || 'Cidade não informada'}/${endereco.estado || 'Estado não informado'} - ${this.formatarCep(endereco.cep)}`;
+
     return enderecoCompleto;
   }
 

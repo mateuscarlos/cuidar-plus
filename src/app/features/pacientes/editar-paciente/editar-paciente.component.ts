@@ -10,6 +10,7 @@ import { finalize } from 'rxjs/operators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { CepService } from '../../../core/services/cep.service';
 
 @Component({
   selector: 'app-editar-paciente',
@@ -35,7 +36,8 @@ export class EditarPacienteComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private pacienteService: PacienteService,
-    private notificacaoService: NotificacaoService
+    private notificacaoService: NotificacaoService,
+    private cepService: CepService
   ) {}
 
   ngOnInit(): void {
@@ -177,27 +179,25 @@ export class EditarPacienteComponent implements OnInit {
       this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
       return;
     }
-    
-    if (!this.pacienteSelecionado || !this.pacienteSelecionado.id) {
-      this.notificacaoService.mostrarErro('ID do paciente não encontrado.');
-      return;
-    }
-    
+
     this.isLoading = true;
-    
-    this.pacienteService.atualizarPaciente(this.pacienteSelecionado.id, this.pacienteForm.value)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (paciente) => {
-          this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
-          this.router.navigate(['/pacientes/visualizar'], {
-            queryParams: { pacienteId: paciente.id }
-          });
-        },
-        error: (err) => {
-          this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
-        }
-      });
+
+    const pacienteId = this.pacienteSelecionado?.id; // ID do paciente selecionado
+    const dadosAtualizados = this.pacienteForm.value; // Dados do formulário
+
+    if (pacienteId) {
+      this.pacienteService.atualizarPaciente(pacienteId, dadosAtualizados)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: () => {
+            this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
+            this.voltarParaLista(); // Redirecionar para a lista de pacientes
+          },
+          error: () => {
+            this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+          }
+        });
+    }
   }
 
   cancelarEdicao(): void {
@@ -231,5 +231,62 @@ export class EditarPacienteComponent implements OnInit {
   isEnderecoFieldValid(field: string): boolean {
     const control = this.pacienteForm.get('endereco')?.get(field);
     return control ? control.invalid && (control.dirty || control.touched) : false;
+  }
+
+  onCepChange(): void {
+    const cepControl = this.pacienteForm.get('endereco')?.get('cep');
+    const cep = cepControl?.value;
+
+    if (cep && cep.length === 8) {
+      this.cepService.consultarCep(cep).subscribe({
+        next: (endereco) => {
+          if (endereco) {
+            this.pacienteForm.patchValue({
+              endereco: {
+                logradouro: endereco.logradouro,
+                bairro: endereco.bairro,
+                cidade: endereco.localidade,
+                estado: endereco.uf
+                // O campo complemento não será preenchido automaticamente
+              }
+            });
+          } else {
+            this.notificacaoService.mostrarAviso('CEP não encontrado.');
+          }
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao consultar o CEP.');
+        }
+      });
+    } else {
+      this.notificacaoService.mostrarAviso('CEP inválido. Certifique-se de que possui 8 dígitos.');
+    }
+  }
+
+  abrirModalExcluir(): void {
+    // Ensure bootstrap is globally available or import it
+    const modal = new (window as any).bootstrap.Modal(document.getElementById('modalExcluirPaciente')!);
+    modal.show();
+  }
+
+  excluirPaciente(): void {
+    if (!this.pacienteSelecionado?.id) {
+      this.notificacaoService.mostrarErro('Paciente não encontrado.');
+      return;
+    }
+  
+    this.isLoading = true;
+  
+    this.pacienteService.excluirPaciente(this.pacienteSelecionado.id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: () => {
+          this.notificacaoService.mostrarSucesso('Paciente excluído com sucesso!');
+          window.location.reload(); // Recarregar a página após a exclusão
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao excluir paciente. Tente novamente.');
+        }
+      });
   }
 }

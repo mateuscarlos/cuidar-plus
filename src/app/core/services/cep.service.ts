@@ -20,7 +20,7 @@ export interface EnderecoViaCep {
   providedIn: 'root'
 })
 export class CepService {
-  private readonly API_URL = 'https://viacep.com.br/ws';
+  private readonly API_URL = 'http://localhost:5001/api/cep';
 
   constructor(private http: HttpClient) { }
 
@@ -38,17 +38,6 @@ export class CepService {
       return of(null);
     }
     
-    const url = `${this.API_URL}/${cep}/json`;
-    
-    return this.http.get<EnderecoViaCep>(url).pipe(
-      map(endereco => {
-        // A API do ViaCEP retorna um objeto com propriedade erro quando o CEP não existe
-        if (endereco && !('erro' in endereco)) {
-          return endereco;
-        }
-        return null;
-      }),
-      catchError(() => of(null))
-    );
+    return this.http.get<EnderecoViaCep>(`${this.API_URL}/${cep}`);
   }
 }

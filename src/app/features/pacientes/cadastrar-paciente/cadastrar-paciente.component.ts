@@ -8,6 +8,7 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { finalize } from 'rxjs/operators';
+import { CepService } from '../../../core/services/cep.service';
 
 @Component({
   selector: 'app-cadastrar-paciente',
@@ -21,17 +22,23 @@ export class CadastrarPacienteComponent implements OnInit {
   estadosCivis = ESTADOS_CIVIS;
   generos = GENEROS;
   acomodacoes = ACOMODACOES;
+  convenios: any[] = [];
+  planos: any[] = [];
+  planosFiltrados: any[] = [];
   isLoading = false;
   
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private pacienteService: PacienteService,
-    private notificacaoService: NotificacaoService
+    private notificacaoService: NotificacaoService,
+    private cepService: CepService // Injeção do serviço de CEP
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    this.carregarConvenios();
+    this.carregarPlanos();
   }
 
   initForm(): void {
@@ -71,16 +78,110 @@ export class CadastrarPacienteComponent implements OnInit {
     });
   }
 
+  carregarConvenios(): void {
+    this.pacienteService.listarConvenios().subscribe({
+      next: (convenios) => this.convenios = convenios,
+      error: () => this.notificacaoService.mostrarErro('Erro ao carregar convênios.')
+    });
+  }
+
+  carregarPlanos(): void {
+    this.pacienteService.listarPlanos().subscribe({
+      next: (planos) => this.planos = planos,
+      error: () => this.notificacaoService.mostrarErro('Erro ao carregar planos.')
+    });
+  }
+
+  onConvenioChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const convenioId = target?.value ? Number(target.value) : null;
+
+    if (convenioId) {
+      this.pacienteService.listarPlanosPorConvenio(convenioId).subscribe({
+        next: (planos) => this.planosFiltrados = planos,
+        error: () => this.notificacaoService.mostrarErro('Erro ao carregar planos para o convênio selecionado.')
+      });
+    } else {
+      this.planosFiltrados = []; // Limpar os planos se nenhum convênio for selecionado
+    }
+  }
+
+  onCepChange(): void {
+    const cepControl = this.pacienteForm.get('endereco')?.get('cep');
+    const cep = cepControl?.value;
+
+    if (cep && cep.length === 8) {
+      this.cepService.consultarCep(cep).subscribe({
+        next: (endereco) => {
+          if (endereco) {
+            this.pacienteForm.patchValue({
+              endereco: {
+                logradouro: endereco.logradouro,
+                bairro: endereco.bairro,
+                cidade: endereco.localidade,
+                estado: endereco.uf
+              }
+            });
+          } else {
+            this.notificacaoService.mostrarAviso('CEP não encontrado.');
+          }
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao consultar o CEP.');
+        }
+      });
+    } else {
+      this.notificacaoService.mostrarAviso('CEP inválido. Certifique-se de que possui 8 dígitos.');
+    }
+  }
+
   onSubmit(): void {
     if (this.pacienteForm.invalid) {
       this.markFormGroupTouched(this.pacienteForm);
       this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
       return;
     }
-    
+
     this.isLoading = true;
-    
-    this.pacienteService.criarPaciente(this.pacienteForm.value)
+
+    // Encapsular os dados do formulário em um objeto estruturado
+    const pacienteData = {
+      nome_completo: this.pacienteForm.value.nome_completo,
+      cpf: this.pacienteForm.value.cpf,
+      data_nascimento: this.pacienteForm.value.data_nascimento,
+      genero: this.pacienteForm.value.genero,
+      estado_civil: this.pacienteForm.value.estado_civil,
+      profissao: this.pacienteForm.value.profissao,
+      nacionalidade: this.pacienteForm.value.nacionalidade,
+      telefone: this.pacienteForm.value.telefone,
+      telefone_secundario: this.pacienteForm.value.telefone_secundario,
+      email: this.pacienteForm.value.email,
+      endereco: {
+        cep: this.pacienteForm.value.endereco.cep,
+        logradouro: this.pacienteForm.value.endereco.logradouro,
+        numero: this.pacienteForm.value.endereco.numero,
+        complemento: this.pacienteForm.value.endereco.complemento,
+        bairro: this.pacienteForm.value.endereco.bairro,
+        cidade: this.pacienteForm.value.endereco.cidade,
+        estado: this.pacienteForm.value.endereco.estado,
+      },
+      status: this.pacienteForm.value.status,
+      cid_primario: this.pacienteForm.value.cid_primario,
+      cid_secundario: this.pacienteForm.value.cid_secundario,
+      acomodacao: this.pacienteForm.value.acomodacao,
+      medico_responsavel: this.pacienteForm.value.medico_responsavel,
+      alergias: this.pacienteForm.value.alergias,
+      convenio_id: this.pacienteForm.value.convenio_id,
+      plano_id: this.pacienteForm.value.plano_id,
+      numero_carteirinha: this.pacienteForm.value.numero_carteirinha,
+      data_validade: this.pacienteForm.value.data_validade,
+      contato_emergencia: this.pacienteForm.value.contato_emergencia,
+      telefone_emergencia: this.pacienteForm.value.telefone_emergencia,
+      case_responsavel: this.pacienteForm.value.case_responsavel,
+    };
+
+    // Enviar os dados para o backend
+    this.pacienteService.criarPaciente(pacienteData)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {
