@@ -58,6 +58,15 @@
               <label for="nacionalidade" class="form-label">Nacionalidade</label>
               <input type="text" class="form-control" id="nacionalidade" formControlName="nacionalidade">
             </div>
+
+            <div class="col-md-3 mb-3">
+              <label for="status" class="form-label">Status do Paciente</label>
+              <select class="form-select" id="status" formControlName="status" [ngClass]="{'is-invalid': isFieldValid('status')}">
+                <option value="" selected>Selecione...</option>
+                <option *ngFor="let status of statusPaciente" [value]="status">{{ status }}</option>
+              </select>
+              <div class="invalid-feedback">O status do paciente é obrigatório.</div>
+            </div>
           </div>
           
           <!-- Contato -->

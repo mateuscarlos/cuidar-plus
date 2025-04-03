@@ -24,6 +24,7 @@ export class EditarPacienteComponent implements OnInit {
   estadosCivis = ESTADOS_CIVIS;
   generos = GENEROS;
   acomodacoes = ACOMODACOES;
+  statusPaciente = Object.values(StatusPaciente);
   
   resultadosBusca: Paciente[] = [];
   pacienteSelecionado: Paciente | null = null;
@@ -71,7 +72,7 @@ export class EditarPacienteComponent implements OnInit {
         cidade: ['', Validators.required],
         estado: ['', Validators.required]
       }),
-      status: ['ativo'],
+      status: ['', Validators.required],
       cid_primario: ['', Validators.required],
       cid_secundario: [''],
       acomodacao: ['', Validators.required],
@@ -90,7 +91,7 @@ export class EditarPacienteComponent implements OnInit {
   carregarPaciente(id: string): void {
     this.isLoading = true;
     this.error = null;
-    
+
     this.pacienteService.obterPacientePorId(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
@@ -98,15 +99,44 @@ export class EditarPacienteComponent implements OnInit {
           if (paciente) {
             this.pacienteSelecionado = paciente;
             this.modoEdicao = true;
+
+            // Carregar nomes de convênio e plano
+            this.carregarConvenioEPlano(paciente.convenio_id ? paciente.convenio_id.toString() : '', paciente.plano_id ? paciente.plano_id.toString() : '');
+
+            // Preencher o formulário com os dados do paciente
             this.preencherFormulario(paciente);
           } else {
             this.error = 'Paciente não encontrado';
           }
         },
-        error: (err) => {
+        error: () => {
           this.error = 'Erro ao carregar dados do paciente';
         }
       });
+  }
+
+  carregarConvenioEPlano(convenioId: string, planoId: string): void {
+    if (convenioId) {
+      this.pacienteService.obterConvenioPorId(convenioId).subscribe({
+        next: (convenio) => {
+          this.pacienteForm.get('convenio_id')?.setValue(convenio.nome);
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao carregar o convênio.');
+        }
+      });
+    }
+
+    if (planoId) {
+      this.pacienteService.obterPlanoPorId(planoId).subscribe({
+        next: (plano) => {
+          this.pacienteForm.get('plano_id')?.setValue(plano.nome);
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao carregar o plano.');
+        }
+      });
+    }
   }
 
   buscarPaciente(resultado: ResultadoBusca): void {
@@ -163,8 +193,8 @@ export class EditarPacienteComponent implements OnInit {
       acomodacao: paciente.acomodacao,
       medico_responsavel: paciente.medico_responsavel,
       alergias: paciente.alergias,
-      convenio_id: paciente.convenio_id,
-      plano_id: paciente.plano_id,
+      convenio_id: paciente.convenio_id, // Será atualizado com o nome no método carregarConvenioEPlano
+      plano_id: paciente.plano_id,       // Será atualizado com o nome no método carregarConvenioEPlano
       numero_carteirinha: paciente.numero_carteirinha,
       data_validade: paciente.data_validade,
       contato_emergencia: paciente.contato_emergencia,

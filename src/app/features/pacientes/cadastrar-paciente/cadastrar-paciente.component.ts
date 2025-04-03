@@ -26,6 +26,7 @@ export class CadastrarPacienteComponent implements OnInit {
   planos: any[] = [];
   planosFiltrados: any[] = [];
   isLoading = false;
+  statusPaciente = Object.values(StatusPaciente);
   
   constructor(
     private fb: FormBuilder,
@@ -62,7 +63,7 @@ export class CadastrarPacienteComponent implements OnInit {
         cidade: ['', Validators.required],
         estado: ['', Validators.required]
       }),
-      status: [StatusPaciente.ATIVO],
+      status: [StatusPaciente.ATIVO, Validators.required],
       cid_primario: ['', Validators.required],
       cid_secundario: [''],
       acomodacao: ['', Validators.required],

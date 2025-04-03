@@ -245,12 +245,11 @@
           
           <div class="col-md-3 mb-3">
             <label for="status" class="form-label">Status do Paciente</label>
-            <select class="form-select" id="status" formControlName="status">
-              <option value="em-avaliacao">Em Avaliação</option>
-              <option value="ativo">Ativo</option>
-              <option value="em-tratamento">Em Tratamento</option>
-              <option value="inativo">Inativo</option>
+            <select class="form-select" id="status" formControlName="status" [ngClass]="{'is-invalid': isFieldValid('status')}">
+              <option value="" selected>Selecione...</option>
+              <option *ngFor="let status of statusPaciente" [value]="status">{{ status }}</option>
             </select>
+            <div class="invalid-feedback">O status do paciente é obrigatório.</div>
           </div>
           
           <div class="col-md-3 mb-3">

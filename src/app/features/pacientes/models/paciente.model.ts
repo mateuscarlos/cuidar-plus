@@ -31,10 +31,11 @@ export interface Paciente {
 }
 
 export enum StatusPaciente {
-  ATIVO = 'ativo',
-  EM_AVALIACAO = 'em-avaliacao',
-  EM_TRATAMENTO = 'em-tratamento',
-  INATIVO = 'inativo',
-  ALTA = 'alta',
-  OBITO = 'obito'
+  ATIVO = 'Ativo ',
+  EM_AVALIACAO = 'Em Avaliação',
+  INTERNADO = 'Internado',
+  INATIVO = 'Inativo',
+  ALTA_ADMINISTRATIVA = 'Alta Administrativa',
+  ALTA_MEDICA = 'Alta Médica',
+  ALTA_OBITO = 'Alta Óbito'
 }

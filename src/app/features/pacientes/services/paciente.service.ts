@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Paciente } from '../models/paciente.model';
 import { environment } from '../../../../environments/environment';
+import { Convenio } from '../models/convenio.model'; // Import Convenio type
+import { Plano } from '../models/convenio.model'; // Import Plano type
 
 @Injectable({
   providedIn: 'root'
@@ -65,5 +67,14 @@ export class PacienteService {
 
   listarPlanosPorConvenio(convenioId: number): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/convenios/${convenioId}/planos`);
+  }
+
+  obterConvenioPorId(id: string): Observable<Convenio> { // Add this method
+    return this.http.get<Convenio>(`/api/convenios/${id}`);
+  }
+
+  obterPlanoPorId(planoId: string): Observable<Plano> {
+    // Replace the URL with the correct endpoint for fetching a plan by ID
+    return this.http.get<Plano>(`/api/planos/${planoId}`);
   }
 }
