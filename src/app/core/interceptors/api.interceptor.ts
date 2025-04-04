@@ -18,6 +18,9 @@ export class ApiInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     console.log(`[HTTP ${request.method}] Enviando requisição para: ${request.url}`);
     
+    // Verificar se a requisição é para um domínio externo
+    const isExternalRequest = request.url.startsWith('http') && !request.url.includes(environment.apiUrl);
+    
     // Adicionar a URL base da API se a requisição não for absoluta
     if (!request.url.startsWith('http')) {
       request = request.clone({
@@ -35,8 +38,8 @@ export class ApiInterceptor implements HttpInterceptor {
       });
     }
 
-    // Add testing headers if we're in the test environment
-    if (environment.testing) {
+    // Add testing headers if we're in the test environment and NOT sending to external API
+    if (environment.testing && !isExternalRequest) {
       request = request.clone({
         setHeaders: {
           'X-Test-Environment': 'true'

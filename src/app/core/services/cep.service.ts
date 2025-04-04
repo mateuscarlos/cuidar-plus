@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -33,7 +33,11 @@ export class CepService {
       return of(null);
     }
 
-    return this.http.get<CepResponse>(`${this.BASE_URL}/${cep}/json`).pipe(
+    // Criar uma requisição sem interceptação
+    const headers = new HttpHeaders();
+    // Não incluindo o cabeçalho X-Test-Environment
+
+    return this.http.get<CepResponse>(`${this.BASE_URL}/${cep}/json`, { headers }).pipe(
       map(response => response.erro ? null : response),
       catchError(() => of(null))
     );
