@@ -20,7 +20,7 @@ export interface EnderecoViaCep {
   providedIn: 'root'
 })
 export class CepService {
-  private readonly API_URL = 'http://localhost:5001/api/cep';
+  private readonly API_URL = 'http://localhost:5000/api/cep';
 
   constructor(private http: HttpClient) { }
 

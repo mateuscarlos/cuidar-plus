@@ -9,6 +9,7 @@ import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constan
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { finalize } from 'rxjs/operators';
 import { CepService } from '../../../core/services/cep.service';
+import { ConvenioPlanoService } from '../services/convenio-plano.service';
 
 @Component({
   selector: 'app-cadastrar-paciente',
@@ -32,14 +33,14 @@ export class CadastrarPacienteComponent implements OnInit {
     private router: Router,
     private pacienteService: PacienteService,
     private notificacaoService: NotificacaoService,
-    private cepService: CepService // Injeção do serviço de CEP
+    private cepService: CepService,
+    private convenioPlanoService: ConvenioPlanoService // Serviço unificado
   ) {}
 
   ngOnInit(): void {
+    console.log('Inicializando componente CadastrarPacienteComponent');
     this.initForm();
     this.carregarConvenios();
-    // Remover o carregamento de todos os planos inicialmente
-    // this.carregarPlanos(); - Não precisamos carregar todos os planos no início
   }
 
   initForm(): void {
@@ -69,44 +70,84 @@ export class CadastrarPacienteComponent implements OnInit {
       acomodacao: ['', Validators.required],
       medico_responsavel: [''],
       alergias: [''],
-      convenio_id: [null],
-      plano_id: [null],
-      numero_carteirinha: [''],
-      data_validade: [''],
+      convenio_id: ['', Validators.required],
+      convenio_nome: [''],  // Campo adicional para autocomplete (se implementado)
+      plano_id: [{value: '', disabled: true}, Validators.required], // Começa desabilitado
+      plano_nome: [{value: '', disabled: true}], // Campo adicional para autocomplete (se implementado)
+      numero_carteirinha: ['', Validators.required],
+      data_validade: ['', Validators.required],
       contato_emergencia: [''],
       telefone_emergencia: [''],
       case_responsavel: ['']
     });
-  }
 
-  carregarConvenios(): void {
-    this.isLoading = true;
-    this.pacienteService.listarConvenios().pipe(
-      finalize(() => this.isLoading = false)
-    ).subscribe({
-      next: (convenios) => {
-        this.convenios = convenios;
-      },
-      error: (erro) => {
-        this.notificacaoService.mostrarErro('Erro ao carregar convênios: ' + erro.message);
+    // Adicionar listener para habilitar/desabilitar campos de plano baseado no convênio
+    this.pacienteForm.get('convenio_id')?.valueChanges.subscribe(convenioId => {
+      const planoIdControl = this.pacienteForm.get('plano_id');
+      const planoNomeControl = this.pacienteForm.get('plano_nome');
+      
+      if (convenioId) {
+        planoIdControl?.enable();
+        planoNomeControl?.enable();
+        this.carregarPlanos(convenioId);
+      } else {
+        planoIdControl?.disable();
+        planoNomeControl?.disable();
+        planoIdControl?.setValue('');
+        planoNomeControl?.setValue('');
+        this.planosFiltrados = [];
       }
     });
   }
 
-  // Remover ou modificar o método carregarPlanos, já que não o utilizaremos
-  // mais para carregar todos os planos inicialmente:
-
-  carregarPlanos(): void {
-    // Este método pode ser mantido para outras funcionalidades, mas não será chamado no ngOnInit
+  carregarConvenios(): void {
+    console.log('Carregando convênios...');
     this.isLoading = true;
-    this.pacienteService.listarPlanos().pipe(
+    this.convenioPlanoService.listarConvenios().pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (convenios) => {
+        console.log(`Convênios recebidos (${convenios.length}):`, convenios);
+        this.convenios = convenios;
+        if (this.convenios.length === 0) {
+          this.notificacaoService.mostrarAviso('Não há convênios cadastrados no sistema.');
+        }
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar convênios:', erro);
+        this.notificacaoService.mostrarErro('Erro ao carregar convênios: ' + (erro.message || 'Falha na comunicação com o servidor'));
+      }
+    });
+  }
+
+  carregarPlanos(convenioId: number): void {
+    if (!convenioId) {
+      this.planosFiltrados = [];
+      return;
+    }
+    
+    this.isLoading = true;
+    console.log(`Carregando planos para o convênio ID: ${convenioId}`);
+    
+    this.convenioPlanoService.listarPlanosPorConvenio(convenioId).pipe(
       finalize(() => this.isLoading = false)
     ).subscribe({
       next: (planos) => {
-        this.planos = planos;
+        console.log(`Planos recebidos (${planos.length}):`, planos);
+        this.planosFiltrados = planos;
+        
+        if (this.planosFiltrados.length === 0) {
+          this.notificacaoService.mostrarAviso('Este convênio não possui planos cadastrados.');
+          
+          // Desabilitar campo de plano já que não há opções
+          this.pacienteForm.get('plano_id')?.disable();
+          this.pacienteForm.get('plano_id')?.setValue(null);
+        }
       },
       error: (erro) => {
-        this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + erro.message);
+        console.error('Erro ao carregar planos:', erro);
+        this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + (erro.message || 'Falha na comunicação com o servidor'));
+        this.planosFiltrados = [];
       }
     });
   }
@@ -115,22 +156,15 @@ export class CadastrarPacienteComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
     
-    // Resetar o plano quando o convênio é alterado
-    this.pacienteForm.get('plano_id')?.setValue(null);
-    this.planosFiltrados = [];
-
+    // A lógica de habilitar/desabilitar e carregar planos já está no listener
+    // do valueChanges de convenio_id no método initForm()
+    
+    // Caso ainda precise de lógica adicional específica para o evento de mudança
     if (convenioId) {
-      this.isLoading = true;
-      this.pacienteService.listarPlanosPorConvenio(convenioId).pipe(
-        finalize(() => this.isLoading = false)
-      ).subscribe({
-        next: (planos) => {
-          this.planosFiltrados = planos;
-        },
-        error: (erro) => {
-          this.notificacaoService.mostrarErro('Erro ao carregar planos para o convênio selecionado: ' + erro.message);
-        }
-      });
+      const convenioSelecionado = this.convenios.find(c => c.id === convenioId);
+      if (convenioSelecionado) {
+        console.log(`Convênio selecionado: ${convenioSelecionado.nome} (ID: ${convenioSelecionado.id})`);
+      }
     }
   }
 
@@ -164,52 +198,54 @@ export class CadastrarPacienteComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.pacienteForm.invalid) {
-      this.markFormGroupTouched(this.pacienteForm);
-      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+    // Verificar se o formulário está válido, ignorando campos desabilitados
+    const formValido = this.validarFormulario();
+    
+    if (!formValido) {
       return;
     }
-
+  
     this.isLoading = true;
-
-    // Encapsular os dados do formulário em um objeto estruturado
-    const pacienteData = {
-      nome_completo: this.pacienteForm.value.nome_completo,
-      cpf: this.pacienteForm.value.cpf,
-      data_nascimento: this.pacienteForm.value.data_nascimento,
-      genero: this.pacienteForm.value.genero,
-      estado_civil: this.pacienteForm.value.estado_civil,
-      profissao: this.pacienteForm.value.profissao,
-      nacionalidade: this.pacienteForm.value.nacionalidade,
-      telefone: this.pacienteForm.value.telefone,
-      telefone_secundario: this.pacienteForm.value.telefone_secundario,
-      email: this.pacienteForm.value.email,
-      endereco: {
-        cep: this.pacienteForm.value.endereco.cep,
-        logradouro: this.pacienteForm.value.endereco.logradouro,
-        numero: this.pacienteForm.value.endereco.numero,
-        complemento: this.pacienteForm.value.endereco.complemento,
-        bairro: this.pacienteForm.value.endereco.bairro,
-        cidade: this.pacienteForm.value.endereco.cidade,
-        estado: this.pacienteForm.value.endereco.estado,
-      },
-      status: this.pacienteForm.value.status,
-      cid_primario: this.pacienteForm.value.cid_primario,
-      cid_secundario: this.pacienteForm.value.cid_secundario,
-      acomodacao: this.pacienteForm.value.acomodacao,
-      medico_responsavel: this.pacienteForm.value.medico_responsavel,
-      alergias: this.pacienteForm.value.alergias,
-      convenio_id: this.pacienteForm.value.convenio_id,
-      plano_id: this.pacienteForm.value.plano_id,
-      numero_carteirinha: this.pacienteForm.value.numero_carteirinha,
-      data_validade: this.pacienteForm.value.data_validade,
-      contato_emergencia: this.pacienteForm.value.contato_emergencia,
-      telefone_emergencia: this.pacienteForm.value.telefone_emergencia,
-      case_responsavel: this.pacienteForm.value.case_responsavel,
-    };
-
+  
+    // Obter os valores do formulário, incluindo campos desabilitados se necessário
+    const formValues = this.pacienteForm.getRawValue();
+    
+    // Formatar data de nascimento se necessário
+    if (formValues.data_nascimento) {
+      const data = new Date(formValues.data_nascimento);
+      if (!isNaN(data.getTime())) {
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        formValues.data_nascimento = `${dia}/${mes}/${ano}`;
+      }
+    }
+    
+    // Formatar data de validade se necessário
+    if (formValues.data_validade) {
+      const data = new Date(formValues.data_validade);
+      if (!isNaN(data.getTime())) {
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        formValues.data_validade = `${dia}/${mes}/${ano}`;
+      }
+    }
+    
+    // Para endereço, garantir compatibilidade com a API
+    if (formValues.endereco) {
+      formValues.endereco = {
+        ...formValues.endereco,
+        rua: formValues.endereco.logradouro
+      };
+    }
+  
+    // Remover campos auxiliares que não devem ser enviados à API
+    delete formValues.convenio_nome;
+    delete formValues.plano_nome;
+  
     // Enviar os dados para o backend
-    this.pacienteService.criarPaciente(pacienteData)
+    this.pacienteService.criarPaciente(formValues)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {
@@ -219,9 +255,83 @@ export class CadastrarPacienteComponent implements OnInit {
           });
         },
         error: (err) => {
-          this.notificacaoService.mostrarErro('Erro ao cadastrar paciente. Tente novamente.');
+          console.error('Erro ao cadastrar paciente:', err);
+          this.notificacaoService.mostrarErro('Erro ao cadastrar paciente: ' + (err.error?.message || 'Tente novamente.'));
         }
       });
+  }
+  
+  // Método auxiliar para validar o formulário com mensagens específicas
+  validarFormulario(): boolean {
+    if (this.pacienteForm.invalid) {
+      this.markFormGroupTouched(this.pacienteForm);
+      
+      // Verificações específicas com mensagens personalizadas
+      const campos = [
+        { nome: 'nome_completo', mensagem: 'Nome completo é obrigatório' },
+        { nome: 'cpf', mensagem: 'CPF é obrigatório e deve ser válido' },
+        { nome: 'data_nascimento', mensagem: 'Data de nascimento é obrigatória' },
+        { nome: 'telefone', mensagem: 'Telefone é obrigatório' },
+        { nome: 'cid_primario', mensagem: 'CID primário é obrigatório' },
+        { nome: 'acomodacao', mensagem: 'Acomodação é obrigatória' }
+      ];
+      
+      for (const campo of campos) {
+        const control = this.pacienteForm.get(campo.nome);
+        if (control?.invalid && control.touched) {
+          this.notificacaoService.mostrarAviso(campo.mensagem);
+          return false;
+        }
+      }
+      
+      // Verificar campos de endereço
+      const enderecoCampos = [
+        { nome: 'cep', mensagem: 'CEP é obrigatório' },
+        { nome: 'logradouro', mensagem: 'Logradouro é obrigatório' },
+        { nome: 'numero', mensagem: 'Número é obrigatório' },
+        { nome: 'bairro', mensagem: 'Bairro é obrigatório' },
+        { nome: 'cidade', mensagem: 'Cidade é obrigatória' },
+        { nome: 'estado', mensagem: 'Estado é obrigatório' }
+      ];
+      
+      for (const campo of enderecoCampos) {
+        const control = this.pacienteForm.get('endereco')?.get(campo.nome);
+        if (control?.invalid && control.touched) {
+          this.notificacaoService.mostrarAviso(campo.mensagem);
+          return false;
+        }
+      }
+      
+      // Verificação específica para convênio
+      const convenioId = this.pacienteForm.get('convenio_id')?.value;
+      if (!convenioId) {
+        this.notificacaoService.mostrarAviso('Por favor, selecione um convênio.');
+        return false;
+      }
+      
+      // Verificação para plano apenas se o campo estiver habilitado
+      const planoControl = this.pacienteForm.get('plano_id');
+      if (planoControl?.enabled && !planoControl.value) {
+        this.notificacaoService.mostrarAviso('Por favor, selecione um plano.');
+        return false;
+      }
+      
+      // Verificar carteirinha e validade
+      if (!this.pacienteForm.get('numero_carteirinha')?.value) {
+        this.notificacaoService.mostrarAviso('Por favor, informe o número da carteirinha.');
+        return false;
+      }
+      
+      if (!this.pacienteForm.get('data_validade')?.value) {
+        this.notificacaoService.mostrarAviso('Por favor, informe a data de validade.');
+        return false;
+      }
+      
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return false;
+    }
+    
+    return true;
   }
 
   markFormGroupTouched(formGroup: FormGroup): void {
@@ -246,6 +356,15 @@ export class CadastrarPacienteComponent implements OnInit {
 
   limparFormulario(): void {
     this.pacienteForm.reset();
+    
+    // Redefinir valores padrão
     this.pacienteForm.get('status')?.setValue(StatusPaciente.ATIVO);
+    
+    // Desabilitar campos de plano
+    this.pacienteForm.get('plano_id')?.disable();
+    this.pacienteForm.get('plano_nome')?.disable();
+    
+    // Limpar listas
+    this.planosFiltrados = [];
   }
 }

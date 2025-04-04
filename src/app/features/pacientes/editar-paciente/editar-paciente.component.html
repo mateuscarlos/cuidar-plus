@@ -296,16 +296,7 @@
                      class="form-control"
                      id="plano"
                      formControlName="plano_nome"
-                     [matAutocomplete]="autoPlano"
-                     [disabled]="!pacienteForm.get('convenio_id')?.value">
-              <mat-autocomplete #autoPlano="matAutocomplete" 
-                               [displayWith]="exibirPlano.bind(this)"
-                               (optionSelected)="selecionarPlano($event)"
-                               class="custom-autocomplete-panel">
-                <mat-option *ngFor="let plano of planosFiltrados$ | async" [value]="plano">
-                  {{plano.nome}}
-                </mat-option>
-              </mat-autocomplete>
+                     [matAutocomplete]="autoPlano">
             </div>
           </div>
           

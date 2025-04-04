@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { Plano } from '../models/plano.model';
+import { Convenio } from '../models/convenio.model';
 import { Endereco } from '../models/endereco.model';
 import { ResultadoBusca } from '../models/busca-paciente.model';
 import { PacienteService } from '../services/paciente.service';
-import { ConvenioService } from '../services/convenio.service';
+import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { finalize } from 'rxjs/operators';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
@@ -48,7 +50,8 @@ export class VisualizarPacienteComponent implements OnInit {
 
   constructor(
     private pacienteService: PacienteService,
-    private convenioService: ConvenioService,
+    private convenioService: ConvenioPlanoService,
+    private statusPaciente: StatusPaciente,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -108,17 +111,18 @@ export class VisualizarPacienteComponent implements OnInit {
 
             // Carregar informações de convênio e plano, se disponíveis
             if (paciente.convenio_id) {
-              this.convenioService.obterConvenios().subscribe(convenios => {
-                const convenio = convenios.find(c => c.id === paciente.convenio_id);
+                this.convenioService.listarConvenios().subscribe((convenios: Convenio[]) => {
+                const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
                 this.convenio = convenio ? convenio.nome : 'Não informado';
 
                 if (paciente.plano_id && paciente.convenio_id) {
-                  this.convenioService.obterPlanosPorConvenio(paciente.convenio_id).subscribe(planos => {
-                    const plano = planos.find(p => p.id === paciente.plano_id);
-                    this.plano = plano ? plano.nome : 'Não informado';
+                  this.convenioService.listarPlanosPorConvenio(paciente.convenio_id).subscribe((planos: Plano[]) => {
+                  const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
+                  const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
+                  this.plano = plano ? plano.nome : 'Não informado';
                   });
                 }
-              });
+                });
             }
           } else {
             this.error = 'Paciente não encontrado';

@@ -7,7 +7,7 @@ import {
   HttpErrorResponse
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Router } from '@angular/router';
 
@@ -16,6 +16,8 @@ export class ApiInterceptor implements HttpInterceptor {
   constructor(private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    console.log(`[HTTP ${request.method}] Enviando requisição para: ${request.url}`);
+    
     // Adicionar a URL base da API se a requisição não for absoluta
     if (!request.url.startsWith('http')) {
       request = request.clone({
@@ -43,7 +45,14 @@ export class ApiInterceptor implements HttpInterceptor {
     }
 
     return next.handle(request).pipe(
+      tap(event => {
+        if (event.type !== 0) { // Ignorar eventos "sent"
+          console.log(`[HTTP] Resposta recebida de ${request.url}`, event);
+        }
+      }),
       catchError((error: HttpErrorResponse) => {
+        console.error(`[HTTP Error] ${request.url}:`, error);
+        
         // Enhanced error logging in test environment
         if (environment.testing && environment.logLevel === 'debug') {
           console.group('API Error in Test Environment');
@@ -51,6 +60,11 @@ export class ApiInterceptor implements HttpInterceptor {
           console.error('Status:', error.status);
           console.error('Error:', error);
           console.groupEnd();
+        }
+        
+        // Log mais detalhado para erros 404
+        if (error.status === 404) {
+          console.error(`Rota não encontrada: ${request.url}`);
         }
         
         if (error.status === 401) {

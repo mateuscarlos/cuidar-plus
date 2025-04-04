@@ -12,8 +12,8 @@ import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { CepService } from '../../../core/services/cep.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { ConvenioService } from '../services/convenio.service';
-import { PlanoService } from '../services/plano.service';
+import { ConvenioPlanoService } from '../services/convenio-plano.service';
+
 import { Convenio } from '../models/convenio.model';
 import { Plano } from '../models/plano.model';
 
@@ -35,7 +35,7 @@ export class EditarPacienteComponent implements OnInit {
   estadosCivis = ESTADOS_CIVIS;
   generos = GENEROS;
   acomodacoes = ACOMODACOES;
-  
+  autoPlano: any;
   resultadosBusca: Paciente[] = [];
   pacienteSelecionado: Paciente | null = null;
   modoEdicao = false;
@@ -61,9 +61,11 @@ export class EditarPacienteComponent implements OnInit {
     private route: ActivatedRoute,
     private pacienteService: PacienteService,
     private notificacaoService: NotificacaoService,
-    private cepService: CepService,
-    private convenioService: ConvenioService,
-    private planoService: PlanoService
+    private convenioService: ConvenioPlanoService, // Nome unificado e consistente
+    private planoService: ConvenioPlanoService,
+    private convenioPlanoService: ConvenioPlanoService, // Nome unificado e consistente
+    private cepService: CepService
+    
   ) {}
 
   ngOnInit(): void {
@@ -109,8 +111,8 @@ export class EditarPacienteComponent implements OnInit {
       alergias: [''],
       convenio_id: [''],
       convenio_nome: [''],  // Campo para exibição do autocomplete
-      plano_id: [''],
-      plano_nome: [''],     // Campo para exibição do autocomplete
+      plano_id: [{value: '', disabled: true}], // Começa desabilitado até selecionar um convênio
+      plano_nome: [{value: '', disabled: true}], // Começa desabilitado até selecionar um convênio
       numero_carteirinha: [''],
       data_validade: [''],
       contato_emergencia: [''],
@@ -215,9 +217,18 @@ export class EditarPacienteComponent implements OnInit {
       case_responsavel: paciente.case_responsavel
     });
 
+    // Se o paciente tem convênio, habilitar os campos de plano
+    if (paciente.convenio_id) {
+      this.pacienteForm.get('plano_id')?.enable();
+      this.pacienteForm.get('plano_nome')?.enable();
+    } else {
+      this.pacienteForm.get('plano_id')?.disable();
+      this.pacienteForm.get('plano_nome')?.disable();
+    }
+
     // Buscar informações do convênio e plano para exibir os nomes
     if (paciente.convenio_id) {
-      this.convenioService.obterConvenio(paciente.convenio_id).subscribe({
+      this.convenioService.obterConvenioPorId(paciente.convenio_id).subscribe({
         next: (convenio) => {
           if (convenio) {
             this.convenioSelecionado = convenio;
@@ -226,11 +237,13 @@ export class EditarPacienteComponent implements OnInit {
             });
             
             // Carregar planos do convênio
-            this.carregarPlanosPorConvenio(convenio.id);
+            if (convenio.id !== undefined) {
+              this.carregarPlanosPorConvenio(convenio.id);
+            }
             
             // Buscar informações do plano
             if (paciente.plano_id && paciente.convenio_id) {
-              this.planoService.listarPorConvenio(paciente.convenio_id).subscribe({
+              this.planoService.listarPlanosPorConvenio(paciente.convenio_id).subscribe({
                 next: (planos) => {
                   if (planos && planos.length > 0) {
                     // Find the specific plan by ID
@@ -400,21 +413,38 @@ export class EditarPacienteComponent implements OnInit {
   }
 
   carregarConvenios(): void {
-    this.convenioService.obterConvenios().subscribe({
+    console.log('Carregando lista de convênios');
+    this.convenioPlanoService.listarConvenios().subscribe({
       next: (convenios) => {
+        console.log('Convênios carregados:', convenios);
         this.convenios = convenios;
+        
+        // Se já temos um paciente com convênio selecionado, carregar seus planos
+        const convenioId = this.pacienteForm.get('convenio_id')?.value;
+        if (convenioId) {
+          this.carregarPlanosPorConvenio(convenioId);
+        }
       },
       error: (err) => {
+        console.error('Erro ao carregar convênios:', err);
         this.notificacaoService.mostrarErro('Erro ao carregar convênios');
       }
     });
   }
 
   carregarPlanosPorConvenio(convenioId: number): void {
-    this.planoService.listarPorConvenio(convenioId).subscribe({
+    console.log('Carregando planos para o convênio ID:', convenioId);
+    this.convenioPlanoService.listarPlanosPorConvenio(convenioId).subscribe({
       next: (planos) => {
+        console.log('Planos recebidos do serviço:', planos);
         this.planos = planos;
         this.planosFiltrados = planos;
+        
+        // Verificar se tem planos
+        if (planos.length === 0) {
+          console.log('Não há planos disponíveis para este convênio');
+          this.notificacaoService.mostrarAviso('Não há planos disponíveis para este convênio');
+        }
         
         // Se havia um plano selecionado, tentar encontrá-lo na nova lista
         const planoIdAtual = this.pacienteForm.get('plano_id')?.value;
@@ -422,101 +452,108 @@ export class EditarPacienteComponent implements OnInit {
           const planoEncontrado = this.planos.find(p => p.id === planoIdAtual);
           if (planoEncontrado) {
             this.planoSelecionado = planoEncontrado;
+            this.pacienteForm.patchValue({
+              plano_nome: planoEncontrado.nome
+            });
           } else {
             // Limpar seleção pois não existe plano correspondente no novo convênio
             this.pacienteForm.get('plano_id')?.setValue(null);
+            this.pacienteForm.get('plano_nome')?.setValue(null);
             this.planoSelecionado = null;
           }
         }
       },
       error: (err) => {
+        console.error('Erro ao carregar planos:', err);
         this.notificacaoService.mostrarErro('Erro ao carregar planos');
       }
     });
   }
 
   setupAutoCompleteListeners(): void {
-    // Autocomplete para convênios
+    // Filtrar convênios baseado na entrada do usuário
     this.conveniosFiltrados$ = this.pacienteForm.get('convenio_nome')!.valueChanges.pipe(
       startWith(''),
       map(value => {
-        const nome = typeof value === 'string' ? value : value?.nome;
-        return nome ? this._filtrarConvenios(nome) : this.convenios.slice();
-      })
-    );
-  
-    // Autocomplete para planos
-    this.planosFiltrados$ = this.pacienteForm.get('plano_nome')!.valueChanges.pipe(
-      startWith(''),
-      map(value => {
-        const nome = typeof value === 'string' ? value : value?.nome;
-        return nome ? this._filtrarPlanos(nome) : this.planosFiltrados.slice();
+        const nome = typeof value === 'string' ? value : value?.nome || '';
+        return this._filtrarConvenios(nome);
       })
     );
     
-    // Observar mudanças no convênio para carregar os planos correspondentes
+    // Filtrar planos baseado na entrada do usuário
+    this.planosFiltrados$ = this.pacienteForm.get('plano_nome')!.valueChanges.pipe(
+      startWith(''),
+      map(value => {
+        const nome = typeof value === 'string' ? value : value?.nome || '';
+        return this._filtrarPlanos(nome);
+      })
+    );
+    
+    // Quando o convênio mudar, atualizar planos disponíveis
     this.pacienteForm.get('convenio_id')!.valueChanges.subscribe(convenioId => {
       if (convenioId) {
         this.carregarPlanosPorConvenio(convenioId);
+        // Habilitar os controles de plano
+        this.pacienteForm.get('plano_id')?.enable();
+        this.pacienteForm.get('plano_nome')?.enable();
       } else {
         this.planos = [];
         this.planosFiltrados = [];
+        // Desabilitar e limpar os controles de plano
+        this.pacienteForm.get('plano_id')?.disable();
+        this.pacienteForm.get('plano_nome')?.disable();
         this.pacienteForm.get('plano_id')?.setValue(null);
+        this.pacienteForm.get('plano_nome')?.setValue('');
         this.planoSelecionado = null;
       }
     });
   }
   
-  private _filtrarConvenios(value: string): Convenio[] {
-    const filterValue = value.toLowerCase();
+  _filtrarConvenios(nome: string): Convenio[] {
+    const filterValue = nome.toLowerCase();
     return this.convenios.filter(convenio => 
       convenio.nome.toLowerCase().includes(filterValue));
   }
   
-  private _filtrarPlanos(value: string): Plano[] {
-    const filterValue = value.toLowerCase();
+  _filtrarPlanos(nome: string): Plano[] {
+    const filterValue = nome.toLowerCase();
     return this.planosFiltrados.filter(plano => 
       plano.nome.toLowerCase().includes(filterValue));
   }
-
-  exibirConvenio(convenio: Convenio | null): string {
-    // Garantir que retornamos uma string legível que será exibida no input
+  
+  exibirConvenio(convenio: Convenio): string {
     return convenio && convenio.nome ? convenio.nome : '';
   }
   
-  exibirPlano(plano: Plano | null): string {
-    // Garantir que retornamos uma string legível que será exibida no input
+  exibirPlano(plano: Plano): string {
     return plano && plano.nome ? plano.nome : '';
   }
   
   selecionarConvenio(event: any): void {
     const convenio = event.option.value;
     this.convenioSelecionado = convenio;
-    
-    // Atualizar os valores no formulário
     this.pacienteForm.patchValue({
       convenio_id: convenio.id,
-      convenio_nome: convenio.nome  // Isso garante que o nome apareça no campo
+      convenio_nome: convenio.nome
     });
     
-    console.log('Convênio selecionado:', convenio);
-    
-    // Limpar plano e carregar planos do convênio selecionado
-    this.pacienteForm.patchValue({ plano_id: null, plano_nome: '' });
-    this.planoSelecionado = null;
+    // Carregar planos do convênio
     this.carregarPlanosPorConvenio(convenio.id);
+    
+    // Habilitar e limpar os campos de plano
+    this.pacienteForm.get('plano_id')?.enable();
+    this.pacienteForm.get('plano_nome')?.enable();
+    this.pacienteForm.get('plano_id')?.setValue(null);
+    this.pacienteForm.get('plano_nome')?.setValue('');
+    this.planoSelecionado = null;
   }
   
   selecionarPlano(event: any): void {
     const plano = event.option.value;
     this.planoSelecionado = plano;
-    
-    // Atualizar os valores no formulário
     this.pacienteForm.patchValue({
       plano_id: plano.id,
-      plano_nome: plano.nome  // Isso garante que o nome apareça no campo
+      plano_nome: plano.nome
     });
-    
-    console.log('Plano selecionado:', plano);
   }
 }

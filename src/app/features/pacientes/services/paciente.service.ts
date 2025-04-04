@@ -40,30 +40,16 @@ export class PacienteService {
       'Content-Type': 'application/json'
     });
     
-    return this.http.put<Paciente>(`${environment.apiUrl}/pacientes/${id}`, dadosAtualizados, { headers });
+    return this.http.put<Paciente>(`${this.apiUrl}/${id}`, dadosAtualizados, { headers });
   }
 
   // Excluir paciente
   excluirPaciente(id: string): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/pacientes/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   // Listar todos os pacientes
   listarTodosPacientes(): Observable<Paciente[]> {
     return this.http.get<Paciente[]>(`${this.apiUrl}`);
-  }
-
-  // Buscar convênios
-  listarConvenios(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/convenios/listar`);
-  }
-
-  // Buscar planos
-  listarPlanos(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/planos`);
-  }
-
-  listarPlanosPorConvenio(convenioId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/convenios/${convenioId}/planos`);
   }
 }
