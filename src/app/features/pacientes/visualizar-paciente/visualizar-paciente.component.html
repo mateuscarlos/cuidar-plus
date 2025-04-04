@@ -36,7 +36,7 @@
                   <tr *ngFor="let paciente of resultadosBusca" (click)="selecionarPaciente(paciente)" style="cursor: pointer;">
                     <td>
                       <div class="d-flex align-items-center">
-                        <app-paciente-avatar [nome]="paciente.nome" class="me-3"></app-paciente-avatar>
+                        <app-paciente-avatar [nome]="paciente.nome || ''" class="me-3"></app-paciente-avatar>
                         <div>
                           <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
                           <small class="text-muted">ID: {{ paciente.id }}</small>
@@ -44,7 +44,7 @@
                       </div>
                     </td>
                     <td>{{ paciente.cpf }}</td>
-                    <td>{{ formatarData(paciente.dataNascimento.toString()) }}</td>
+                    <td>{{ paciente.dataNascimento ? formatarData(paciente.dataNascimento.toString()) : 'Não informado' }}</td>
                     <td>
                       <app-status-badge [status]="paciente.status"></app-status-badge>
                     </td>
@@ -97,7 +97,7 @@
         <div class="d-flex justify-content-between flex-wrap">
           <!-- Informações básicas do paciente -->
           <div class="d-flex align-items-center mb-3 mb-md-0">
-            <app-paciente-avatar [nome]="paciente.nome" size="lg" class="me-3"></app-paciente-avatar>
+            <app-paciente-avatar [nome]="paciente.nome || ''" size="lg" class="me-3"></app-paciente-avatar>
             <div>
               <h4 class="mb-0">{{ paciente.nome }}</h4>
               <p class="text-muted mb-0">
@@ -128,7 +128,7 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Data de Nascimento:</span>
-              <strong>{{ formatarData(paciente.dataNascimento.toString()) }}</strong>
+              <strong>{{ paciente.dataNascimento ? formatarData(paciente.dataNascimento.toString()) : 'Não informado' }}</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Gênero:</span>
@@ -181,7 +181,7 @@
       <!-- Endereço -->
       <div class="col-md-12 mb-4">
         <app-info-card title="Endereço" icon="house-fill">
-          <p class="mb-0">{{ formatarEndereco(paciente.endereco) }}</p>
+          <p class="mb-0">{{ paciente.endereco && paciente.endereco.logradouro ? formatarEndereco($any(paciente.endereco)) : 'Endereço não informado' }}</p>
         </app-info-card>
       </div>
       <!-- Informações Médicas -->

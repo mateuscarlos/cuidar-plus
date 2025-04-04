@@ -28,11 +28,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/pacientes/cadastrar-paciente/cadastrar-paciente.component').then(m => m.CadastrarPacienteComponent),
     canActivate: [AuthGuard]
   },
-  /* {
+  {
     path: 'pacientes/editar',
-    loadComponent: () => import('./features/pacientes/editar-paciente/editar-paciente.component').then(m => m.EditarPacienteComponent),
+    loadComponent: () => import('./features/pacientes/editar-pacientes/editar-pacientes.component').then(m => m.EditarPacientesComponent),
     canActivate: [AuthGuard]
-  }, */
+  },
   {
     path: 'pacientes/visualizar',
     loadComponent: () => import('./features/pacientes/visualizar-paciente/visualizar-paciente.component').then(m => m.VisualizarPacienteComponent),
