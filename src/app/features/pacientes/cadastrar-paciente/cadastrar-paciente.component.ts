@@ -38,7 +38,8 @@ export class CadastrarPacienteComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.carregarConvenios();
-    this.carregarPlanos();
+    // Remover o carregamento de todos os planos inicialmente
+    // this.carregarPlanos(); - Não precisamos carregar todos os planos no início
   }
 
   initForm(): void {
@@ -79,30 +80,57 @@ export class CadastrarPacienteComponent implements OnInit {
   }
 
   carregarConvenios(): void {
-    this.pacienteService.listarConvenios().subscribe({
-      next: (convenios) => this.convenios = convenios,
-      error: () => this.notificacaoService.mostrarErro('Erro ao carregar convênios.')
+    this.isLoading = true;
+    this.pacienteService.listarConvenios().pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (convenios) => {
+        this.convenios = convenios;
+      },
+      error: (erro) => {
+        this.notificacaoService.mostrarErro('Erro ao carregar convênios: ' + erro.message);
+      }
     });
   }
 
+  // Remover ou modificar o método carregarPlanos, já que não o utilizaremos
+  // mais para carregar todos os planos inicialmente:
+
   carregarPlanos(): void {
-    this.pacienteService.listarPlanos().subscribe({
-      next: (planos) => this.planos = planos,
-      error: () => this.notificacaoService.mostrarErro('Erro ao carregar planos.')
+    // Este método pode ser mantido para outras funcionalidades, mas não será chamado no ngOnInit
+    this.isLoading = true;
+    this.pacienteService.listarPlanos().pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (planos) => {
+        this.planos = planos;
+      },
+      error: (erro) => {
+        this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + erro.message);
+      }
     });
   }
 
   onConvenioChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
+    
+    // Resetar o plano quando o convênio é alterado
+    this.pacienteForm.get('plano_id')?.setValue(null);
+    this.planosFiltrados = [];
 
     if (convenioId) {
-      this.pacienteService.listarPlanosPorConvenio(convenioId).subscribe({
-        next: (planos) => this.planosFiltrados = planos,
-        error: () => this.notificacaoService.mostrarErro('Erro ao carregar planos para o convênio selecionado.')
+      this.isLoading = true;
+      this.pacienteService.listarPlanosPorConvenio(convenioId).pipe(
+        finalize(() => this.isLoading = false)
+      ).subscribe({
+        next: (planos) => {
+          this.planosFiltrados = planos;
+        },
+        error: (erro) => {
+          this.notificacaoService.mostrarErro('Erro ao carregar planos para o convênio selecionado: ' + erro.message);
+        }
       });
-    } else {
-      this.planosFiltrados = []; // Limpar os planos se nenhum convênio for selecionado
     }
   }
 

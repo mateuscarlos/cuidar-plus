@@ -187,10 +187,10 @@
             
             <div class="col-md-3 mb-3">
               <div class="form-group">
-                <label for="convenio_id">Convênio</label>
-                <select id="convenio_id" formControlName="convenio_id" class="form-control" (change)="onConvenioChange($event)">
-                  <option [value]="null">Selecione um convênio</option>
-                  <option *ngFor="let convenio of convenios" [value]="convenio.id">
+                <label for="convenio_id" class="form-label">Convênio</label>
+                <select id="convenio_id" formControlName="convenio_id" class="form-select" (change)="onConvenioChange($event)">
+                  <option [ngValue]="null">Selecione um convênio</option>
+                  <option *ngFor="let convenio of convenios" [ngValue]="convenio.id">
                     {{ convenio.nome }}
                   </option>
                 </select>
@@ -199,10 +199,10 @@
             
             <div class="col-md-3 mb-3">
               <div class="form-group">
-                <label for="plano_id">Plano</label>
-                <select id="plano_id" formControlName="plano_id" class="form-control">
-                  <option [value]="null">Selecione um plano</option>
-                  <option *ngFor="let plano of planosFiltrados" [value]="plano.id">
+                <label for="plano_id" class="form-label">Plano</label>
+                <select id="plano_id" formControlName="plano_id" class="form-select" [disabled]="!planosFiltrados.length">
+                  <option [ngValue]="null">Selecione um plano</option>
+                  <option *ngFor="let plano of planosFiltrados" [ngValue]="plano.id">
                     {{ plano.nome }}
                   </option>
                 </select>
