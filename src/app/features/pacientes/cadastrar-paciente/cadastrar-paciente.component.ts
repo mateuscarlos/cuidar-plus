@@ -10,6 +10,7 @@ import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { finalize } from 'rxjs/operators';
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
+import { DateFormatterService } from '../../../core/services/date-formatter.service';
 
 @Component({
   selector: 'app-cadastrar-paciente',
@@ -28,17 +29,24 @@ export class CadastrarPacienteComponent implements OnInit {
   planosFiltrados: any[] = [];
   isLoading = false;
   
+   
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private pacienteService: PacienteService,
     private notificacaoService: NotificacaoService,
     private cepService: CepService,
-    private convenioPlanoService: ConvenioPlanoService // Serviço unificado
+    private convenioPlanoService: ConvenioPlanoService, 
+    private dateFormatter: DateFormatterService
   ) {}
+
+  // Formatos para os controles de data
+  readonly dateFormat = 'YYYY-MM-DD';
+  maxDate!: string;
 
   ngOnInit(): void {
     console.log('Inicializando componente CadastrarPacienteComponent');
+    this.maxDate = this.dateFormatter.toHtmlDateFormat(new Date());
     this.initForm();
     this.carregarConvenios();
   }
@@ -47,7 +55,7 @@ export class CadastrarPacienteComponent implements OnInit {
     this.pacienteForm = this.fb.group({
       nome_completo: ['', [Validators.required, Validators.minLength(5)]],
       cpf: ['', [Validators.required, CustomValidators.cpf()]],
-      data_nascimento: ['', Validators.required],
+      data_nascimento: ['', [Validators.required, this.dateValidator()]],
       genero: [''],
       estado_civil: [''],
       profissao: [''],
@@ -71,17 +79,17 @@ export class CadastrarPacienteComponent implements OnInit {
       medico_responsavel: [''],
       alergias: [''],
       convenio_id: ['', Validators.required],
-      convenio_nome: [''],  // Campo adicional para autocomplete (se implementado)
-      plano_id: [{value: '', disabled: true}, Validators.required], // Começa desabilitado
-      plano_nome: [{value: '', disabled: true}], // Campo adicional para autocomplete (se implementado)
+      convenio_nome: [''],
+      plano_id: [{value: '', disabled: true}, Validators.required],
+      plano_nome: [{value: '', disabled: true}],
       numero_carteirinha: ['', Validators.required],
-      data_validade: ['', Validators.required],
+      data_validade: ['', [Validators.required, this.futureOrTodayDateValidator()]],
       contato_emergencia: [''],
       telefone_emergencia: [''],
       case_responsavel: ['']
     });
 
-    // Adicionar listener para habilitar/desabilitar campos de plano baseado no convênio
+    // Listener para habilitar/desabilitar campos de plano baseado no convênio
     this.pacienteForm.get('convenio_id')?.valueChanges.subscribe(convenioId => {
       const planoIdControl = this.pacienteForm.get('plano_id');
       const planoNomeControl = this.pacienteForm.get('plano_nome');
@@ -98,6 +106,62 @@ export class CadastrarPacienteComponent implements OnInit {
         this.planosFiltrados = [];
       }
     });
+  }
+
+  // Validador personalizado para datas
+  dateValidator() {
+    return (control: any) => {
+      const value = control.value;
+      if (!value) {
+        return null;
+      }
+      
+      try {
+        const date = this.dateFormatter.parseToDate(value);
+        if (isNaN(date.getTime())) {
+          return { invalidDate: true };
+        }
+        
+        // Verificar se a data não está no futuro
+        const today = new Date();
+        if (date > today) {
+          return { futureDate: true };
+        }
+        
+        return null;
+      } catch (error) {
+        return { invalidDate: true };
+      }
+    };
+  }
+
+  // Validador para datas que devem ser futuras ou hoje (como data de validade)
+  futureOrTodayDateValidator() {
+    return (control: any) => {
+      const value = control.value;
+      if (!value) {
+        return null;
+      }
+      
+      try {
+        const date = this.dateFormatter.parseToDate(value);
+        if (isNaN(date.getTime())) {
+          return { invalidDate: true };
+        }
+        
+        // Verificar se a data não é passada (anterior a hoje)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Ignora o horário para comparação apenas de data
+        
+        if (date < today) {
+          return { pastDate: true };
+        }
+        
+        return null;
+      } catch (error) {
+        return { invalidDate: true };
+      }
+    };
   }
 
   carregarConvenios(): void {
@@ -139,7 +203,6 @@ export class CadastrarPacienteComponent implements OnInit {
         if (this.planosFiltrados.length === 0) {
           this.notificacaoService.mostrarAviso('Este convênio não possui planos cadastrados.');
           
-          // Desabilitar campo de plano já que não há opções
           this.pacienteForm.get('plano_id')?.disable();
           this.pacienteForm.get('plano_id')?.setValue(null);
         }
@@ -156,10 +219,6 @@ export class CadastrarPacienteComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
     
-    // A lógica de habilitar/desabilitar e carregar planos já está no listener
-    // do valueChanges de convenio_id no método initForm()
-    
-    // Caso ainda precise de lógica adicional específica para o evento de mudança
     if (convenioId) {
       const convenioSelecionado = this.convenios.find(c => c.id === convenioId);
       if (convenioSelecionado) {
@@ -198,67 +257,106 @@ export class CadastrarPacienteComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // Verificar se o formulário está válido, ignorando campos desabilitados
-    const formValido = this.validarFormulario();
-    
-    if (!formValido) {
+    if (this.pacienteForm.invalid) {
+      this.pacienteForm.markAllAsTouched();
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-  
-    this.isLoading = true;
-  
-    // Obter os valores do formulário, incluindo campos desabilitados se necessário
-    const formValues = this.pacienteForm.getRawValue();
+
+    // Obter valores do formulário
+    let formValues = { ...this.pacienteForm.value };
+
+    // Processar todos os campos de data para o formato do backend
+    formValues = this.processarDatasFormulario(formValues);
     
-    // Formatar data de nascimento se necessário
-    if (formValues.data_nascimento) {
-      const data = new Date(formValues.data_nascimento);
-      if (!isNaN(data.getTime())) {
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        formValues.data_nascimento = `${dia}/${mes}/${ano}`;
-      }
-    }
-    
-    // Formatar data de validade se necessário
-    if (formValues.data_validade) {
-      const data = new Date(formValues.data_validade);
-      if (!isNaN(data.getTime())) {
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        formValues.data_validade = `${dia}/${mes}/${ano}`;
-      }
-    }
-    
-    // Para endereço, garantir compatibilidade com a API
-    if (formValues.endereco) {
-      formValues.endereco = {
-        ...formValues.endereco,
-        rua: formValues.endereco.logradouro
-      };
-    }
+    // Enviar dados para o serviço
+    this.criarPaciente(formValues);
+  }
   
-    // Remover campos auxiliares que não devem ser enviados à API
-    delete formValues.convenio_nome;
-    delete formValues.plano_nome;
-  
-    // Enviar os dados para o backend
-    this.pacienteService.criarPaciente(formValues)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (paciente) => {
-          this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
-          this.router.navigate(['/pacientes/visualizar'], {
-            queryParams: { pacienteId: paciente.id }
-          });
-        },
-        error: (err) => {
-          console.error('Erro ao cadastrar paciente:', err);
-          this.notificacaoService.mostrarErro('Erro ao cadastrar paciente: ' + (err.error?.message || 'Tente novamente.'));
+  /**
+   * Processa todas as datas do formulário para o formato esperado pelo backend
+   */
+  processarDatasFormulario(formValues: any): any {
+    // Cria uma cópia para não modificar o objeto original
+    const processedValues = { ...formValues };
+    
+    // Processa data de nascimento
+    if (processedValues.data_nascimento) {
+      try {
+        // Verifica se já está no formato yyyy-mm-dd
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_nascimento)) {
+          const dateParts = processedValues.data_nascimento.split('/');
+          if (dateParts.length === 3) {
+            // Converte de DD/MM/YYYY para YYYY-MM-DD
+            const day = dateParts[0].padStart(2, '0');
+            const month = dateParts[1].padStart(2, '0');
+            const year = dateParts[2];
+            processedValues.data_nascimento = `${year}-${month}-${day}`;
+          } else {
+            console.error('Formato de data não reconhecido:', processedValues.data_nascimento);
+          }
         }
-      });
+      } catch (error) {
+        console.error('Erro ao processar data de nascimento:', error);
+      }
+    }
+    
+    // Processa data de validade do plano
+    if (processedValues.data_validade) {
+      try {
+        // Verifica se já está no formato yyyy-mm-dd
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_validade)) {
+          const dateParts = processedValues.data_validade.split('/');
+          if (dateParts.length === 3) {
+            // Converte de DD/MM/YYYY para YYYY-MM-DD
+            const day = dateParts[0].padStart(2, '0');
+            const month = dateParts[1].padStart(2, '0');
+            const year = dateParts[2];
+            processedValues.data_validade = `${year}-${month}-${day}`;
+          } else {
+            console.error('Formato de data não reconhecido:', processedValues.data_validade);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao processar data de validade:', error);
+      }
+    }
+    
+    return processedValues;
+  }
+  
+  /**
+   * Realiza a chamada ao serviço para criar um novo paciente
+   */
+  criarPaciente(formValues: any): void {
+    this.isLoading = true;
+    
+    this.pacienteService.criarPaciente(formValues).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (response) => {
+        this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
+        this.router.navigate(['/pacientes/visualizar', response.id]);
+      },
+      error: (error) => {
+        console.error('Erro ao cadastrar paciente:', error);
+        this.notificacaoService.mostrarErro('Erro ao cadastrar paciente: ' + (error.message || 'Por favor, tente novamente.'));
+      }
+    });
+  }
+  
+  /**
+   * Formata uma data para exibição no formato brasileiro
+   */
+  formatarDataParaExibicao(data: string | Date | null | undefined): string {
+    return this.dateFormatter.toDisplayDateOnly(data);
+  }
+  
+  /**
+   * Formata uma data para uso em inputs HTML do tipo date
+   */
+  formatarDataParaInput(data: string | Date | null | undefined): string {
+    return this.dateFormatter.toHtmlDateFormat(data);
   }
   
   // Método auxiliar para validar o formulário com mensagens específicas
@@ -270,7 +368,7 @@ export class CadastrarPacienteComponent implements OnInit {
       const campos = [
         { nome: 'nome_completo', mensagem: 'Nome completo é obrigatório' },
         { nome: 'cpf', mensagem: 'CPF é obrigatório e deve ser válido' },
-        { nome: 'data_nascimento', mensagem: 'Data de nascimento é obrigatória' },
+        { nome: 'data_nascimento', mensagem: 'Data de nascimento é obrigatória e deve ser válida' },
         { nome: 'telefone', mensagem: 'Telefone é obrigatório' },
         { nome: 'cid_primario', mensagem: 'CID primário é obrigatório' },
         { nome: 'acomodacao', mensagem: 'Acomodação é obrigatória' }
@@ -282,6 +380,19 @@ export class CadastrarPacienteComponent implements OnInit {
           this.notificacaoService.mostrarAviso(campo.mensagem);
           return false;
         }
+      }
+      
+      // Verificação específica para campos de data
+      const nascimentoControl = this.pacienteForm.get('data_nascimento');
+      if (nascimentoControl?.hasError('futureDate')) {
+        this.notificacaoService.mostrarAviso('Data de nascimento não pode ser no futuro');
+        return false;
+      }
+      
+      const validadeControl = this.pacienteForm.get('data_validade');
+      if (validadeControl?.hasError('pastDate')) {
+        this.notificacaoService.mostrarAviso('Data de validade não pode ser no passado');
+        return false;
       }
       
       // Verificar campos de endereço

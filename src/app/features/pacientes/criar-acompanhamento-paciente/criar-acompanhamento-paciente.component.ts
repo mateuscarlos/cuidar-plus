@@ -15,6 +15,7 @@ import { PacienteService } from '../services/paciente.service';
 import { AcompanhamentoService } from '../services/acompanhamento.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { finalize } from 'rxjs/operators';
+import { DateFormatterService } from '../../../core/services/date-formatter.service';
 
 @Component({
   selector: 'app-criar-acompanhamento-paciente', // Alterado para corresponder ao nome do arquivo
@@ -43,7 +44,8 @@ export class CriarAcompanhamentoPacienteComponent implements OnInit { // Alterad
     private route: ActivatedRoute,
     private pacienteService: PacienteService,
     private acompanhamentoService: AcompanhamentoService,
-    private notificacaoService: NotificacaoService
+    private notificacaoService: NotificacaoService,
+    private dateFormatter: DateFormatterService
   ) {}
 
   ngOnInit(): void {
@@ -233,5 +235,46 @@ export class CriarAcompanhamentoPacienteComponent implements OnInit { // Alterad
   deveExibirCampo(condicao: string, valor: string): boolean {
     const control = this.acompanhamentoForm.get(condicao);
     return control ? control.value === valor : false;
+  }
+
+  onSubmit(): void {
+    if (this.acompanhamentoForm.invalid) {
+      this.acompanhamentoForm.markAllAsTouched();
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+    
+    // Obter valores do formulário
+    const formValues = { ...this.acompanhamentoForm.value };
+    
+    // Tratar datas e horas para o formato do backend
+    if (formValues.data_hora_atendimento) {
+      formValues.data_hora_atendimento = this.dateFormatter.toBackendFormat(
+        this.dateFormatter.ajustarFusoHorarioInput(formValues.data_hora_atendimento)
+      );
+    }
+    
+    // Tratar data do próximo atendimento
+    if (formValues.plano_acao?.data_proximo && formValues.plano_acao?.hora_proximo) {
+      const dataHoraProximo = `${formValues.plano_acao.data_proximo}T${formValues.plano_acao.hora_proximo}`;
+      formValues.plano_acao.data_hora_proximo = this.dateFormatter.toBackendFormat(
+        this.dateFormatter.ajustarFusoHorarioInput(dataHoraProximo)
+      );
+    }
+    
+    // Adicionar o ID do paciente
+    formValues.paciente_id = this.pacienteSelecionado?.id;
+    
+    // Enviar para o serviço
+    this.acompanhamentoService.criarAcompanhamento(formValues).subscribe({
+      next: (response) => {
+        this.notificacaoService.mostrarSucesso('Acompanhamento registrado com sucesso!');
+        this.router.navigate(['/pacientes/visualizar', this.pacienteSelecionado?.id]);
+      },
+      error: (error) => {
+        console.error('Erro ao criar acompanhamento:', error);
+        this.notificacaoService.mostrarErro('Erro ao registrar acompanhamento. Por favor, tente novamente.');
+      }
+    });
   }
 }
