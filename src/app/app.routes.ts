@@ -28,15 +28,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/pacientes/cadastrar-paciente/cadastrar-paciente.component').then(m => m.CadastrarPacienteComponent),
     canActivate: [AuthGuard]
   },
-  {
+  /* {
     path: 'pacientes/editar',
     loadComponent: () => import('./features/pacientes/editar-paciente/editar-paciente.component').then(m => m.EditarPacienteComponent),
     canActivate: [AuthGuard]
-  },
+  }, */
   {
     path: 'pacientes/visualizar',
     loadComponent: () => import('./features/pacientes/visualizar-paciente/visualizar-paciente.component').then(m => m.VisualizarPacienteComponent),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'pacientes/gerenciar',
+  loadComponent: () => import('./features/pacientes/gerenciar-pacientes/gerenciar-pacientes.component').then(m => m.GerenciarPacientesComponent),
+  canActivate: [AuthGuard]
   },
   {
     path: 'pacientes/acompanhamento',

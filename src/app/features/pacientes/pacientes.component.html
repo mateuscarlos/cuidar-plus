@@ -29,9 +29,9 @@
                 <tr *ngFor="let paciente of pacientes">
                   <td>
                     <div class="d-flex align-items-center">
-                      <app-paciente-avatar [nome]="paciente.nome_completo" class="me-3"></app-paciente-avatar>
+                      <app-paciente-avatar [nome]="paciente.nome" class="me-3"></app-paciente-avatar>
                       <div>
-                        <p class="mb-0 fw-medium">{{ paciente.nome_completo }}</p>
+                        <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
                         <small class="text-muted">ID: {{ paciente.id }}</small>
                       </div>
                     </div>
@@ -43,15 +43,15 @@
                   <td class="text-end">
                     <div class="btn-group">
                       <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
-                            (click)="visualizarPaciente(paciente.id); $event.stopPropagation()">
+                            (click)="visualizarPaciente(paciente.id.toString()); $event.stopPropagation()">
                         <i class="bi bi-eye"></i>
                       </button>
                       <button class="btn btn-sm btn-outline-primary" title="Editar" 
-                            (click)="editarPaciente(paciente.id); $event.stopPropagation()">
+                            (click)="editarPaciente(paciente.id.toString()); $event.stopPropagation()">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
-                            (click)="acompanharPaciente(paciente.id); $event.stopPropagation()">
+                            (click)="acompanharPaciente(paciente.id.toString()); $event.stopPropagation()">
                         <i class="bi bi-clipboard-pulse"></i>
                       </button>
                     </div>

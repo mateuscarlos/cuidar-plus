@@ -59,7 +59,7 @@ export class VisualizarPacienteComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['pacienteId']) {
-        this.carregarPaciente(params['pacienteId']);
+        this.carregarPaciente(String(params['pacienteId']));
       } else {
         this.isLoading = false;
       }
@@ -83,7 +83,6 @@ export class VisualizarPacienteComponent implements OnInit {
                 console.error('Erro ao desserializar o endereço:', e);
                 paciente.endereco = {
                   logradouro: '',
-                  rua: '',
                   numero: '',
                   complemento: '',
                   bairro: '',
@@ -97,7 +96,6 @@ export class VisualizarPacienteComponent implements OnInit {
             // Garantir que o endereço seja sempre um objeto válido
             paciente.endereco = paciente.endereco || {
               logradouro: '',
-              rua: '',
               numero: '',
               complemento: '',
               bairro: '',
@@ -116,11 +114,16 @@ export class VisualizarPacienteComponent implements OnInit {
                 this.convenio = convenio ? convenio.nome : 'Não informado';
 
                 if (paciente.plano_id && paciente.convenio_id) {
-                  this.convenioService.listarPlanosPorConvenio(paciente.convenio_id).subscribe((planos: Plano[]) => {
-                  const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
-                  const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
-                  this.plano = plano ? plano.nome : 'Não informado';
-                  });
+                    // Convert convenio_id to number if the method expects a number
+                    const convenioId = typeof paciente.convenio_id === 'string' 
+                    ? parseInt(paciente.convenio_id, 10) 
+                    : paciente.convenio_id;
+                    
+                    this.convenioService.listarPlanosPorConvenio(convenioId).subscribe((planos: Plano[]) => {
+                    const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
+                    const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
+                    this.plano = plano ? plano.nome : 'Não informado';
+                    });
                 }
                 });
             }
@@ -159,7 +162,7 @@ export class VisualizarPacienteComponent implements OnInit {
   }
   
   selecionarPaciente(paciente: Paciente): void {
-    this.carregarPaciente(paciente.id);
+    this.carregarPaciente(String(paciente.id));
   }
 
   voltarParaBusca(): void {

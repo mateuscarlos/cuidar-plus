@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
-export interface EnderecoViaCep {
+export interface CepResponse {
   cep: string;
   logradouro: string;
   complemento: string;
@@ -14,30 +14,28 @@ export interface EnderecoViaCep {
   gia: string;
   ddd: string;
   siafi: string;
+  erro?: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class CepService {
-  private readonly API_URL = 'http://localhost:5000/api/cep';
+  private readonly BASE_URL = 'https://viacep.com.br/ws';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
-  /**
-   * Consulta um CEP na API ViaCEP
-   * @param cep CEP a ser consultado (apenas números)
-   * @returns Observable com dados do endereço ou null em caso de erro
-   */
-  consultarCep(cep: string): Observable<EnderecoViaCep | null> {
+  consultarCep(cep: string): Observable<CepResponse | null> {
     // Remove caracteres não numéricos
     cep = cep.replace(/\D/g, '');
     
-    // Verifica se o CEP tem o formato válido
-    if (cep.length !== 8) {
+    if (!cep || cep.length !== 8) {
       return of(null);
     }
-    
-    return this.http.get<EnderecoViaCep>(`${this.API_URL}/${cep}`);
+
+    return this.http.get<CepResponse>(`${this.BASE_URL}/${cep}/json`).pipe(
+      map(response => response.erro ? null : response),
+      catchError(() => of(null))
+    );
   }
 }
