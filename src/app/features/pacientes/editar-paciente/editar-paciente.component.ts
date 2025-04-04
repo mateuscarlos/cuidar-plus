@@ -183,7 +183,29 @@ export class EditarPacienteComponent implements OnInit {
     this.isLoading = true;
 
     const pacienteId = this.pacienteSelecionado?.id; // ID do paciente selecionado
-    const dadosAtualizados = this.pacienteForm.value; // Dados do formulário
+    const dadosAtualizados = { ...this.pacienteForm.value }; // Cria uma cópia dos dados do formulário
+    
+    // Converter formato de data de nascimento de yyyy-mm-dd para dd/mm/yyyy
+    if (dadosAtualizados.data_nascimento) {
+      const data = new Date(dadosAtualizados.data_nascimento);
+      if (!isNaN(data.getTime())) {
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0'); // Janeiro é 0
+        const ano = data.getFullYear();
+        dadosAtualizados.data_nascimento = `${dia}/${mes}/${ano}`;
+      }
+    }
+    
+    // Converter formato da data de validade, se existir
+    if (dadosAtualizados.data_validade) {
+      const data = new Date(dadosAtualizados.data_validade);
+      if (!isNaN(data.getTime())) {
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        dadosAtualizados.data_validade = `${dia}/${mes}/${ano}`;
+      }
+    }
 
     if (pacienteId) {
       this.pacienteService.atualizarPaciente(pacienteId, dadosAtualizados)
@@ -193,8 +215,8 @@ export class EditarPacienteComponent implements OnInit {
             this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
             this.voltarParaLista(); // Redirecionar para a lista de pacientes
           },
-          error: () => {
-            this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+          error: (err) => {
+            this.notificacaoService.mostrarErro('Erro ao atualizar paciente: ' + (err.error?.message || 'Tente novamente.'));
           }
         });
     }
