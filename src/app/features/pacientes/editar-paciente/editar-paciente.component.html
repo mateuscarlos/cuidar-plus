@@ -271,15 +271,36 @@
           </div>
           
           <div class="col-md-3 mb-3">
-            <label for="convenio_id" class="form-label">Convênio</label>
-            <input type="number" class="form-control" id="convenio_id" formControlName="convenio_id">
-            <!-- Aqui poderia ser um select carregado do backend -->
+            <label for="convenio" class="form-label">Convênio</label>
+            <input type="text"
+                   class="form-control"
+                   id="convenio"
+                   formControlName="convenio_nome"
+                   [matAutocomplete]="autoConvenio">
+            <mat-autocomplete #autoConvenio="matAutocomplete" 
+                             [displayWith]="exibirConvenio.bind(this)"
+                             (optionSelected)="selecionarConvenio($event)">
+              <mat-option *ngFor="let convenio of conveniosFiltrados$ | async" [value]="convenio">
+                {{convenio.nome}}
+              </mat-option>
+            </mat-autocomplete>
           </div>
           
           <div class="col-md-3 mb-3">
-            <label for="plano_id" class="form-label">Plano</label>
-            <input type="number" class="form-control" id="plano_id" formControlName="plano_id">
-            <!-- Aqui poderia ser um select carregado do backend -->
+            <label for="plano" class="form-label">Plano</label>
+            <input type="text"
+                   class="form-control"
+                   id="plano"
+                   formControlName="plano_nome"
+                   [matAutocomplete]="autoPlano"
+                   [disabled]="!pacienteForm.get('convenio_id')?.value">
+            <mat-autocomplete #autoPlano="matAutocomplete" 
+                             [displayWith]="exibirPlano.bind(this)"
+                             (optionSelected)="selecionarPlano($event)">
+              <mat-option *ngFor="let plano of planosFiltrados$ | async" [value]="plano">
+                {{plano.nome}}
+              </mat-option>
+            </mat-autocomplete>
           </div>
           
           <div class="col-md-3 mb-3">
@@ -291,6 +312,13 @@
             <label for="data_validade" class="form-label">Data de Validade</label>
             <input type="date" class="form-control" id="data_validade" formControlName="data_validade">
           </div>
+        </div>
+        
+        <!-- Adicione isso ao seu template HTML -->
+        <div class="row mb-4">
+          
+          
+          
         </div>
         
         <!-- Contato de Emergência -->
