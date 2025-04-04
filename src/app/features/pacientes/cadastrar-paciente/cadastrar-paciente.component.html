@@ -15,18 +15,35 @@
           <div class="col-md-6 mb-3">
             <label for="nome_completo" class="form-label">Nome Completo *</label>
             <input type="text" class="form-control" id="nome_completo" formControlName="nome_completo" 
-                  [ngClass]="{'is-invalid': isFieldValid('nome_completo')}">
-            <div class="invalid-feedback">Nome completo é obrigatório.</div>
+                   [ngClass]="{'is-invalid': isFieldValid('nome_completo')}">
+            <div *ngIf="isFieldValid('nome_completo')" class="invalid-feedback">
+              Nome completo é obrigatório e deve ter pelo menos 5 caracteres.
+            </div>
           </div>
           
-          <div class="col-md-3 mb-3">
+          <div class="col-md-2 mb-3">
+            <label for="status" class="form-label">Status *</label>
+            <div class="input-group">
+              <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
+                <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
+              </span>
+              <select class="form-select" id="status" formControlName="status"
+                      [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)">
+                <option *ngFor="let status of statusPaciente" [value]="status">
+                  {{ status }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-2 mb-3">
             <label for="cpf" class="form-label">CPF *</label>
             <input type="text" class="form-control" id="cpf" formControlName="cpf" 
                   [ngClass]="{'is-invalid': isFieldValid('cpf')}">
             <div class="invalid-feedback">CPF válido é obrigatório (11 dígitos).</div>
           </div>
           
-          <div class="col-md-3 mb-3">
+          <div class="col-md-2 mb-3">
             <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
             <input type="date" class="form-control" id="data_nascimento" formControlName="data_nascimento"
                   [ngClass]="{'is-invalid': isFieldValid('data_nascimento')}">

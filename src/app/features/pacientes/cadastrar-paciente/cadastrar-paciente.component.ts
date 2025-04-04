@@ -11,6 +11,7 @@ import { finalize } from 'rxjs/operators';
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
+import { StatusStyleService } from '../../../core/services/status-style.service';
 
 @Component({
   selector: 'app-cadastrar-paciente',
@@ -29,6 +30,9 @@ export class CadastrarPacienteComponent implements OnInit {
   planosFiltrados: any[] = [];
   isLoading = false;
   
+  // Adicionando os status disponíveis
+  statusPaciente = Object.values(StatusPaciente);
+  
    
   constructor(
     private fb: FormBuilder,
@@ -37,7 +41,8 @@ export class CadastrarPacienteComponent implements OnInit {
     private notificacaoService: NotificacaoService,
     private cepService: CepService,
     private convenioPlanoService: ConvenioPlanoService, 
-    private dateFormatter: DateFormatterService
+    private dateFormatter: DateFormatterService,
+    public statusStyle: StatusStyleService  // Adicionado o serviço
   ) {}
 
   // Formatos para os controles de data
@@ -477,5 +482,15 @@ export class CadastrarPacienteComponent implements OnInit {
     
     // Limpar listas
     this.planosFiltrados = [];
+  }
+  
+  // Método para obter as classes de estilo para cada status
+  getStatusClasses(status: string): string {
+    return this.statusStyle.getAllClasses(status);
+  }
+  
+  // Método para obter o ícone para cada status
+  getStatusIcon(status: string): string {
+    return this.statusStyle.getIcon(status);
   }
 }
