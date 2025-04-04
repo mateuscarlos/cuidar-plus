@@ -272,35 +272,41 @@
           
           <div class="col-md-3 mb-3">
             <label for="convenio" class="form-label">Convênio</label>
-            <input type="text"
-                   class="form-control"
-                   id="convenio"
-                   formControlName="convenio_nome"
-                   [matAutocomplete]="autoConvenio">
-            <mat-autocomplete #autoConvenio="matAutocomplete" 
-                             [displayWith]="exibirConvenio.bind(this)"
-                             (optionSelected)="selecionarConvenio($event)">
-              <mat-option *ngFor="let convenio of conveniosFiltrados$ | async" [value]="convenio">
-                {{convenio.nome}}
-              </mat-option>
-            </mat-autocomplete>
+            <div class="autocomplete-container">
+              <input type="text"
+                     class="form-control"
+                     id="convenio"
+                     formControlName="convenio_nome"
+                     [matAutocomplete]="autoConvenio">
+              <mat-autocomplete #autoConvenio="matAutocomplete" 
+                               [displayWith]="exibirConvenio.bind(this)"
+                               (optionSelected)="selecionarConvenio($event)"
+                               class="custom-autocomplete-panel">
+                <mat-option *ngFor="let convenio of conveniosFiltrados$ | async" [value]="convenio">
+                  {{convenio.nome}}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
           </div>
           
           <div class="col-md-3 mb-3">
             <label for="plano" class="form-label">Plano</label>
-            <input type="text"
-                   class="form-control"
-                   id="plano"
-                   formControlName="plano_nome"
-                   [matAutocomplete]="autoPlano"
-                   [disabled]="!pacienteForm.get('convenio_id')?.value">
-            <mat-autocomplete #autoPlano="matAutocomplete" 
-                             [displayWith]="exibirPlano.bind(this)"
-                             (optionSelected)="selecionarPlano($event)">
-              <mat-option *ngFor="let plano of planosFiltrados$ | async" [value]="plano">
-                {{plano.nome}}
-              </mat-option>
-            </mat-autocomplete>
+            <div class="autocomplete-container">
+              <input type="text"
+                     class="form-control"
+                     id="plano"
+                     formControlName="plano_nome"
+                     [matAutocomplete]="autoPlano"
+                     [disabled]="!pacienteForm.get('convenio_id')?.value">
+              <mat-autocomplete #autoPlano="matAutocomplete" 
+                               [displayWith]="exibirPlano.bind(this)"
+                               (optionSelected)="selecionarPlano($event)"
+                               class="custom-autocomplete-panel">
+                <mat-option *ngFor="let plano of planosFiltrados$ | async" [value]="plano">
+                  {{plano.nome}}
+                </mat-option>
+              </mat-autocomplete>
+            </div>
           </div>
           
           <div class="col-md-3 mb-3">
@@ -314,13 +320,7 @@
           </div>
         </div>
         
-        <!-- Adicione isso ao seu template HTML -->
-        <div class="row mb-4">
-          
-          
-          
-        </div>
-        
+            
         <!-- Contato de Emergência -->
         <div class="row mb-4">
           <div class="col-12">

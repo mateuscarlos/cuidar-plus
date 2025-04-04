@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -27,7 +27,8 @@ import { Plano } from '../models/plano.model';
     MatAutocompleteModule
   ],
   templateUrl: './editar-paciente.component.html',
-  styleUrls: ['./editar-paciente.component.scss']
+  styleUrls: ['./editar-paciente.component.scss'],
+  encapsulation: ViewEncapsulation.None // Permite que os estilos ::ng-deep funcionem corretamente
 })
 export class EditarPacienteComponent implements OnInit {
   pacienteForm!: FormGroup;
@@ -479,20 +480,26 @@ export class EditarPacienteComponent implements OnInit {
   }
 
   exibirConvenio(convenio: Convenio | null): string {
-    return convenio ? convenio.nome : '';
+    // Garantir que retornamos uma string legível que será exibida no input
+    return convenio && convenio.nome ? convenio.nome : '';
   }
   
   exibirPlano(plano: Plano | null): string {
-    return plano ? plano.nome : '';
+    // Garantir que retornamos uma string legível que será exibida no input
+    return plano && plano.nome ? plano.nome : '';
   }
   
   selecionarConvenio(event: any): void {
     const convenio = event.option.value;
     this.convenioSelecionado = convenio;
+    
+    // Atualizar os valores no formulário
     this.pacienteForm.patchValue({
       convenio_id: convenio.id,
-      convenio_nome: convenio.nome
+      convenio_nome: convenio.nome  // Isso garante que o nome apareça no campo
     });
+    
+    console.log('Convênio selecionado:', convenio);
     
     // Limpar plano e carregar planos do convênio selecionado
     this.pacienteForm.patchValue({ plano_id: null, plano_nome: '' });
@@ -503,9 +510,13 @@ export class EditarPacienteComponent implements OnInit {
   selecionarPlano(event: any): void {
     const plano = event.option.value;
     this.planoSelecionado = plano;
+    
+    // Atualizar os valores no formulário
     this.pacienteForm.patchValue({
       plano_id: plano.id,
-      plano_nome: plano.nome
+      plano_nome: plano.nome  // Isso garante que o nome apareça no campo
     });
+    
+    console.log('Plano selecionado:', plano);
   }
 }
