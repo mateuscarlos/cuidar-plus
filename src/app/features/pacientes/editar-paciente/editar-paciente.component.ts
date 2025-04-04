@@ -137,6 +137,16 @@ export class EditarPacienteComponent implements OnInit {
   }
   
   preencherFormulario(paciente: Paciente): void {
+    // Parse endereco if it's a string
+    let endereco = paciente.endereco;
+    if (typeof endereco === 'string') {
+      try {
+        endereco = JSON.parse(endereco);
+      } catch (error) {
+        console.error('Erro ao converter endereço:', error);
+      }
+    }
+
     this.pacienteForm.patchValue({
       nome_completo: paciente.nome_completo,
       cpf: paciente.cpf,
@@ -149,13 +159,14 @@ export class EditarPacienteComponent implements OnInit {
       telefone_secundario: paciente.telefone_secundario,
       email: paciente.email,
       endereco: {
-        cep: paciente.endereco.cep,
-        logradouro: paciente.endereco.logradouro,
-        numero: paciente.endereco.numero,
-        complemento: paciente.endereco.complemento,
-        bairro: paciente.endereco.bairro,
-        cidade: paciente.endereco.cidade,
-        estado: paciente.endereco.estado
+        cep: endereco.cep,
+        // Use rua OR logradouro, whichever is available
+        logradouro: endereco.rua || endereco.logradouro || '',
+        numero: endereco.numero,
+        complemento: endereco.complemento,
+        bairro: endereco.bairro,
+        cidade: endereco.cidade,
+        estado: endereco.estado
       },
       status: paciente.status,
       cid_primario: paciente.cid_primario,
@@ -184,6 +195,15 @@ export class EditarPacienteComponent implements OnInit {
 
     const pacienteId = this.pacienteSelecionado?.id; // ID do paciente selecionado
     const dadosAtualizados = { ...this.pacienteForm.value }; // Cria uma cópia dos dados do formulário
+    
+    // Fix endereco field mapping
+    if (dadosAtualizados.endereco) {
+      // Map logradouro to rua for API compatibility
+      dadosAtualizados.endereco = {
+        ...dadosAtualizados.endereco,
+        rua: dadosAtualizados.endereco.logradouro
+      };
+    }
     
     // Converter formato de data de nascimento de yyyy-mm-dd para dd/mm/yyyy
     if (dadosAtualizados.data_nascimento) {
