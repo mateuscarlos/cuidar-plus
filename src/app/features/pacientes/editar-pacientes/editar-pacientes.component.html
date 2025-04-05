@@ -49,11 +49,9 @@
                 <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
                   <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
                 </span>
-                <select class="form-select" id="status" formControlName="status"
+                <select class="form-select" id="status" formControlName="status" 
                         [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)">
-                  <option *ngFor="let status of statusPaciente" [value]="status">
-                    {{ status }}
-                  </option>
+                  <option *ngFor="let status of statusPaciente" [ngValue]="status">{{ status }}</option>
                 </select>
               </div>
             </div>

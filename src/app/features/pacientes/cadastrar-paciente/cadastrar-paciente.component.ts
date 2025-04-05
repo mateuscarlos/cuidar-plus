@@ -263,6 +263,7 @@ export class CadastrarPacienteComponent implements OnInit {
 
   onSubmit(): void {
     if (this.pacienteForm.invalid) {
+      console.log(this.pacienteForm);
       this.pacienteForm.markAllAsTouched();
       this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios.');
       return;

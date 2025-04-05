@@ -19,7 +19,7 @@ import { finalize } from 'rxjs/operators';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent],
   templateUrl: './editar-pacientes.component.html',
-  styleUrl: './editar-pacientes.component.scss'
+  styleUrls: ['./editar-pacientes.component.scss']
 })
 export class EditarPacientesComponent implements OnInit {
   pacienteForm!: FormGroup;
@@ -82,7 +82,7 @@ export class EditarPacientesComponent implements OnInit {
         cidade: ['', Validators.required],
         estado: ['', Validators.required]
       }),
-      status: [StatusPaciente.ATIVO],
+      status: ['', Validators.required],
       cid_primario: ['', Validators.required],
       cid_secundario: [''],
       acomodacao: ['', Validators.required],
@@ -225,11 +225,20 @@ export class EditarPacientesComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
     
-    if (convenioId) {
-      const convenioSelecionado = this.convenios.find(c => c.id === convenioId);
-      if (convenioSelecionado) {
-        console.log(`Convênio selecionado: ${convenioSelecionado.nome} (ID: ${convenioSelecionado.id})`);
+    // Limpar e desabilitar o campo plano
+    const planoIdControl = this.pacienteForm.get('plano_id');
+    if (planoIdControl) {
+      planoIdControl.setValue('');
+      
+      if (!convenioId) {
+        planoIdControl.disable();
+        this.planosFiltrados = [];
+        return;
       }
+      
+      // Se tiver convênio selecionado, carregar planos
+      this.carregarPlanos(convenioId);
+      planoIdControl.enable();
     }
   }
 
@@ -287,74 +296,77 @@ export class EditarPacientesComponent implements OnInit {
   }
 
   preencherFormularioComDadosPaciente(paciente: Paciente): void {
-    // Carregar planos do convênio do paciente (se houver)
-    if (paciente.convenio_id) {
-      this.carregarPlanos(Number(paciente.convenio_id));
-    }
-    
-    // Formatar data de nascimento para o formato aceito pelo input date
+    console.log('Dados do paciente recebidos:', paciente);
+
     const dataNascimentoFormatada = this.formatarDataParaInput(paciente.data_nascimento);
-    
-    // Formatar data de validade para o formato aceito pelo input date
     const dataValidadeFormatada = this.formatarDataParaInput(paciente.data_validade);
-    
-    // Preencher o formulário com os dados do paciente
-    this.pacienteForm.patchValue({
-      nome_completo: paciente.nome_completo || paciente.nome,
-      cpf: paciente.cpf,
-      data_nascimento: dataNascimentoFormatada,
-      genero: paciente.genero || '',
-      estado_civil: paciente.estado_civil || '',
-      profissao: paciente.profissao || '',
-      nacionalidade: paciente.nacionalidade || '',
-      telefone: paciente.telefone || '',
-      telefone_secundario: paciente.telefone_secundario || '',
-      email: paciente.email || '',
-      status: paciente.status || StatusPaciente.ATIVO,
-      cid_primario: paciente.cid_primario || '',
-      cid_secundario: paciente.cid_secundario || '',
-      acomodacao: paciente.acomodacao || '',
-      medico_responsavel: paciente.medico_responsavel || '',
-      alergias: paciente.alergias || '',
-      convenio_id: paciente.convenio_id || '',
-      numero_carteirinha: paciente.numero_carteirinha || '',
-      data_validade: dataValidadeFormatada,
-      contato_emergencia: paciente.contato_emergencia || '',
-      telefone_emergencia: paciente.telefone_emergencia || '',
-      case_responsavel: paciente.case_responsavel || ''
-    });
-    
-    // Preencher o endereço
-    if (paciente.endereco) {
-      let enderecoData = paciente.endereco;
-      
-      // Se o endereço estiver como string (serializado), converter para objeto
-      if (typeof paciente.endereco === 'string') {
+
+    // Corrigir mapeamento de convenioId e numeroCarteirinha
+    const convenioId = paciente.convenioId || paciente.convenio_id || '';
+    const numeroCarteirinha = paciente.numeroCarteirinha || paciente.numero_carteirinha || '';
+    const planoId = paciente.planoId || paciente.plano_id || '';
+
+    // Corrigir mapeamento do endereço
+    let endereco = paciente.endereco || {};
+    if (typeof endereco === 'string') {
         try {
-          enderecoData = JSON.parse(paciente.endereco);
+            endereco = JSON.parse(endereco);
         } catch (error) {
-          console.error('Erro ao processar endereço:', error);
-          enderecoData = {};
+            console.error('Erro ao parsear o endereço:', error);
+            endereco = {}; // Define um valor padrão em caso de erro
         }
-      }
-      
-      this.pacienteForm.patchValue({
-        endereco: {
-          cep: enderecoData.cep || '',
-          logradouro: enderecoData.logradouro || '',
-          numero: enderecoData.numero || '',
-          complemento: enderecoData.complemento || '',
-          bairro: enderecoData.bairro || '',
-          cidade: enderecoData.cidade || '',
-          estado: enderecoData.estado || ''
-        }
-      });
     }
-    
-    // Se tiver plano_id, habilitar o campo
-    if (paciente.plano_id) {
-      this.pacienteForm.get('plano_id')?.enable();
-      this.pacienteForm.get('plano_id')?.setValue(paciente.plano_id);
+
+    const enderecoFormatado = {
+        cep: endereco.cep || '',
+        logradouro: endereco.logradouro,
+        numero: endereco.numero || '',
+        complemento: endereco.complemento || '',
+        bairro: endereco.bairro || '',
+        cidade: endereco.cidade || '',
+        estado: endereco.estado || ''
+    };
+
+    if (convenioId) {
+        this.carregarPlanos(Number(convenioId));
+    }
+
+    this.pacienteForm.patchValue({
+        nome_completo: paciente.nome_completo || paciente.nome,
+        cpf: paciente.cpf,
+        data_nascimento: dataNascimentoFormatada,
+        genero: paciente.genero || '',
+        estado_civil: paciente.estado_civil || '',
+        profissao: paciente.profissao || '',
+        nacionalidade: paciente.nacionalidade || '',
+        telefone: paciente.telefone || '',
+        telefone_secundario: paciente.telefone_secundario || '',
+        email: paciente.email || '',
+        status: paciente.status || StatusPaciente.ATIVO,
+        cid_primario: paciente.cid_primario || '',
+        cid_secundario: paciente.cid_secundario || '',
+        acomodacao: paciente.acomodacao || '',
+        medico_responsavel: paciente.medico_responsavel || '',
+        alergias: paciente.alergias || '',
+        convenio_id: convenioId,
+        numero_carteirinha: numeroCarteirinha,
+        data_validade: dataValidadeFormatada,
+        contato_emergencia: paciente.contato_emergencia || '',
+        telefone_emergencia: paciente.telefone_emergencia || '',
+        case_responsavel: paciente.case_responsavel || '',
+        endereco: enderecoFormatado
+    });
+
+    console.log('Formulário após patchValue:', this.pacienteForm.value);
+
+    if (planoId) {
+        setTimeout(() => {
+            const planoControl = this.pacienteForm.get('plano_id');
+            if (planoControl) {
+                planoControl.enable();
+                planoControl.setValue(planoId);
+            }
+        }, 500);
     }
   }
 

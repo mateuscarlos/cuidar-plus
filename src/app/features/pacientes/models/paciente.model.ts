@@ -45,6 +45,10 @@ export interface Paciente {
   // Campo para facilitar a exibição na lista
   nome?: string;
   dataNascimento?: string;
+  convenioId?: string;
+  planoId?: string;
+  numeroCarteirinha?: string;
+  rua?: string;
 }
 
 export enum StatusPaciente {
