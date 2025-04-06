@@ -31,11 +31,12 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    // Usamos UTC methods para evitar problemas de timezone
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const year = dateObj.getUTCFullYear();
+    const hours = String(dateObj.getUTCHours()).padStart(2, '0');
+    const minutes = String(dateObj.getUTCMinutes()).padStart(2, '0');
     
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
@@ -48,9 +49,10 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const year = dateObj.getFullYear();
+    // Usamos UTC methods para evitar problemas de timezone
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const year = dateObj.getUTCFullYear();
     
     return `${day}/${month}/${year}`;
   }
@@ -63,15 +65,15 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    // Usamos UTC methods para evitar problemas de timezone
+    const hours = String(dateObj.getUTCHours()).padStart(2, '0');
+    const minutes = String(dateObj.getUTCMinutes()).padStart(2, '0');
     
     return `${hours}:${minutes}`;
   }
 
   /**
    * Converte para formato do backend completo (DD/MM/YYYY HH:mm)
-   * Garante que a data está na timezone correta para o Brasil
    */
   toBackendFormat(date: string | Date | null | undefined): string {
     // Se já estiver no formato do backend, retorna diretamente
@@ -81,19 +83,14 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    // Garante que a data está na timezone de São Paulo antes de formatar
-    const options = { timeZone: this.TIMEZONE };
-    const formatter = new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-      timeZone: this.TIMEZONE
-    });
+    // Usamos UTC methods para evitar problemas de timezone
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const year = dateObj.getUTCFullYear();
+    const hours = String(dateObj.getUTCHours()).padStart(2, '0');
+    const minutes = String(dateObj.getUTCMinutes()).padStart(2, '0');
     
-    return formatter.format(dateObj).replace(',', '');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
   /**
@@ -110,15 +107,12 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    // Garante que a data está na timezone de São Paulo antes de formatar
-    const formatter = new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      timeZone: this.TIMEZONE
-    });
+    // Usamos UTC methods para evitar problemas de timezone
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const year = dateObj.getUTCFullYear();
     
-    return formatter.format(dateObj);
+    return `${day}/${month}/${year}`;
   }
 
   /**
@@ -129,10 +123,10 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    // Ajustamos para a timezone do Brasil
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
+    // Usamos UTC methods para evitar problemas de timezone
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
     
     return `${year}-${month}-${day}`;
   }
@@ -145,22 +139,33 @@ export class DateFormatterService {
     const dateObj = this.parseToDate(date);
     if (!this.isValidDate(dateObj)) return '';
     
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const hours = String(dateObj.getHours()).padStart(2, '0');
-    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    // Usamos UTC methods para evitar problemas de timezone
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    const hours = String(dateObj.getUTCHours()).padStart(2, '0');
+    const minutes = String(dateObj.getUTCMinutes()).padStart(2, '0');
     
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   /**
    * Analisa uma string ou objeto Date para um objeto Date
-   * respeitando a timezone de São Paulo
+   * Mantém a data exata sem ajustes de timezone
    */
-  public parseToDate(date: string | Date): Date {
+  public parseToDate(date: string | Date | null | undefined): Date {
+    if (!date) return new Date(0);
+    
     if (date instanceof Date) {
-      return date;
+      // Criamos uma data UTC a partir dos componentes da data local para preservar os valores exatos
+      return new Date(Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds()
+      ));
     }
     
     // Se for uma string no formato do backend brasileiro (DD/MM/YYYY ou DD/MM/YYYY HH:mm)
@@ -175,21 +180,49 @@ export class DateFormatterService {
         if (parts.length >= 5) {
           const hours = parseInt(parts[3], 10);
           const minutes = parseInt(parts[4], 10);
-          // Cria a data com timezone local
-          const newDate = new Date(year, month, day, hours, minutes);
-          return newDate;
+          // Usamos UTC para preservar os valores exatos
+          return new Date(Date.UTC(year, month, day, hours, minutes));
         }
         
-        return new Date(year, month, day);
+        return new Date(Date.UTC(year, month, day));
       }
     }
     
-    // Tentativa de análise padrão
+    // Se for uma string no formato HTML (YYYY-MM-DD ou YYYY-MM-DDThh:mm)
+    if (typeof date === 'string' && (date.includes('-') || date.includes('T'))) {
+      if (date.includes('T')) {
+        // Formato YYYY-MM-DDThh:mm
+        const [datePart, timePart] = date.split('T');
+        const [year, month, day] = datePart.split('-').map(Number);
+        let hours = 0, minutes = 0;
+        
+        if (timePart) {
+          [hours, minutes] = timePart.split(':').map(Number);
+        }
+        
+        // Usamos UTC para preservar os valores exatos
+        return new Date(Date.UTC(year, month - 1, day, hours, minutes));
+      } else {
+        // Formato YYYY-MM-DD
+        const [year, month, day] = date.split('-').map(Number);
+        return new Date(Date.UTC(year, month - 1, day));
+      }
+    }
+    
+    // Para outros formatos, criamos data UTC e depois ajustamos
     try {
-      return new Date(date);
+      const tempDate = new Date(date);
+      return new Date(Date.UTC(
+        tempDate.getFullYear(),
+        tempDate.getMonth(),
+        tempDate.getDate(),
+        tempDate.getHours(),
+        tempDate.getMinutes(),
+        tempDate.getSeconds()
+      ));
     } catch (error) {
       console.error('Erro ao analisar data:', error);
-      return new Date();
+      return new Date(0);
     }
   }
 
@@ -202,7 +235,6 @@ export class DateFormatterService {
 
   /**
    * Formata datas para uso em formulários
-   * Garante que as datas estejam sempre no formato correto para as APIs
    */
   formatarDataParaFormulario(data: any, campo: string): any {
     if (!data) return data;
@@ -221,29 +253,30 @@ export class DateFormatterService {
   }
 
   /**
-   * Ajusta o fuso horário para a data gerada pelo input datetime-local
-   * para garantir que a data não mude ao ser enviada ao backend
+   * Calcula a idade a partir da data de nascimento
    */
-  ajustarFusoHorarioInput(dateStr: string): Date {
-    if (!dateStr) return new Date();
+  calculateAge(birthDate: Date | string | null): number | null {
+    if (!birthDate) return null;
     
-    // O formato do input é YYYY-MM-DDThh:mm
-    const [datePart, timePart] = dateStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart ? timePart.split(':').map(Number) : [0, 0];
+    const birth = this.parseToDate(birthDate);
     
-    // Cria data usando a data/hora informada diretamente
-    return new Date(year, month - 1, day, hours, minutes);
-  }
-
-  /**
-   * Converte a data para ISO string mantendo o fuso horário correto
-   */
-  toISOWithTimezone(date: Date | string): string {
-    if (!date) return '';
-    const dateObj = date instanceof Date ? date : this.parseToDate(date);
-    if (!this.isValidDate(dateObj)) return '';
+    // Verificar se é uma data válida
+    if (!this.isValidDate(birth)) {
+      return null;
+    }
     
-    return dateObj.toISOString();
+    const today = new Date();
+    const birthYear = birth.getUTCFullYear();
+    const birthMonth = birth.getUTCMonth();
+    const birthDay = birth.getUTCDate();
+    
+    let age = today.getFullYear() - birthYear;
+    const currentMonth = today.getMonth();
+    
+    if (currentMonth < birthMonth || (currentMonth === birthMonth && today.getDate() < birthDay)) {
+      age--;
+    }
+    
+    return age;
   }
 }

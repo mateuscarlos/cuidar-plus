@@ -16,15 +16,16 @@ import { AcompanhamentoService } from '../services/acompanhamento.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { finalize } from 'rxjs/operators';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
 
 @Component({
-  selector: 'app-criar-acompanhamento-paciente', // Alterado para corresponder ao nome do arquivo
+  selector: 'app-criar-acompanhamento-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent],
+  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent, DateInputComponent],
   templateUrl: './criar-acompanhamento-paciente.component.html',
   styleUrls: ['./criar-acompanhamento-paciente.component.scss']
 })
-export class CriarAcompanhamentoPacienteComponent implements OnInit { // Alterado o nome da classe
+export class CriarAcompanhamentoPacienteComponent implements OnInit {
   acompanhamentoForm!: FormGroup;
   pacienteSelecionado: Paciente | null = null;
   modoEdicao = false;
@@ -249,17 +250,26 @@ export class CriarAcompanhamentoPacienteComponent implements OnInit { // Alterad
     
     // Tratar datas e horas para o formato do backend
     if (formValues.data_hora_atendimento) {
+      // Usar diretamente o método toBackendFormat para converter para o formato do backend
       formValues.data_hora_atendimento = this.dateFormatter.toBackendFormat(
-        this.dateFormatter.ajustarFusoHorarioInput(formValues.data_hora_atendimento)
+        formValues.data_hora_atendimento
       );
     }
     
     // Tratar data do próximo atendimento
     if (formValues.plano_acao?.data_proximo && formValues.plano_acao?.hora_proximo) {
+      // Combinar data e hora em uma única string ISO
       const dataHoraProximo = `${formValues.plano_acao.data_proximo}T${formValues.plano_acao.hora_proximo}`;
-      formValues.plano_acao.data_hora_proximo = this.dateFormatter.toBackendFormat(
-        this.dateFormatter.ajustarFusoHorarioInput(dataHoraProximo)
-      );
+      
+      // Usar o método parseToDate para criar uma data UTC correta
+      const dataObjeto = this.dateFormatter.parseToDate(dataHoraProximo);
+      
+      // Converter para o formato do backend
+      formValues.plano_acao.data_hora_proximo = this.dateFormatter.toBackendFormat(dataObjeto);
+      
+      // Remover os campos separados, pois agora temos o campo combinado
+      delete formValues.plano_acao.data_proximo;
+      delete formValues.plano_acao.hora_proximo;
     }
     
     // Adicionar o ID do paciente

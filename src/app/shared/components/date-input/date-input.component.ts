@@ -31,6 +31,7 @@ export class DateInputComponent implements ControlValueAccessor {
   @Output() dateChange = new EventEmitter<string>();
 
   inputValue = '';
+  originalValue: string | Date | null = null;
   
   constructor(private dateFormatter: DateFormatterService) {}
 
@@ -42,6 +43,9 @@ export class DateInputComponent implements ControlValueAccessor {
    * Chamado quando o valor muda externamente
    */
   writeValue(value: string | Date | null): void {
+    // Armazena o valor original para evitar conversões repetidas
+    this.originalValue = value;
+    
     if (value) {
       // Converte para o formato adequado para o input HTML
       this.inputValue = this.showTime 
@@ -81,12 +85,18 @@ export class DateInputComponent implements ControlValueAccessor {
     const value = input.value;
     this.inputValue = value;
     
-    // Converte de formato HTML para o formato do backend para o formulário
-    const backendFormat = this.showTime
-      ? this.dateFormatter.toBackendFormat(value)
-      : this.dateFormatter.toBackendDateOnlyFormat(value);
-    
-    this.onChange(backendFormat);
-    this.dateChange.emit(backendFormat);
+    // Somente emite mudanças se houver de fato uma alteração do usuário
+    if (value) {
+      // Converte de formato HTML para o formato do backend para o formulário
+      const backendFormat = this.showTime
+        ? this.dateFormatter.toBackendFormat(value)
+        : this.dateFormatter.toBackendDateOnlyFormat(value);
+      
+      this.onChange(backendFormat);
+      this.dateChange.emit(backendFormat);
+    } else {
+      this.onChange(null);
+      this.dateChange.emit('');
+    }
   }
 }

@@ -1,0 +1,23 @@
+<div class="form-group">
+  <label *ngIf="label" [for]="id" class="form-label">
+    {{ label }}
+    <span *ngIf="required" class="text-danger">*</span>
+  </label>
+  
+  <input
+    [id]="id"
+    [name]="name || id"
+    [type]="showTime ? 'datetime-local' : 'date'"
+    [placeholder]="placeholder"
+    [required]="required"
+    [disabled]="disabled"
+    [value]="inputValue"
+    (change)="onInputChange($event)"
+    (blur)="onTouched()"
+    class="form-control"
+    [class.is-invalid]="error"
+  >
+  
+  <div *ngIf="help" class="form-text">{{ help }}</div>
+  <div *ngIf="error" class="invalid-feedback">{{ error }}</div>
+</div>

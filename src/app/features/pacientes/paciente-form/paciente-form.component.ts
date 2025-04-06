@@ -10,14 +10,16 @@ import { Convenio } from '../models/convenio.model';
 import { Plano } from '../models/plano.model';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { CepService } from '../../../core/services/cep.service';
-import { DateUtilsService } from '../../../core/services/date-utils.service';
+import { DateFormatterService } from '../../../core/services/date-formatter.service';
+import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+
 
 @Component({
   selector: 'app-paciente-form',
   templateUrl: './paciente-form.component.html',
   styleUrls: ['./paciente-form.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule]
+  imports: [CommonModule, ReactiveFormsModule, DateInputComponent]
 })
 export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() paciente: Paciente | null = null;
@@ -43,7 +45,7 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
     private fb: FormBuilder,
     private convenioPlanoService: ConvenioPlanoService,
     private cepService: CepService,
-    private dateUtils: DateUtilsService
+    private dateFormatter: DateFormatterService
   ) {}
 
   ngOnInit(): void {
@@ -112,13 +114,13 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
   private patchFormValues(): void {
     if (!this.paciente) return;
 
-    const formattedDataNascimento = this.dateUtils.formatDateForInput(this.paciente.dataNascimento || null);
+    const formattedDataNascimento = this.dateFormatter.toBackendDateOnlyFormat(this.paciente.data_nascimento);
     const formattedDataValidade = this.paciente.data_validade ? 
-      this.dateUtils.formatDateForInput(this.paciente.data_validade) : '';
+      this.dateFormatter.toBackendDateOnlyFormat(this.paciente.data_validade) : '';
 
     this.form.patchValue({
-      nome: this.paciente.nome,
-      dataNascimento: formattedDataNascimento,
+      nome: this.paciente.nome_completo,
+      data_nascimento: formattedDataNascimento,
       cpf: this.paciente.cpf,
       genero: this.paciente.genero,
       estado_civil: this.paciente.estado_civil,
@@ -263,16 +265,9 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
   prepareFormData(): Paciente {
     const formValue = this.form.value;
     
-    // Processar datas para o formato esperado pelo backend
-    let dataNascimento = formValue.data_nascimento;
-    if (dataNascimento && typeof dataNascimento === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
-      dataNascimento = this.converterDataParaFormatoBackend(dataNascimento);
-    }
-    
-    let dataValidade = formValue.data_validade;
-    if (dataValidade && typeof dataValidade === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(dataValidade)) {
-      dataValidade = this.converterDataParaFormatoBackend(dataValidade);
-    }
+    // Usar o serviço DateFormatterService para tratar as datas
+    const dataNascimento = this.dateFormatter.toBackendDateOnlyFormat(formValue.data_nascimento);
+    const dataValidade = this.dateFormatter.toBackendDateOnlyFormat(formValue.data_validade);
     
     return {
       id: this.paciente?.id ?? 0, // Use 0 or '' instead of null as a default value
@@ -311,22 +306,6 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
     };
   }
 
-  private converterDataParaFormatoBackend(data: string): string {
-    // Converter de DD/MM/YYYY para YYYY-MM-DD
-    if (!data) return '';
-    
-    try {
-      const partes = data.split('/');
-      if (partes.length === 3) {
-        return `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
-      }
-      return data;
-    } catch (error) {
-      console.error('Erro ao converter data:', error);
-      return data;
-    }
-  }
-
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
@@ -359,7 +338,7 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
     this.form.patchValue({
       nome_completo: paciente.nome_completo,
       cpf: paciente.cpf,
-      data_nascimento: this.formatDateForInput(paciente.data_nascimento),
+      data_nascimento: this.dateFormatter.toBackendDateOnlyFormat(paciente.data_nascimento),
       genero: paciente.genero || '',
       estado_civil: paciente.estado_civil || '',
       profissao: paciente.profissao || '',
@@ -382,7 +361,7 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
       convenio_id: paciente.convenio_id || '',
       plano_id: paciente.plano_id || '',
       numero_carteirinha: paciente.numero_carteirinha || '',
-      data_validade: this.formatDateForInput(paciente.data_validade),
+      data_validade: this.dateFormatter.toBackendDateOnlyFormat(paciente.data_validade),
       
       endereco: {
         cep: endereco?.cep || '',
@@ -404,16 +383,7 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
     console.log('Formulário preenchido com os dados do paciente:', this.form.value);
   }
 
-  // Método auxiliar para formatar data para input
-  private formatDateForInput(dateValue: string | Date | null | undefined): string {
-    if (!dateValue) return '';
-    if (dateValue instanceof Date) {
-      return this.dateUtils.formatDateForInput(dateValue);
-    }
-    return this.dateUtils.formatDateForInput(dateValue);
-  }
-
-  // Adicionar um método para tratar o clique no campo convênio
+  // Onvenio focus handler
   onConvenioFocus(): void {
     // Verificar se os convênios já foram carregados
     if (this.convenios.length === 0) {
@@ -426,10 +396,14 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
     
     console.log('Atualizando formulário com dados:', this.paciente);
     
+    // Formatar datas usando o DateFormatterService
+    const dataNascimento = this.dateFormatter.toBackendDateOnlyFormat(this.paciente.data_nascimento);
+    const dataValidade = this.dateFormatter.toBackendDateOnlyFormat(this.paciente.data_validade);
+    
     // Atualizar campos básicos
     this.form.patchValue({
       nome_completo: this.paciente.nome_completo,
-      data_nascimento: this.paciente.data_nascimento,
+      data_nascimento: dataNascimento,
       cpf: this.paciente.cpf,
       genero: this.paciente.genero,
       estado_civil: this.paciente.estado_civil,
@@ -452,7 +426,7 @@ export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
       
       convenio_id: this.paciente.convenio_id,
       numero_carteirinha: this.paciente.numero_carteirinha,
-      data_validade: this.paciente.data_validade,
+      data_validade: dataValidade,
     });
     
     // Se houver convênio, habilitar o campo de plano e carregar os planos
