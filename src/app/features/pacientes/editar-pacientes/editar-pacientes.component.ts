@@ -313,7 +313,7 @@ export class EditarPacientesComponent implements OnInit {
             endereco = JSON.parse(endereco);
         } catch (error) {
             console.error('Erro ao parsear o endereço:', error);
-            endereco = {}; // Define um valor padrão em caso de erro
+            endereco = {};
         }
     }
 
@@ -327,10 +327,7 @@ export class EditarPacientesComponent implements OnInit {
         estado: endereco.estado || ''
     };
 
-    if (convenioId) {
-        this.carregarPlanos(Number(convenioId));
-    }
-
+    // Primeiro preencher todos os campos exceto plano_id
     this.pacienteForm.patchValue({
         nome_completo: paciente.nome_completo || paciente.nome,
         cpf: paciente.cpf,
@@ -357,16 +354,43 @@ export class EditarPacientesComponent implements OnInit {
         endereco: enderecoFormatado
     });
 
-    console.log('Formulário após patchValue:', this.pacienteForm.value);
-
-    if (planoId) {
-        setTimeout(() => {
-            const planoControl = this.pacienteForm.get('plano_id');
-            if (planoControl) {
-                planoControl.enable();
-                planoControl.setValue(planoId);
-            }
-        }, 500);
+    // Se tiver convênio, carregar os planos associados e depois preencher plano_id
+    if (convenioId) {
+        const planoControl = this.pacienteForm.get('plano_id');
+        
+        // Ativar o campo plano_id para poder receber valor
+        if (planoControl) {
+            planoControl.enable();
+        }
+        
+        // Carregar os planos e então definir o valor do plano selecionado
+        this.convenioPlanoService.listarPlanosPorConvenio(Number(convenioId))
+            .subscribe({
+                next: (planos) => {
+                    this.planosFiltrados = planos;
+                    
+                    // Depois que os planos estiverem carregados, selecionar o plano do paciente
+                    if (planoId && planoControl) {
+                        planoControl.setValue(planoId);
+                    }
+                    
+                    if (this.planosFiltrados.length === 0) {
+                        this.notificacaoService.mostrarAviso('Este convênio não possui planos cadastrados.');
+                        planoControl?.disable();
+                    }
+                },
+                error: (erro) => {
+                    console.error('Erro ao carregar planos:', erro);
+                    this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + (erro.message || 'Falha na comunicação com o servidor'));
+                }
+            });
+    } else {
+        // Se não tiver convênio, desabilitar o campo plano_id
+        const planoControl = this.pacienteForm.get('plano_id');
+        if (planoControl) {
+            planoControl.disable();
+            planoControl.setValue('');
+        }
     }
   }
 
