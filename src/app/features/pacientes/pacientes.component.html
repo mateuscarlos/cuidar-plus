@@ -13,15 +13,44 @@
         </div>
       </div>
       
-      <div class="card">
+      <!-- Componente de Busca -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <app-busca-paciente (resultadoBusca)="buscarPaciente($event)"></app-busca-paciente>
+          
+          <!-- Botão para resetar a busca -->
+          <div *ngIf="buscaRealizada" class="d-flex justify-content-end mt-3">
+            <button class="btn btn-outline-secondary" (click)="resetarBusca()">
+              <i class="bi bi-arrow-repeat me-1"></i> Mostrar Todos
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Loader -->
+      <div class="text-center my-5" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+      
+      <!-- Mensagem de erro -->
+      <div class="alert alert-danger" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ error }}
+      </div>
+      
+      <!-- Grid de Pacientes -->
+      <div class="card" *ngIf="!isLoading && !error">
         <div class="card-body">
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Nome</th>
+                  <th>Nome Completo</th>
+                  <th>Matrícula (ID)</th>
                   <th>Status</th>
-                  <th>Últ. Atualização</th>
+                  <th>Última Atualização</th>
                   <th class="text-end">Ações</th>
                 </tr>
               </thead>
@@ -29,17 +58,15 @@
                 <tr *ngFor="let paciente of pacientes">
                   <td>
                     <div class="d-flex align-items-center">
-                      <app-paciente-avatar [nome]="paciente.nome ?? ''" class="me-3"></app-paciente-avatar>
-                      <div>
-                        <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
-                        <small class="text-muted">ID: {{ paciente.id }}</small>
-                      </div>
+                      <app-paciente-avatar [nome]="paciente.nome_completo || paciente.nome || ''" class="me-3"></app-paciente-avatar>
+                      <span>{{ paciente.nome_completo || paciente.nome }}</span>
                     </div>
                   </td>
+                  <td>{{ paciente.id }}</td>
                   <td>
                     <app-status-badge [status]="paciente.status"></app-status-badge>
                   </td>
-                  <td>{{ paciente.updated_at | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ paciente.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td class="text-end">
                     <div class="btn-group">
                       <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
@@ -59,6 +86,12 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          
+          <!-- Mensagem para lista vazia -->
+          <div class="text-center py-5" *ngIf="pacientes.length === 0">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="mt-3 text-muted">Nenhum paciente encontrado</p>
           </div>
         </div>
       </div>

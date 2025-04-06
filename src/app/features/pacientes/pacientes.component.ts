@@ -5,11 +5,13 @@ import { PacienteAvatarComponent } from '../../shared/components/paciente-avatar
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { PacienteService } from './services/paciente.service';
 import { Paciente } from './models/paciente.model';
+import { BuscaPacienteComponent } from './busca-paciente/busca-paciente.component';
+import { ResultadoBusca } from './models/busca-paciente.model';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, PacienteAvatarComponent, StatusBadgeComponent],
+  imports: [CommonModule, PacienteAvatarComponent, StatusBadgeComponent, BuscaPacienteComponent],
   templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.scss']
 })
@@ -17,6 +19,7 @@ export class PacientesComponent implements OnInit {
   pacientes: Paciente[] = [];
   isLoading = true;
   error: string | null = null;
+  buscaRealizada = false;
 
   constructor(private router: Router, private pacienteService: PacienteService) {}
 
@@ -36,6 +39,29 @@ export class PacientesComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+  
+  // Método para lidar com o resultado da busca
+  buscarPaciente(resultado: ResultadoBusca): void {
+    this.isLoading = true;
+    this.buscaRealizada = true;
+    
+    this.pacienteService.buscarPacientes(resultado).subscribe({
+      next: (pacientes) => {
+        this.pacientes = pacientes;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.error = 'Erro ao buscar pacientes.';
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  // Método para resetar a busca e mostrar todos os pacientes
+  resetarBusca(): void {
+    this.buscaRealizada = false;
+    this.carregarPacientes();
   }
   
   // Métodos para navegação
