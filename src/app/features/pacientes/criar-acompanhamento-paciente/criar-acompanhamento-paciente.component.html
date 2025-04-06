@@ -8,61 +8,10 @@
       <app-busca-paciente
         *ngIf="!modoEdicao"
         (resultadoBusca)="buscarPaciente($event)"
+        [modoVisualizacao]="'acompanhamento'"
       ></app-busca-paciente>
 
-      <!-- Resultados da busca - exibidos apenas quando houver resultados e não estiver no modo de edição -->
-      <div
-        class="card border-0 shadow-sm mb-4"
-        *ngIf="resultadosBusca.length > 0 && !modoEdicao"
-      >
-        <div class="card-body">
-          <h6 class="card-title mb-3">Resultados da Busca</h6>
-
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>CPF</th>
-                  <th>Data de Nasc.</th>
-                  <th>Telefone</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let paciente of resultadosBusca"
-                  (click)="selecionarPaciente(paciente)"
-                  style="cursor: pointer"
-                >
-                  <td>
-                    <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
-                      <small class="text-muted">ID: {{ paciente.id }}</small>
-                  </td>
-                  <td>{{ paciente.cpf }}</td>
-                  <td>{{ paciente.dataNascimento | date : "dd/MM/yyyy" }}</td>
-                  <td>{{ paciente.telefone }}</td>
-                  <td>
-                    <button
-                      class="btn btn-sm btn-info"
-                      (click)="
-                        selecionarPaciente(paciente); $event.stopPropagation()
-                      "
-                    >
-                      <i class="bi bi-clipboard-plus me-1"></i> Registrar
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Mensagem caso não encontre resultados -->
-          <div class="alert alert-info" *ngIf="resultadosBusca.length === 0">
-            Nenhum paciente encontrado com os critérios de busca informados.
-          </div>
-        </div>
-      </div>
+        
 
       <!-- Formulário de acompanhamento - exibido apenas quando um paciente estiver selecionado -->
       <form

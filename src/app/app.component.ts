@@ -7,12 +7,12 @@ import { FooterComponent } from './layout/footer/footer.component';
 import { DeviceDetectorService } from './core/services/device-detector.service';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { NotificacoesComponent } from './shared/components/notificacoes/notificacoes.component';
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, FooterComponent, NotificacoesComponent],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, SidebarComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

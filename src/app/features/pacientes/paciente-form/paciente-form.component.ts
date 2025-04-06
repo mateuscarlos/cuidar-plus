@@ -11,7 +11,7 @@ import { Plano } from '../models/plano.model';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { CepService } from '../../../core/services/cep.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+
 
 
 @Component({
@@ -19,7 +19,7 @@ import { DateInputComponent } from '../../../shared/components/date-input/date-i
   templateUrl: './paciente-form.component.html',
   styleUrls: ['./paciente-form.component.scss'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DateInputComponent]
+  imports: [CommonModule, ReactiveFormsModule, ]
 })
 export class PacienteFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() paciente: Paciente | null = null;

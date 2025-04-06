@@ -16,12 +16,12 @@ import { AcompanhamentoService } from '../services/acompanhamento.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { finalize } from 'rxjs/operators';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { DateInputComponent } from '../../../shared/components/date-input/date-input.component';
+
 
 @Component({
   selector: 'app-criar-acompanhamento-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent, DateInputComponent],
+  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent,],
   templateUrl: './criar-acompanhamento-paciente.component.html',
   styleUrls: ['./criar-acompanhamento-paciente.component.scss']
 })

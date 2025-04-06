@@ -11,7 +11,7 @@
         <h5 class="card-title">Selecione um Paciente</h5>
         <p class="text-muted">Utilize a busca para encontrar o paciente que deseja editar.</p>
         
-        <app-busca-paciente (pacienteSelecionadoParaEdicao)="onPacienteSelecionado($event)"></app-busca-paciente>
+        <app-busca-paciente [modoVisualizacao]="'editaPaciente'"(pacienteSelecionadoParaEdicao)="onPacienteSelecionado($event)"></app-busca-paciente>
       </div>
     </div>
   </div>
