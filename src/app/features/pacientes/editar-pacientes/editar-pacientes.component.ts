@@ -13,11 +13,12 @@ import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.compone
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { finalize } from 'rxjs/operators';
+import { Endereco } from '../models/endereco.model';
 
 @Component({
   selector: 'app-editar-pacientes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent],
+  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent,],
   templateUrl: './editar-pacientes.component.html',
   styleUrls: ['./editar-pacientes.component.scss']
 })
@@ -45,7 +46,8 @@ export class EditarPacientesComponent implements OnInit {
     private cepService: CepService,
     private convenioPlanoService: ConvenioPlanoService, 
     private dateFormatter: DateFormatterService,
-    public statusStyle: StatusStyleService
+    public statusStyle: StatusStyleService,
+    // Removed Endereco as it is an interface and cannot be injected
   ) {}
   
   ngOnInit(): void {
@@ -254,8 +256,8 @@ export class EditarPacientesComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade,
-                estado: endereco.uf
+                cidade: endereco.localidade, // Mapeando localidade para o campo cidade no form
+                estado: endereco.uf        // Mapeando uf para o campo estado no form
               }
             });
           } else {
@@ -318,14 +320,14 @@ export class EditarPacientesComponent implements OnInit {
     }
 
     const enderecoFormatado = {
-        cep: endereco.cep || '',
-        logradouro: endereco.logradouro,
-        numero: endereco.numero || '',
-        complemento: endereco.complemento || '',
-        bairro: endereco.bairro || '',
-        cidade: endereco.cidade || '',
-        estado: endereco.estado || ''
-    };
+      cep: (endereco as Endereco).cep || '',
+      logradouro: (endereco as Endereco).logradouro || '',
+      numero: (endereco as Endereco).numero || '',
+      complemento: (endereco as Endereco).complemento || '',
+      bairro: (endereco as Endereco).bairro || '',
+      cidade: (endereco as Endereco).localidade || '', // Mapeando localidade para cidade no form
+      estado: (endereco as Endereco).uf || ''         // Mapeando uf para estado no form
+  };
 
     // Primeiro preencher todos os campos exceto plano_id
     this.pacienteForm.patchValue({

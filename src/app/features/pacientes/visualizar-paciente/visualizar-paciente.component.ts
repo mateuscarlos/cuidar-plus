@@ -199,16 +199,17 @@ export class VisualizarPacienteComponent implements OnInit {
   formatarEndereco(endereco: Endereco): string {
     if (!endereco) return 'Não informado';
 
-    // Usar 'logradouro' ou 'rua', dependendo de qual estiver disponível
-    const logradouroOuRua = endereco.logradouro || endereco.rua || 'Logradouro não informado';
+    // Usar 'logradouro' da API
+    const logradouro = endereco.logradouro || 'Logradouro não informado';
 
-    let enderecoCompleto = `${logradouroOuRua}, ${endereco.numero || 'S/N'}`;
+    let enderecoCompleto = `${logradouro}, ${endereco.numero || 'S/N'}`;
 
     if (endereco.complemento) {
       enderecoCompleto += ` - ${endereco.complemento}`;
     }
 
-    enderecoCompleto += ` - ${endereco.bairro || 'Bairro não informado'}, ${endereco.cidade || 'Cidade não informada'}/${endereco.estado || 'Estado não informado'} - ${this.formatarCep(endereco.cep)}`;
+    // Usar 'bairro', 'localidade' (cidade) e 'uf' (estado) da API
+    enderecoCompleto += ` - ${endereco.bairro || 'Bairro não informado'}, ${endereco.localidade || 'Cidade não informada'}/${endereco.uf || 'UF não informado'} - ${this.formatarCep(endereco.cep || '')}`;
 
     return enderecoCompleto;
   }

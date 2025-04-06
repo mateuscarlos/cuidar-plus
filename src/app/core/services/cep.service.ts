@@ -26,8 +26,7 @@ export class CepService {
   constructor(private http: HttpClient) {}
 
   consultarCep(cep: string): Observable<CepResponse | null> {
-    // Remove caracteres não numéricos
-    cep = cep.replace(/\D/g, '');
+    const cepLimpo = cep.replace(/\D/g, '');
     
     if (!cep || cep.length !== 8) {
       return of(null);
@@ -37,9 +36,12 @@ export class CepService {
     const headers = new HttpHeaders();
     // Não incluindo o cabeçalho X-Test-Environment
 
-    return this.http.get<CepResponse>(`${this.BASE_URL}/${cep}/json`, { headers }).pipe(
+    return this.http.get<CepResponse>(`${this.BASE_URL}/${cepLimpo}/json`, { headers }).pipe(
       map(response => response.erro ? null : response),
-      catchError(() => of(null))
+      catchError(error => {
+        console.error('Erro ao consultar CEP:', error);
+        return of(null);
+      })
     );
   }
 }

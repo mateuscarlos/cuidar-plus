@@ -246,8 +246,8 @@ export class CadastrarPacienteComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade,
-                estado: endereco.uf
+                cidade: endereco.localidade, // Mapeando localidade para o campo cidade no form
+                estado: endereco.uf        // Mapeando uf para o campo estado no form
               }
             });
           } else {
@@ -281,6 +281,20 @@ export class CadastrarPacienteComponent implements OnInit {
 
     // Processar datas para o formato do backend
     formValues = this.processarDatasFormulario(formValues);
+
+    // Converter os campos cidade e estado para os campos esperados pelo backend (localidade e uf)
+    if (formValues.endereco) {
+      const endereco = { ...formValues.endereco };
+      if (endereco.cidade) {
+        endereco.localidade = endereco.cidade;  // Adicionar campo localidade
+        delete endereco.cidade;                 // Remover campo cidade
+      }
+      if (endereco.estado) {
+        endereco.uf = endereco.estado;          // Adicionar campo uf
+        delete endereco.estado;                 // Remover campo estado
+      }
+      formValues.endereco = endereco;
+    }
 
     // Enviar dados para o serviço
     this.criarPaciente(formValues);
