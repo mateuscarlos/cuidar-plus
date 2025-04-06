@@ -37,9 +37,5 @@ export const PACIENTES_ROUTES: Routes = [
     component: VisualizarPacienteComponent,
     title: 'Visualizar Paciente - Cuidar+'
   },
-  {
-    path: 'gerenciar',
-    component: GerenciarPacientesComponent,
-    title: 'Gerenciar Pacientes'
-  }
+
 ];

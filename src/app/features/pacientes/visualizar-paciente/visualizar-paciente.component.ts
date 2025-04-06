@@ -1,8 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+// Import the formatted date component and date pipe
+import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
+import { DateFormatPipe } from '../../../shared/pipes/date-format.pipe';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
-import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { Paciente, StatusPaciente } from '../models/paciente.model'; // Import as a type, not for DI
 import { Plano } from '../models/plano.model';
 import { Convenio } from '../models/convenio.model';
 import { Endereco } from '../models/endereco.model';
@@ -22,7 +25,12 @@ import { PacienteAvatarComponent } from '../../../shared/components/paciente-ava
     BuscaPacienteComponent,
     InfoCardComponent,
     StatusBadgeComponent,
-    PacienteAvatarComponent
+    PacienteAvatarComponent,
+    DateFormatPipe,
+    FormattedDateComponent
+  ],
+  providers: [
+    DateFormatPipe // Add this line to provide the pipe
   ],
   templateUrl: './visualizar-paciente.component.html',
   styleUrls: ['./visualizar-paciente.component.scss']
@@ -48,10 +56,13 @@ export class VisualizarPacienteComponent implements OnInit {
     'obito': { texto: 'Óbito', classe: 'bg-danger' }
   };
 
+  // Use the enum directly as a property or reference StatusPaciente directly when needed
+  statusPacienteEnum = StatusPaciente;
+
   constructor(
     private pacienteService: PacienteService,
     private convenioService: ConvenioPlanoService,
-    private statusPaciente: StatusPaciente,
+    // Remove StatusPaciente from here - it's an enum, not a service
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -75,6 +86,31 @@ export class VisualizarPacienteComponent implements OnInit {
       .subscribe({
         next: (paciente) => {
           if (paciente) {
+            console.log('Paciente recebido:', JSON.stringify(paciente));
+            
+            // Ensure the nome field is set (used in the template)
+            if (paciente.nome_completo && !paciente.nome) {
+              paciente.nome = paciente.nome_completo;
+            }
+            
+            // Ensure we have both date fields properly set
+            if (paciente.data_nascimento) {
+              // Normalize into a standard date format
+              try {
+                const dateObj = new Date(paciente.data_nascimento);
+                if (!isNaN(dateObj.getTime())) {
+                  const isoDate = dateObj.toISOString().split('T')[0];
+                  paciente.data_nascimento = isoDate;
+                  paciente.dataNascimento = isoDate; // Set the alias field too
+                }
+              } catch (e) {
+                console.error('Erro ao processar data de nascimento:', e);
+              }
+            } else if (paciente.dataNascimento) {
+              // If we only have dataNascimento, copy it to data_nascimento
+              paciente.data_nascimento = paciente.dataNascimento;
+            }
+            
             // Desserializar o campo 'endereco' se ele for uma string JSON
             if (paciente.endereco && typeof paciente.endereco === 'string') {
               try {
@@ -186,13 +222,33 @@ export class VisualizarPacienteComponent implements OnInit {
   }
 
   formatarData(data: string | undefined): string {
-    if (!data) return 'Não informado';
+    if (!data) {
+      // Check if this.paciente exists and has a dataNascimento field
+      if (this.paciente?.dataNascimento) {
+        data = this.paciente.dataNascimento;
+      } else if (this.paciente?.data_nascimento) {
+        data = this.paciente.data_nascimento;
+      } else {
+        return 'Não informado';
+      }
+    }
     
     try {
-      const dataObj = new Date(data);
+      // Remove any timezone information if present
+      const cleanDate = data.toString().split('T')[0];
+      const dataObj = new Date(cleanDate);
+      
+      // Check if date is valid
+      if (isNaN(dataObj.getTime())) {
+        console.warn('Data inválida:', data);
+        return 'Não informado';
+      }
+      
+      // Format the date to Brazilian format
       return dataObj.toLocaleDateString('pt-BR');
     } catch (e) {
-      return data;
+      console.error('Erro ao formatar data:', e, data);
+      return 'Não informado';
     }
   }
 

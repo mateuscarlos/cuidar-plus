@@ -44,7 +44,9 @@
                       </div>
                     </td>
                     <td>{{ paciente.cpf }}</td>
-                    <td>{{ paciente.dataNascimento ? formatarData(paciente.dataNascimento.toString()) : 'Não informado' }}</td>
+                    <td>
+                      <app-formatted-date [date]="paciente?.data_nascimento || paciente?.dataNascimento" format="displayDateOnly"></app-formatted-date>
+                    </td>
                     <td>
                       <app-status-badge [status]="paciente.status"></app-status-badge>
                     </td>
@@ -128,7 +130,9 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Data de Nascimento:</span>
-              <strong>{{ paciente.dataNascimento ? formatarData(paciente.dataNascimento.toString()) : 'Não informado' }}</strong>
+              <strong>
+                <app-formatted-date [date]="paciente?.data_nascimento || paciente?.dataNascimento" format="displayDateOnly"></app-formatted-date>
+              </strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Gênero:</span>

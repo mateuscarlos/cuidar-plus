@@ -3,7 +3,7 @@ import { Endereco } from './endereco.model';
 export interface Paciente {
   id?: number;
   nome_completo: string;
-  data_nascimento: string;
+  data_nascimento?: string;
   cpf: string;
   genero?: string;
   estado_civil?: string;
