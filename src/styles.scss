@@ -28,10 +28,36 @@ app-root {
   main {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
+
+/* Estilos globais para melhorar os Mat Autocomplete */
+.mat-autocomplete-panel {
+  z-index: 1050 !important;
+}
+
+.cdk-overlay-container {
+  z-index: 1060 !important;
+}
+
+.cdk-overlay-connected-position-bounding-box {
+  z-index: 1060 !important;
+}
+
+// Garantir que o overlay seja exibido acima de tudo
+::ng-deep .cdk-overlay-container {
+  z-index: 1060 !important;
+}
+
+::ng-deep .cdk-overlay-backdrop {
+  z-index: 1050 !important;
+}
+
+::ng-deep .cdk-global-overlay-wrapper {
+  z-index: 1060 !important;
 }

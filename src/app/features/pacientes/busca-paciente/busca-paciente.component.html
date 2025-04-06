@@ -67,3 +67,61 @@
     </form>
   </div>
 </div>
+
+<!-- Área de Resultados -->
+<div class="card border-0 shadow-sm mb-4" *ngIf="carregando || pacientes.length > 0 || mensagemErro">
+  <div class="card-body">
+    <h6 class="card-title mb-3">Resultados da Busca</h6>
+    
+    <!-- Indicador de carregamento -->
+    <div class="text-center my-4" *ngIf="carregando">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+      <p class="mt-2">Buscando pacientes...</p>
+    </div>
+    
+    <!-- Mensagem de erro -->
+    <div class="alert alert-danger" *ngIf="mensagemErro">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ mensagemErro }}
+    </div>
+    
+    <!-- Tabela de resultados -->
+    <div class="table-responsive" *ngIf="pacientes.length > 0">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>ID/Matrícula</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Data Nasc.</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let paciente of pacientes">
+            <td>{{ paciente.id }}</td>
+            <td>{{ paciente.nome }}</td>
+            <td>{{ paciente.cpf | cpfMask }}</td>
+            <td>{{ paciente.dataNascimento | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <button class="btn btn-sm btn-primary me-2" (click)="editarPaciente(paciente); $event.stopPropagation();">
+                <i class="bi bi-pencil me-1"></i> Editar
+              </button>
+              <button class="btn btn-sm btn-info" (click)="visualizarPaciente(paciente); $event.stopPropagation();">
+                <i class="bi bi-eye me-1"></i> Visualizar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Mensagem de nenhum resultado -->
+    <div class="alert alert-info" *ngIf="buscaRealizada && pacientes.length === 0 && !carregando && !mensagemErro">
+      <i class="bi bi-info-circle me-2"></i>
+      Nenhum paciente encontrado com os critérios informados.
+    </div>
+  </div>
+</div>

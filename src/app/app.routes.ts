@@ -8,8 +8,15 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   {
+    path: 'login',
+    loadComponent: () => import('./core/auth/login/login.component').then(m => m.LoginComponent),
+    title: 'Login - Cuidar+'
+  },
+  {
     path: 'home',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
+    canActivate: [AuthGuard],
+    title: 'Home - Cuidar+'
   },
   {
     path: 'pacientes',
@@ -23,13 +30,18 @@ export const routes: Routes = [
   },
   {
     path: 'pacientes/editar',
-    loadComponent: () => import('./features/pacientes/editar-paciente/editar-paciente.component').then(m => m.EditarPacienteComponent),
+    loadComponent: () => import('./features/pacientes/editar-pacientes/editar-pacientes.component').then(m => m.EditarPacientesComponent),
     canActivate: [AuthGuard]
   },
   {
     path: 'pacientes/visualizar',
     loadComponent: () => import('./features/pacientes/visualizar-paciente/visualizar-paciente.component').then(m => m.VisualizarPacienteComponent),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'pacientes/gerenciar',
+  loadComponent: () => import('./features/pacientes/gerenciar-pacientes/gerenciar-pacientes.component').then(m => m.GerenciarPacientesComponent),
+  canActivate: [AuthGuard]
   },
   {
     path: 'pacientes/acompanhamento',

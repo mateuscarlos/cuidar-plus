@@ -13,78 +13,72 @@
         </div>
       </div>
       
-      <div class="card">
+      <!-- Componente de Busca -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <app-busca-paciente (resultadoBusca)="buscarPaciente($event)"></app-busca-paciente>
+          
+          <!-- Botão para resetar a busca -->
+          <div *ngIf="buscaRealizada" class="d-flex justify-content-end mt-3">
+            <button class="btn btn-outline-secondary" (click)="resetarBusca()">
+              <i class="bi bi-arrow-repeat me-1"></i> Mostrar Todos
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Loader -->
+      <div class="text-center my-5" *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+      </div>
+      
+      <!-- Mensagem de erro -->
+      <div class="alert alert-danger" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ error }}
+      </div>
+      
+      <!-- Grid de Pacientes -->
+      <div class="card" *ngIf="!isLoading && !error">
         <div class="card-body">
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th>Nome</th>
+                  <th>Nome Completo</th>
+                  <th>Matrícula (ID)</th>
                   <th>Status</th>
-                  <th>Últ. Atualização</th>
+                  <th>Última Atualização</th>
                   <th class="text-end">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                <tr *ngFor="let paciente of pacientes">
                   <td>
                     <div class="d-flex align-items-center">
-                      <app-paciente-avatar [nome]="'Maria Rodrigues'" class="me-3"></app-paciente-avatar>
-                      <div>
-                        <p class="mb-0 fw-medium">Maria Rodrigues</p>
-                        <small class="text-muted">ID: 12345</small>
-                      </div>
+                      <app-paciente-avatar [nome]="paciente.nome_completo || paciente.nome || ''" class="me-3"></app-paciente-avatar>
+                      <span>{{ paciente.nome_completo || paciente.nome }}</span>
                     </div>
                   </td>
+                  <td>{{ paciente.id }}</td>
                   <td>
-                    <app-status-badge [status]="'ativo'"></app-status-badge>
+                    <app-status-badge [status]="paciente.status"></app-status-badge>
                   </td>
-                  <td>15/03/2025</td>
+                  <td>{{ paciente.updated_at | date: 'dd/MM/yyyy HH:mm' }}</td>
                   <td class="text-end">
                     <div class="btn-group">
                       <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
-                            (click)="visualizarPaciente('12345'); $event.stopPropagation()">
+                            (click)="visualizarPaciente((paciente.id ?? '').toString()); $event.stopPropagation()">
                         <i class="bi bi-eye"></i>
                       </button>
                       <button class="btn btn-sm btn-outline-primary" title="Editar" 
-                            (click)="editarPaciente('12345'); $event.stopPropagation()">
+                            (click)="editarPaciente((paciente.id ?? '').toString()); $event.stopPropagation()">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
-                            (click)="acompanharPaciente('12345'); $event.stopPropagation()">
-                        <i class="bi bi-clipboard-pulse"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-light me-3">
-                        <span>JS</span>
-                      </div>
-                      <div>
-                        <p class="mb-0 fw-medium">João Silva</p>
-                        <small class="text-muted">ID: 12346</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge bg-warning text-dark">Em tratamento</span>
-                  </td>
-                  <td>28/03/2025</td>
-                  <td class="text-end">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
-                            (click)="visualizarPaciente('12346'); $event.stopPropagation()">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-primary" title="Editar" 
-                            (click)="editarPaciente('12346'); $event.stopPropagation()">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
-                            (click)="acompanharPaciente('12346'); $event.stopPropagation()">
+                            (click)="acompanharPaciente((paciente.id ?? '').toString()); $event.stopPropagation()">
                         <i class="bi bi-clipboard-pulse"></i>
                       </button>
                     </div>
@@ -92,6 +86,12 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          
+          <!-- Mensagem para lista vazia -->
+          <div class="text-center py-5" *ngIf="pacientes.length === 0">
+            <i class="bi bi-inbox fs-1 text-muted"></i>
+            <p class="mt-3 text-muted">Nenhum paciente encontrado</p>
           </div>
         </div>
       </div>

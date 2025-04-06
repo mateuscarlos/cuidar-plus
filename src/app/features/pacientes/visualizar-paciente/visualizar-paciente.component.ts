@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { Plano } from '../models/plano.model';
+import { Convenio } from '../models/convenio.model';
 import { Endereco } from '../models/endereco.model';
 import { ResultadoBusca } from '../models/busca-paciente.model';
 import { PacienteService } from '../services/paciente.service';
-import { ConvenioService } from '../services/convenio.service';
+import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { finalize } from 'rxjs/operators';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
@@ -48,7 +50,8 @@ export class VisualizarPacienteComponent implements OnInit {
 
   constructor(
     private pacienteService: PacienteService,
-    private convenioService: ConvenioService,
+    private convenioService: ConvenioPlanoService,
+    private statusPaciente: StatusPaciente,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -56,7 +59,7 @@ export class VisualizarPacienteComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['pacienteId']) {
-        this.carregarPaciente(params['pacienteId']);
+        this.carregarPaciente(String(params['pacienteId']));
       } else {
         this.isLoading = false;
       }
@@ -66,28 +69,63 @@ export class VisualizarPacienteComponent implements OnInit {
   carregarPaciente(id: string): void {
     this.isLoading = true;
     this.error = null;
-    
-    this.pacienteService.getPaciente(id)
+
+    this.pacienteService.obterPacientePorId(id)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (paciente) => {
           if (paciente) {
+            // Desserializar o campo 'endereco' se ele for uma string JSON
+            if (paciente.endereco && typeof paciente.endereco === 'string') {
+              try {
+                paciente.endereco = JSON.parse(paciente.endereco);
+              } catch (e) {
+                console.error('Erro ao desserializar o endereço:', e);
+                paciente.endereco = {
+                  logradouro: '',
+                  numero: '',
+                  complemento: '',
+                  bairro: '',
+                  cidade: '',
+                  estado: '',
+                  cep: ''
+                };
+              }
+            }
+
+            // Garantir que o endereço seja sempre um objeto válido
+            paciente.endereco = paciente.endereco || {
+              logradouro: '',
+              numero: '',
+              complemento: '',
+              bairro: '',
+              cidade: '',
+              estado: '',
+              cep: ''
+            };
+
             this.paciente = paciente;
             this.modoVisualizacao = true;
-            
+
             // Carregar informações de convênio e plano, se disponíveis
             if (paciente.convenio_id) {
-              this.convenioService.getConvenios().subscribe(convenios => {
-                const convenio = convenios.find(c => c.id === paciente.convenio_id);
+                this.convenioService.listarConvenios().subscribe((convenios: Convenio[]) => {
+                const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
                 this.convenio = convenio ? convenio.nome : 'Não informado';
-                
-                if (paciente.plano_id) {
-                  this.convenioService.getTodosPlanos().subscribe(planos => {
-                    const plano = planos.find(p => p.id === paciente.plano_id);
+
+                if (paciente.plano_id && paciente.convenio_id) {
+                    // Convert convenio_id to number if the method expects a number
+                    const convenioId = typeof paciente.convenio_id === 'string' 
+                    ? parseInt(paciente.convenio_id, 10) 
+                    : paciente.convenio_id;
+                    
+                    this.convenioService.listarPlanosPorConvenio(convenioId).subscribe((planos: Plano[]) => {
+                    const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
+                    const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
                     this.plano = plano ? plano.nome : 'Não informado';
-                  });
+                    });
                 }
-              });
+                });
             }
           } else {
             this.error = 'Paciente não encontrado';
@@ -124,7 +162,7 @@ export class VisualizarPacienteComponent implements OnInit {
   }
   
   selecionarPaciente(paciente: Paciente): void {
-    this.carregarPaciente(paciente.id);
+    this.carregarPaciente(String(paciente.id));
   }
 
   voltarParaBusca(): void {
@@ -160,15 +198,17 @@ export class VisualizarPacienteComponent implements OnInit {
 
   formatarEndereco(endereco: Endereco): string {
     if (!endereco) return 'Não informado';
+
+    const logradouro = endereco.logradouro || 'Logradouro não informado';
     
-    let enderecoCompleto = `${endereco.logradouro}, ${endereco.numero}`;
-    
+    let enderecoCompleto = `${logradouro}, ${endereco.numero || 'S/N'}`;
+
     if (endereco.complemento) {
       enderecoCompleto += ` - ${endereco.complemento}`;
     }
-    
-    enderecoCompleto += ` - ${endereco.bairro}, ${endereco.cidade}/${endereco.estado} - ${this.formatarCep(endereco.cep)}`;
-    
+
+    enderecoCompleto += ` - ${endereco.bairro || 'Bairro não informado'}, ${endereco.localidade || 'Cidade não informada'}/${endereco.uf || 'UF não informado'} - ${this.formatarCep(endereco.cep || '')}`;
+
     return enderecoCompleto;
   }
 

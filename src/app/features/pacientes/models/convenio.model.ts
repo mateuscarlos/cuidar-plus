@@ -1,10 +1,10 @@
 export interface Convenio {
-  id: number;
+  id?: number;
   nome: string;
+  codigo?: string;
+  tipo?: string;
+  ativo?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface Plano {
-  id: number;
-  nome: string;
-  convenio_id: number;
-}
