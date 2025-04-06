@@ -53,6 +53,8 @@ export class CadastrarPacienteComponent implements OnInit {
     console.log('Inicializando componente CadastrarPacienteComponent');
     this.maxDate = this.dateFormatter.toHtmlDateFormat(new Date());
     this.initForm();
+    
+    // Carregar convênios ao inicializar o componente
     this.carregarConvenios();
   }
 
@@ -102,7 +104,7 @@ export class CadastrarPacienteComponent implements OnInit {
       if (convenioId) {
         planoIdControl?.enable();
         planoNomeControl?.enable();
-        this.carregarPlanos(convenioId);
+        this.carregarPlanos(convenioId); // Carregar os planos do convênio selecionado
       } else {
         planoIdControl?.disable();
         planoNomeControl?.disable();
@@ -272,9 +274,14 @@ export class CadastrarPacienteComponent implements OnInit {
     // Obter valores do formulário
     let formValues = { ...this.pacienteForm.value };
 
-    // Processar todos os campos de data para o formato do backend
+    // Sanitizar o CPF antes de enviar
+    if (formValues.cpf) {
+      formValues.cpf = formValues.cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+    }
+
+    // Processar datas para o formato do backend
     formValues = this.processarDatasFormulario(formValues);
-    
+
     // Enviar dados para o serviço
     this.criarPaciente(formValues);
   }

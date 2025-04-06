@@ -106,7 +106,7 @@ export class ConvenioPlanoService {
    * Listar planos por convênio
    */
   listarPlanosPorConvenio(convenioId: number): Observable<Plano[]> {
-    const url = `${this.apiUrl}/planos/convenio/${convenioId}`;
+    const url = `${this.apiUrl}/planos/convenios/${convenioId}`; // Ajuste para a rota correta
     console.log(`Solicitando planos do convênio ID ${convenioId} de:`, url);
     return this.http.get<Plano[]>(url).pipe(
       map(response => {
@@ -115,13 +115,7 @@ export class ConvenioPlanoService {
       }),
       catchError(error => {
         console.error(`Erro ao obter planos para convênio ${convenioId} (${url}):`, error);
-        
-        // Se for erro 404, verificar os blueprints no backend
-        if (error.status === 404) {
-          console.error('Rota não encontrada. Verifique se o blueprint convenio_plano_routes está registrado no backend.');
-        }
-        
-        return of([]);
+        return of([]); // Retorna uma lista vazia em caso de erro
       })
     );
   }
