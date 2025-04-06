@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { PacienteService } from '../services/paciente.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
@@ -18,7 +18,12 @@ import { Endereco } from '../models/endereco.model';
 @Component({
   selector: 'app-editar-pacientes',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BuscaPacienteComponent,],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    BuscaPacienteComponent,
+    RouterModule
+  ],
   templateUrl: './editar-pacientes.component.html',
   styleUrls: ['./editar-pacientes.component.scss']
 })
@@ -33,6 +38,7 @@ export class EditarPacientesComponent implements OnInit {
   planosFiltrados: any[] = [];
   isLoading = false;
   modoEdicao = false;
+  resultadosBusca: Paciente[] = [];
   
   // Status disponíveis
   statusPaciente = Object.values(StatusPaciente);
@@ -229,6 +235,27 @@ export class EditarPacientesComponent implements OnInit {
     });
   }
 
+  /* buscarPaciente(resultado: ResultadoBusca): void {
+      this.isLoading = true;
+      this.error = null;
+      
+      this.pacienteService.buscarPacientes(resultado)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: (pacientes) => {
+            this.resultadosBusca = pacientes;
+            
+            if (pacientes.length === 0) {
+              this.error = 'Nenhum paciente encontrado com os critérios informados.';
+            }
+          },
+          error: (err) => {
+            this.error = 'Erro ao buscar pacientes';
+            this.resultadosBusca = [];
+          }
+        });
+    } */
+
   onConvenioChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
@@ -266,9 +293,7 @@ export class EditarPacientesComponent implements OnInit {
     console.log(`Convênio alterado para ID: ${convenioId}. Plano habilitado: ${!planoIdControl?.disabled}`);
   }
 
-  // ...existing code...
-
-onCepChange(): void {
+  onCepChange(): void {
   const cepControl = this.pacienteForm.get('endereco')?.get('cep');
   const cep = cepControl?.value;
 
@@ -332,9 +357,7 @@ onCepChange(): void {
     });
   }
 
-  // ...existing code...
-
-preencherFormularioComDadosPaciente(paciente: Paciente): void {
+  preencherFormularioComDadosPaciente(paciente: Paciente): void {
   console.log('Dados do paciente recebidos:', paciente);
 
   const dataNascimentoFormatada = this.formatarDataParaInput(paciente.data_nascimento);
