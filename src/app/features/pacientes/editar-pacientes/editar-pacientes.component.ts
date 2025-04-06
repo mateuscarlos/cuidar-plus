@@ -208,11 +208,17 @@ export class EditarPacientesComponent implements OnInit {
       next: (planos) => {
         this.planosFiltrados = planos;
         
+        // Garantir que o plano esteja habilitado para seleção
+        const planoIdControl = this.pacienteForm.get('plano_id');
+        if (planoIdControl?.disabled) {
+          planoIdControl.enable();
+        }
+        
         if (this.planosFiltrados.length === 0) {
           this.notificacaoService.mostrarAviso('Este convênio não possui planos cadastrados.');
-          
-          this.pacienteForm.get('plano_id')?.disable();
-          this.pacienteForm.get('plano_id')?.setValue(null);
+          // Mesmo sem planos, manter o campo habilitado para permitir seleção quando houver
+        } else {
+          console.log(`${this.planosFiltrados.length} planos carregados para o convênio ${convenioId}`);
         }
       },
       error: (erro) => {
@@ -227,51 +233,80 @@ export class EditarPacientesComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
     
-    // Limpar e desabilitar o campo plano
+    // Obter controles
     const planoIdControl = this.pacienteForm.get('plano_id');
+    const planoNomeControl = this.pacienteForm.get('plano_nome');
+    
+    // Limpar o valor do plano atual
     if (planoIdControl) {
       planoIdControl.setValue('');
-      
-      if (!convenioId) {
-        planoIdControl.disable();
-        this.planosFiltrados = [];
-        return;
-      }
-      
-      // Se tiver convênio selecionado, carregar planos
-      this.carregarPlanos(convenioId);
+    }
+    
+    // Garantir que está habilitado, independente do valor
+    if (planoIdControl?.disabled) {
       planoIdControl.enable();
     }
-  }
-
-  onCepChange(): void {
-    const cepControl = this.pacienteForm.get('endereco')?.get('cep');
-    const cep = cepControl?.value;
-
-    if (cep && cep.length === 8) {
-      this.cepService.consultarCep(cep).subscribe({
-        next: (endereco) => {
-          if (endereco) {
-            this.pacienteForm.patchValue({
-              endereco: {
-                logradouro: endereco.logradouro,
-                bairro: endereco.bairro,
-                cidade: endereco.localidade, // Mapeando localidade para o campo cidade no form
-                estado: endereco.uf        // Mapeando uf para o campo estado no form
-              }
-            });
-          } else {
-            this.notificacaoService.mostrarAviso('CEP não encontrado.');
-          }
-        },
-        error: () => {
-          this.notificacaoService.mostrarErro('Erro ao consultar o CEP.');
-        }
-      });
-    } else {
-      this.notificacaoService.mostrarAviso('CEP inválido. Certifique-se de que possui 8 dígitos.');
+    
+    if (planoNomeControl?.disabled) {
+      planoNomeControl.enable();
     }
+    
+    if (!convenioId) {
+      // Se não houver convênio selecionado, desabilitar campos de plano
+      if (planoIdControl) planoIdControl.disable();
+      if (planoNomeControl) planoNomeControl.disable();
+      this.planosFiltrados = [];
+      return;
+    }
+    
+    // Sempre que trocar o convênio, garantir que o plano esteja habilitado e carregue os planos
+    this.carregarPlanos(convenioId);
+    
+    // Log para depuração
+    console.log(`Convênio alterado para ID: ${convenioId}. Plano habilitado: ${!planoIdControl?.disabled}`);
   }
+
+  // ...existing code...
+
+onCepChange(): void {
+  const cepControl = this.pacienteForm.get('endereco')?.get('cep');
+  const cep = cepControl?.value;
+
+  if (cep && cep.length === 8) {
+    this.isLoading = true;
+    this.cepService.consultarCep(cep).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (endereco) => {
+        console.log('Dados do CEP recebidos:', endereco);
+        
+        if (endereco) {
+          const enderecoForm = this.pacienteForm.get('endereco');
+          
+          if (enderecoForm) {
+            // Atualizar os campos com os nomes exatos recebidos da API
+            enderecoForm.get('logradouro')?.setValue(endereco.logradouro || '');
+            enderecoForm.get('bairro')?.setValue(endereco.bairro || '');
+            
+            // Mapeamento direto para os campos usados no formulário
+            enderecoForm.get('cidade')?.setValue(endereco.localidade || '');
+            enderecoForm.get('estado')?.setValue(endereco.uf || '');
+            
+            this.notificacaoService.mostrarSucesso('CEP encontrado e endereço preenchido');
+          }
+        } else {
+          this.notificacaoService.mostrarAviso('CEP não encontrado.');
+        }
+      },
+      error: (erro) => {
+        console.error('Erro ao consultar o CEP:', erro);
+        this.notificacaoService.mostrarErro('Erro ao consultar o CEP.');
+      }
+    });
+  } else {
+    this.notificacaoService.mostrarAviso('CEP inválido. Certifique-se de que possui 8 dígitos.');
+  }
+}
 
   onPacienteSelecionado(paciente: Paciente): void {
     this.pacienteSelecionado = paciente;
@@ -297,39 +332,47 @@ export class EditarPacientesComponent implements OnInit {
     });
   }
 
-  preencherFormularioComDadosPaciente(paciente: Paciente): void {
-    console.log('Dados do paciente recebidos:', paciente);
+  // ...existing code...
 
-    const dataNascimentoFormatada = this.formatarDataParaInput(paciente.data_nascimento);
-    const dataValidadeFormatada = this.formatarDataParaInput(paciente.data_validade);
+preencherFormularioComDadosPaciente(paciente: Paciente): void {
+  console.log('Dados do paciente recebidos:', paciente);
 
-    // Corrigir mapeamento de convenioId e numeroCarteirinha
-    const convenioId = paciente.convenioId || paciente.convenio_id || '';
-    const numeroCarteirinha = paciente.numeroCarteirinha || paciente.numero_carteirinha || '';
-    const planoId = paciente.planoId || paciente.plano_id || '';
+  const dataNascimentoFormatada = this.formatarDataParaInput(paciente.data_nascimento);
+  const dataValidadeFormatada = this.formatarDataParaInput(paciente.data_validade);
 
-    // Corrigir mapeamento do endereço
-    let endereco = paciente.endereco || {};
-    if (typeof endereco === 'string') {
-        try {
-            endereco = JSON.parse(endereco);
-        } catch (error) {
-            console.error('Erro ao parsear o endereço:', error);
-            endereco = {};
-        }
+  // Corrigir mapeamento de convenioId e numeroCarteirinha
+  const convenioId = paciente.convenioId || paciente.convenio_id || '';
+  const numeroCarteirinha = paciente.numeroCarteirinha || paciente.numero_carteirinha || '';
+  const planoId = paciente.planoId || paciente.plano_id || '';
+
+  // Corrigir mapeamento do endereço
+  let endereco = paciente.endereco || {};
+  console.log('Endereço original do paciente:', endereco);
+  
+  if (typeof endereco === 'string') {
+    try {
+      endereco = JSON.parse(endereco);
+      console.log('Endereço parseado:', endereco);
+    } catch (error) {
+      console.error('Erro ao parsear o endereço:', error);
+      endereco = {};
     }
+  }
 
-    const enderecoFormatado = {
-      cep: (endereco as Endereco).cep || '',
-      logradouro: (endereco as Endereco).logradouro || '',
-      numero: (endereco as Endereco).numero || '',
-      complemento: (endereco as Endereco).complemento || '',
-      bairro: (endereco as Endereco).bairro || '',
-      cidade: (endereco as Endereco).localidade || '', // Mapeando localidade para cidade no form
-      estado: (endereco as Endereco).uf || ''         // Mapeando uf para estado no form
+  // Mapear explicitamente cada campo do endereço
+  const enderecoFormatado = {
+    cep: (endereco as Endereco).cep || '',
+    logradouro: (endereco as Endereco).logradouro || '',
+    numero: (endereco as Endereco).numero || '',
+    complemento: (endereco as Endereco).complemento || '',
+    bairro: (endereco as Endereco).bairro || '',
+    cidade: (endereco as Endereco).localidade || '', // Usar diretamente o campo localidade
+    estado: (endereco as Endereco).uf || ''          // Usar diretamente o campo uf
   };
+  
+  console.log('Endereço formatado para o formulário:', enderecoFormatado);
 
-    // Primeiro preencher todos os campos exceto plano_id
+  // Primeiro preencher todos os campos exceto plano_id
     this.pacienteForm.patchValue({
         nome_completo: paciente.nome_completo || paciente.nome,
         cpf: paciente.cpf,
@@ -396,6 +439,9 @@ export class EditarPacientesComponent implements OnInit {
     }
   }
 
+  /**
+   * Método de submissão atualizado para logging adicional
+   */
   onSubmit(): void {
     if (!this.pacienteSelecionado || !this.pacienteSelecionado.id) {
       this.notificacaoService.mostrarErro('É necessário selecionar um paciente para editar.');
@@ -410,9 +456,11 @@ export class EditarPacientesComponent implements OnInit {
 
     // Obter valores do formulário
     let formValues = { ...this.pacienteForm.value };
+    console.log('Valores do formulário antes de processar datas:', formValues);
 
     // Processar todos os campos de data para o formato do backend
     formValues = this.processarDatasFormulario(formValues);
+    console.log('Valores do formulário após processar datas:', formValues);
     
     // Enviar dados para o serviço
     this.isLoading = true;
@@ -437,46 +485,16 @@ export class EditarPacientesComponent implements OnInit {
     // Cria uma cópia para não modificar o objeto original
     const processedValues = { ...formValues };
     
-    // Processa data de nascimento
+    // Processa data de nascimento - garantindo formato DD/MM/YYYY
     if (processedValues.data_nascimento) {
-      try {
-        // Verifica se já está no formato yyyy-mm-dd
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_nascimento)) {
-          const dateParts = processedValues.data_nascimento.split('/');
-          if (dateParts.length === 3) {
-            // Converte de DD/MM/YYYY para YYYY-MM-DD
-            const day = dateParts[0].padStart(2, '0');
-            const month = dateParts[1].padStart(2, '0');
-            const year = dateParts[2];
-            processedValues.data_nascimento = `${year}-${month}-${day}`;
-          } else {
-            console.error('Formato de data não reconhecido:', processedValues.data_nascimento);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao processar data de nascimento:', error);
-      }
+      processedValues.data_nascimento = this.dateFormatter.toBackendDateOnlyFormat(processedValues.data_nascimento);
+      console.log('Data de nascimento processada:', processedValues.data_nascimento);
     }
     
-    // Processa data de validade do plano
+    // Processa data de validade do plano - garantindo formato DD/MM/YYYY
     if (processedValues.data_validade) {
-      try {
-        // Verifica se já está no formato yyyy-mm-dd
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_validade)) {
-          const dateParts = processedValues.data_validade.split('/');
-          if (dateParts.length === 3) {
-            // Converte de DD/MM/YYYY para YYYY-MM-DD
-            const day = dateParts[0].padStart(2, '0');
-            const month = dateParts[1].padStart(2, '0');
-            const year = dateParts[2];
-            processedValues.data_validade = `${year}-${month}-${day}`;
-          } else {
-            console.error('Formato de data não reconhecido:', processedValues.data_validade);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao processar data de validade:', error);
-      }
+      processedValues.data_validade = this.dateFormatter.toBackendDateOnlyFormat(processedValues.data_validade);
+      console.log('Data de validade processada:', processedValues.data_validade);
     }
     
     return processedValues;
@@ -548,5 +566,29 @@ export class EditarPacientesComponent implements OnInit {
     this.pacienteSelecionado = null;
     this.modoEdicao = false;
     this.limparFormulario();
+  }
+
+  // Método para quando o usuário clicar no dropdown de convênio
+  onConvenioFocus(): void {
+    console.log('Convênio recebeu foco');
+    
+    // Garantir que o plano seja habilitado para seleção quando o usuário decidir mudar o convênio
+    const planoIdControl = this.pacienteForm.get('plano_id');
+    const planoNomeControl = this.pacienteForm.get('plano_nome');
+    
+    if (planoIdControl && planoIdControl.disabled) {
+      console.log('Habilitando campo de plano');
+      planoIdControl.enable();
+    }
+    
+    if (planoNomeControl && planoNomeControl.disabled) {
+      planoNomeControl.enable();
+    }
+    
+    // Verificar se o convênio tem valor e carregar os planos caso ainda não estejam carregados
+    const convenioId = this.pacienteForm.get('convenio_id')?.value;
+    if (convenioId && this.planosFiltrados.length === 0) {
+      this.carregarPlanos(convenioId);
+    }
   }
 }

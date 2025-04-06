@@ -246,8 +246,8 @@ export class CadastrarPacienteComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade, // Mapeando localidade para o campo cidade no form
-                estado: endereco.uf        // Mapeando uf para o campo estado no form
+                cidade: endereco.localidade, // Mapeamento para o campo do formulário
+                estado: endereco.uf         // Mapeamento para o campo do formulário
               }
             });
           } else {

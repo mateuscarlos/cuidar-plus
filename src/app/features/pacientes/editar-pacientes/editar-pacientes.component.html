@@ -222,18 +222,21 @@
               <h6 class="border-bottom pb-2 mb-3">Convênio e Plano</h6>
             </div>
             
-            <div class="col-md-3 mb-3">
-              <div class="form-group">
-                <label for="convenio_id" class="form-label">Convênio *</label>
-                <select id="convenio_id" formControlName="convenio_id" class="form-select" 
-                       (change)="onConvenioChange($event)"
-                       [ngClass]="{'is-invalid': isFieldValid('convenio_id')}">
-                  <option [ngValue]="">Selecione um convênio</option>
-                  <option *ngFor="let convenio of convenios" [ngValue]="convenio.id">
-                    {{ convenio.nome }}
-                  </option>
-                </select>
-                <div class="invalid-feedback">Convênio é obrigatório.</div>
+            <div class="form-group">
+              <label for="convenio_id" class="form-label">Convênio *</label>
+              <select 
+                id="convenio_id" 
+                formControlName="convenio_id" 
+                class="form-select"
+                (change)="onConvenioChange($event)"
+                (focus)="onConvenioFocus()">
+                <option value="">Selecione um convênio</option>
+                <option *ngFor="let convenio of convenios" [value]="convenio.id">
+                  {{ convenio.nome }}
+                </option>
+              </select>
+              <div *ngIf="isFieldValid('convenio_id')" class="invalid-feedback d-block">
+                Convênio é obrigatório
               </div>
             </div>
             
