@@ -70,9 +70,53 @@ export class VisualizarPacienteComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       if (params['pacienteId']) {
-        this.carregarPaciente(String(params['pacienteId']));
-      } else {
-        this.isLoading = false;
+        this.carregarPacienteParaEdicao(params['pacienteId']);
+      }
+    });
+  }
+
+  carregarPacienteParaEdicao(id: string): void {
+    this.isLoading = true;
+    this.pacienteService.obterPacientePorId(id)
+      .pipe(finalize(() => this.isLoading = false))
+      .subscribe({
+        next: (paciente) => {
+          if (paciente) {
+            // Processar os dados do paciente
+            this.paciente = paciente;
+            this.modoVisualizacao = true;
+
+            // If the patient has insurance, load additional information
+            if (paciente.convenio_id) {
+              this.loadInsuranceInfo(paciente);
+            }
+          } else {
+            this.error = 'Paciente não encontrado';
+          }
+        },
+        error: (err) => {
+          this.error = 'Erro ao carregar dados do paciente para edição';
+          console.error('Erro ao carregar paciente:', err);
+        }
+      });
+  }
+
+  loadInsuranceInfo(paciente: Paciente): void {
+    this.convenioService.listarConvenios().subscribe((convenios: Convenio[]) => {
+      const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
+      this.convenio = convenio ? convenio.nome : 'Não informado';
+
+      if (paciente.plano_id && paciente.convenio_id) {
+        // Convert convenio_id to number if the method expects a number
+        const convenioId = typeof paciente.convenio_id === 'string' 
+          ? parseInt(paciente.convenio_id, 10) 
+          : paciente.convenio_id;
+        
+        this.convenioService.listarPlanosPorConvenio(convenioId).subscribe((planos: Plano[]) => {
+          const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
+          const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
+          this.plano = plano ? plano.nome : 'Não informado';
+        });
       }
     });
   }
@@ -215,6 +259,20 @@ export class VisualizarPacienteComponent implements OnInit {
     this.router.navigate(['/pacientes/acompanhamento'], {
       queryParams: { pacienteId: this.paciente?.id }
     });
+  }
+  
+  irParaEdicao(): void {
+    if (this.paciente && this.paciente.id) {
+      // Navegar para a rota de edição com o ID como parâmetro
+      this.router.navigate(['/pacientes/editar'], {
+        queryParams: { 
+          pacienteId: this.paciente.id,
+          autoLoad: 'true'  // Adicionar um parâmetro para sinalizar carregamento automático
+        }
+      });
+    } else {
+      console.error('Não é possível editar: paciente não encontrado ou sem ID');
+    }
   }
   
   getStatusInfo(statusCode: string): {texto: string, classe: string} {

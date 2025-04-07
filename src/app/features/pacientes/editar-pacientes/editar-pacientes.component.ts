@@ -61,9 +61,11 @@ export class EditarPacientesComponent implements OnInit {
     this.carregarConvenios();
     
     // Verificar se tem ID na rota para carregar o paciente diretamente
-    this.route.paramMap.subscribe(params => {
-      const pacienteId = params.get('id');
-      if (pacienteId) {
+    this.route.queryParams.subscribe(params => {
+      const pacienteId = params['pacienteId'];
+      const autoLoad = params['autoLoad'];
+      
+      if (pacienteId && autoLoad === 'true') {
         this.carregarPacientePorId(pacienteId);
       }
     });
