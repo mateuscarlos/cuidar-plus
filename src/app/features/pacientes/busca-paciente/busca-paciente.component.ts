@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -20,6 +20,7 @@ export class BuscaPacienteComponent implements OnInit {
   @Output() pacienteSelecionado = new EventEmitter<Paciente>();
   @Output() pacienteSelecionadoParaEdicao = new EventEmitter<Paciente>();
   @Output() pacienteSelecionadoParaVisualizacao = new EventEmitter<Paciente>();
+  @Input() modoVisualizacao: 'padrao' | 'editaPaciente' | 'acompanhamento' = 'padrao';
   
   buscaForm!: FormGroup;
   pacientes: Paciente[] = [];

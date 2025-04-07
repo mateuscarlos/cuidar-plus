@@ -68,11 +68,6 @@ export class SidebarComponent implements OnInit {
           title: 'Visualizar Paciente',
           route: '/pacientes/visualizar',
           icon: 'bi-eye'
-        },
-        {
-          title: 'Gerenciar Pacientes',
-          route: '/pacientes/gerenciar',
-          icon: 'bi-person-check'
         }
       ]
     },

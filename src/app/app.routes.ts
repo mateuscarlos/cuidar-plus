@@ -39,11 +39,6 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'pacientes/gerenciar',
-  loadComponent: () => import('./features/pacientes/gerenciar-pacientes/gerenciar-pacientes.component').then(m => m.GerenciarPacientesComponent),
-  canActivate: [AuthGuard]
-  },
-  {
     path: 'pacientes/acompanhamento',
     loadComponent: () => import('./features/pacientes/criar-acompanhamento-paciente/criar-acompanhamento-paciente.component').then(m => m.CriarAcompanhamentoPacienteComponent),
     canActivate: [AuthGuard]
@@ -53,6 +48,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
     canActivate: [AuthGuard]
   },
+  
   {
     path: 'farmacia',
     loadComponent: () => import('./features/farmacia/farmacia.component').then(m => m.FarmaciaComponent),

@@ -4,7 +4,7 @@ import { CadastrarPacienteComponent } from './cadastrar-paciente/cadastrar-pacie
 import { EditarPacientesComponent } from './editar-pacientes/editar-pacientes.component';
 import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
 import { VisualizarPacienteComponent } from './visualizar-paciente/visualizar-paciente.component';
-import { GerenciarPacientesComponent } from './gerenciar-pacientes/gerenciar-pacientes.component';
+
 
 export const PACIENTES_ROUTES: Routes = [
   { 
@@ -37,9 +37,9 @@ export const PACIENTES_ROUTES: Routes = [
     component: VisualizarPacienteComponent,
     title: 'Visualizar Paciente - Cuidar+'
   },
-  {
-    path: 'gerenciar',
-    component: GerenciarPacientesComponent,
-    title: 'Gerenciar Pacientes'
+  { path: 'pacientes/editar/:id', 
+    component: EditarPacientesComponent, 
+    title: 'Editar Paciente - Cuidar+'
   }
+
 ];
