@@ -51,6 +51,54 @@ export interface Paciente {
   rua?: string;
 }
 
+export class Patient { 
+  // Método auxiliar para transformar dados do backend para o formato do frontend
+  static fromBackendResponse(data: any): Patient {
+    return {
+      id: data.id,
+      nome: data.nome_completo || data.nome || '',
+      genero: data.genero || '',
+      cpf: data.cpf,
+      dataNascimento: data.data_nascimento,
+      telefone: data.telefone,
+      email: data.email,
+      endereco: {
+        cep: data.cep || '',
+        logradouro: data.logradouro || '',
+        numero: data.numero || '',
+        complemento: data.complemento || '',
+        bairro: data.bairro || '',
+        cidade: data.cidade || '',
+        estado: data.estado || '',
+      },
+      status: data.status,
+      cid_primario: data.cid_primario,
+      cid_secundario: data.cid_secundario,
+      acomodacao: data.acomodacao,
+      medico_responsavel: data.medico_responsavel,
+      alergias: data.alergias,
+      case_responsavel: data.case_responsavel,
+      convenio_id: data.convenio_id,
+      plano_id: data.plano_id,
+      numero_carteirinha: data.numero_carteirinha,
+      data_validade: data.data_validade,
+      telefone_secundario: data.telefone_secundario,
+      contato_emergencia: data.contato_emergencia,
+      telefone_emergencia: data.telefone_emergencia,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      // Campos adicionais para facilitar a exibição na lista
+       
+      convenioId: data.convenio_id,
+      planoId: data.plano_id,
+      numeroCarteirinha: data.numero_carteirinha,
+      rua: data.logradouro || data.rua,
+
+      // mapeamento de outros campos conforme necessário
+    };
+  }
+}
+
 export enum StatusPaciente {
   ATIVO = 'Ativo',
   EM_AVALIACAO = 'Em Avaliação',
