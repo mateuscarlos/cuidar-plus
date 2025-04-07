@@ -43,7 +43,7 @@ export interface Paciente {
   updated_at?: string;
   
   // Campo para facilitar a exibição na lista
-  nome?: string;
+  nome?: string;  
   dataNascimento?: string;
   convenioId?: string;
   planoId?: string;

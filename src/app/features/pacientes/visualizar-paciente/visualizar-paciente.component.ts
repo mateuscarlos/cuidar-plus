@@ -106,11 +106,18 @@ export class VisualizarPacienteComponent implements OnInit {
         next: (paciente) => {
           if (paciente) {
             console.log('Paciente recebido com sucesso:', paciente.id);
+            
+            // Garantir que o campo nome esteja sempre preenchido
+            if (!paciente.nome && paciente.nome_completo) {
+              paciente.nome = paciente.nome_completo;
+            } else if (!paciente.nome_completo && paciente.nome) {
+              paciente.nome_completo = paciente.nome;
+            }
+            
             // Processar os dados do paciente
             this.paciente = paciente;
             this.modoVisualizacao = true;
             
-            // If the patient has insurance, load additional information
             if (paciente.convenio_id) {
               this.loadInsuranceInfo(paciente);
             }
@@ -175,81 +182,22 @@ export class VisualizarPacienteComponent implements OnInit {
       .subscribe({
         next: (paciente) => {
           if (paciente) {
-            console.log('Paciente recebido:', paciente.id);
-            // Ensure the nome field is set (used in the template)
-            if (paciente.nome_completo && !paciente.nome) {
+            console.log('Paciente recebido com sucesso:', paciente.id);
+            
+            // Garantir que o campo nome esteja sempre preenchido
+            if (!paciente.nome && paciente.nome_completo) {
               paciente.nome = paciente.nome_completo;
+            } else if (!paciente.nome_completo && paciente.nome) {
+              paciente.nome_completo = paciente.nome;
             }
             
-            // Ensure we have both date fields properly set
-            if (paciente.data_nascimento) {
-              // Normalize into a standard date format
-              try {
-                const dateObj = new Date(paciente.data_nascimento);
-                if (!isNaN(dateObj.getTime())) {
-                  const isoDate = dateObj.toISOString().split('T')[0];
-                  paciente.data_nascimento = isoDate;
-                  paciente.dataNascimento = isoDate; // Set the alias field too
-                }
-              } catch (e) {
-                console.error('Erro ao processar data de nascimento:', e);
-              }
-            } else if (paciente.dataNascimento) {
-              // If we only have dataNascimento, copy it to data_nascimento
-              paciente.data_nascimento = paciente.dataNascimento;
-            }
-            
-            // Desserializar o campo 'endereco' se ele for uma string JSON
-            if (paciente.endereco && typeof paciente.endereco === 'string') {
-              try {
-                paciente.endereco = JSON.parse(paciente.endereco);
-              } catch (e) {
-                console.error('Erro ao desserializar o endereço:', e);
-                paciente.endereco = {
-                  logradouro: '',
-                  numero: '',
-                  complemento: '',
-                  bairro: '',
-                  cidade: '',
-                  estado: '',
-                  cep: ''
-                };
-              }
-            }
-
-            // Garantir que o endereço seja sempre um objeto válido
-            paciente.endereco = paciente.endereco || {
-              logradouro: '',
-              numero: '',
-              complemento: '',
-              bairro: '',
-              cidade: '',
-              estado: '',
-              cep: ''
-            };
-
+            // Processar os dados do paciente
             this.paciente = paciente;
             this.modoVisualizacao = true;
-
-            // Carregar informações de convênio e plano, se disponíveis
+            
+            // If the patient has insurance, load additional information
             if (paciente.convenio_id) {
-                this.convenioService.listarConvenios().subscribe((convenios: Convenio[]) => {
-                const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
-                this.convenio = convenio ? convenio.nome : 'Não informado';
-
-                if (paciente.plano_id && paciente.convenio_id) {
-                    // Convert convenio_id to number if the method expects a number
-                    const convenioId = typeof paciente.convenio_id === 'string' 
-                    ? parseInt(paciente.convenio_id, 10) 
-                    : paciente.convenio_id;
-                    
-                    this.convenioService.listarPlanosPorConvenio(convenioId).subscribe((planos: Plano[]) => {
-                    const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
-                    const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
-                    this.plano = plano ? plano.nome : 'Não informado';
-                    });
-                }
-                });
+              this.loadInsuranceInfo(paciente);
             }
           } else {
             this.error = 'Paciente não encontrado';
@@ -257,9 +205,9 @@ export class VisualizarPacienteComponent implements OnInit {
           }
         },
         error: (err) => {
-          console.error('Erro ao carregar dados do paciente:', err);
           this.error = 'Erro ao carregar dados do paciente';
           this.modoVisualizacao = false;
+          console.error('Erro ao carregar paciente:', err);
         }
       });
   }
