@@ -39,7 +39,7 @@ export class VisualizarPacienteComponent implements OnInit {
   paciente: Paciente | null = null;
   convenio: string = '';
   plano: string = '';
-  isLoading: boolean = true;
+  isLoading: boolean = false; // Inicializa como false até que seja necessário carregar
   error: string | null = null;
   
   // Controle da tela
@@ -68,55 +68,93 @@ export class VisualizarPacienteComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Resetamos o estado inicial antes de qualquer carregamento
+    this.resetComponent();
+    
     this.route.queryParams.subscribe(params => {
       if (params['pacienteId']) {
         this.carregarPacienteParaEdicao(params['pacienteId']);
+      } else {
+        // Se não há parâmetros, mostramos a tela de busca
+        this.isLoading = false;
+        this.modoVisualizacao = false;
       }
     });
+  }
+  
+  // Método para resetar o componente a um estado inicial consistente
+  resetComponent(): void {
+    this.paciente = null;
+    this.convenio = '';
+    this.plano = '';
+    this.error = null;
+    this.resultadosBusca = [];
   }
 
   carregarPacienteParaEdicao(id: string): void {
     this.isLoading = true;
+    this.resetComponent(); // Reseta o estado antes de começar o carregamento
+    
     this.pacienteService.obterPacientePorId(id)
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(
+        finalize(() => {
+          this.isLoading = false; // Sempre garante que o loading será desativado
+          console.log('Finalizou a chamada de API para obter paciente');
+        })
+      )
       .subscribe({
         next: (paciente) => {
           if (paciente) {
+            console.log('Paciente recebido com sucesso:', paciente.id);
             // Processar os dados do paciente
             this.paciente = paciente;
             this.modoVisualizacao = true;
-
+            
             // If the patient has insurance, load additional information
             if (paciente.convenio_id) {
               this.loadInsuranceInfo(paciente);
             }
           } else {
             this.error = 'Paciente não encontrado';
+            this.modoVisualizacao = false;
           }
         },
         error: (err) => {
           this.error = 'Erro ao carregar dados do paciente para edição';
+          this.modoVisualizacao = false;
           console.error('Erro ao carregar paciente:', err);
         }
       });
   }
 
   loadInsuranceInfo(paciente: Paciente): void {
-    this.convenioService.listarConvenios().subscribe((convenios: Convenio[]) => {
-      const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
-      this.convenio = convenio ? convenio.nome : 'Não informado';
+    this.convenioService.listarConvenios().subscribe({
+      next: (convenios: Convenio[]) => {
+        const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
+        this.convenio = convenio ? convenio.nome : 'Não informado';
 
-      if (paciente.plano_id && paciente.convenio_id) {
-        // Convert convenio_id to number if the method expects a number
-        const convenioId = typeof paciente.convenio_id === 'string' 
-          ? parseInt(paciente.convenio_id, 10) 
-          : paciente.convenio_id;
-        
-        this.convenioService.listarPlanosPorConvenio(convenioId).subscribe((planos: Plano[]) => {
-          const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
-          const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
-          this.plano = plano ? plano.nome : 'Não informado';
-        });
+        if (paciente.plano_id && paciente.convenio_id) {
+          // Convert convenio_id to number if the method expects a number
+          const convenioId = typeof paciente.convenio_id === 'string' 
+            ? parseInt(paciente.convenio_id, 10) 
+            : paciente.convenio_id;
+          
+          this.convenioService.listarPlanosPorConvenio(convenioId).subscribe({
+            next: (planos: Plano[]) => {
+              const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
+              const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
+              this.plano = plano ? plano.nome : 'Não informado';
+            },
+            error: (err) => {
+              console.error('Erro ao carregar planos:', err);
+              this.plano = 'Não foi possível carregar';
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao carregar convênios:', err);
+        this.convenio = 'Não foi possível carregar';
       }
     });
   }
@@ -124,14 +162,20 @@ export class VisualizarPacienteComponent implements OnInit {
   carregarPaciente(id: string): void {
     this.isLoading = true;
     this.error = null;
+    
+    console.log('Iniciando carregamento do paciente ID:', id);
 
     this.pacienteService.obterPacientePorId(id)
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+          console.log('Finalizou carregamento do paciente');
+        })
+      )
       .subscribe({
         next: (paciente) => {
           if (paciente) {
-            console.log('Paciente recebido:', JSON.stringify(paciente));
-            
+            console.log('Paciente recebido:', paciente.id);
             // Ensure the nome field is set (used in the template)
             if (paciente.nome_completo && !paciente.nome) {
               paciente.nome = paciente.nome_completo;
@@ -213,6 +257,7 @@ export class VisualizarPacienteComponent implements OnInit {
           }
         },
         error: (err) => {
+          console.error('Erro ao carregar dados do paciente:', err);
           this.error = 'Erro ao carregar dados do paciente';
           this.modoVisualizacao = false;
         }
