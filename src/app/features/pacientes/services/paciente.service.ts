@@ -41,10 +41,8 @@ export class PacienteService {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
-    
-    const dadosTratados = this.prepararDadosEndereco(paciente);
 
-    return this.http.post<Paciente>(`${this.apiUrl}/criar`, dadosTratados, { headers });
+    return this.http.post<Paciente>(`${this.apiUrl}/criar`, paciente, { headers });
   }
   
   // Atualizar paciente
@@ -53,9 +51,7 @@ export class PacienteService {
       'Content-Type': 'application/json'
     });
     
-    const dadosTratados = this.prepararDadosEndereco(dadosAtualizados);
-    
-    return this.http.put<Paciente>(`${this.apiUrl}/${id}`, dadosTratados, { headers });
+    return this.http.put<Paciente>(`${this.apiUrl}/${id}`, dadosAtualizados, { headers });
   }
 
   // Excluir paciente
@@ -65,7 +61,16 @@ export class PacienteService {
 
   // Listar todos os pacientes
   listarTodosPacientes(): Observable<Paciente[]> {
-    return this.http.get<Paciente[]>(`${this.apiUrl}`);
+    return this.http.get<Paciente[]>(`${this.apiUrl}`).pipe(
+      tap(pacientes => {
+        // Verificação de debugging temporária
+        console.log('Pacientes carregados:', pacientes);
+      }),
+      catchError(error => {
+        console.error('Erro ao carregar pacientes:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Adicionar este método ao serviço
@@ -84,32 +89,6 @@ export class PacienteService {
     // Se houver outros campos com nomes inconsistentes, normalizar aqui
     
     return pacienteNormalizado as Paciente;
-  }
-
-  private prepararDadosEndereco(formValues: any): any {
-    const dadosPaciente = { ...formValues };
-    
-    // Se existir endereço no formulário, garantir que os campos estejam adequados para o backend
-    if (dadosPaciente.endereco) {
-      // Manter os campos exatamente como são retornados pela API ViaCEP
-      // Adicionar apenas o campo número que não vem da API
-      const endereco = { ...dadosPaciente.endereco };
-      
-      // Converter os campos cidade e estado do formulário para localidade e uf
-      if (endereco.cidade && !endereco.localidade) {
-        endereco.localidade = endereco.cidade;
-        delete endereco.cidade;
-      }
-      
-      if (endereco.estado && !endereco.uf) {
-        endereco.uf = endereco.estado;
-        delete endereco.estado;
-      }
-      
-      dadosPaciente.endereco = endereco;
-    }
-    
-    return dadosPaciente;
   }
 
   private handleError(error: any): Observable<never> {

@@ -48,6 +48,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
     canActivate: [AuthGuard]
   },
+  
   {
     path: 'farmacia',
     loadComponent: () => import('./features/farmacia/farmacia.component').then(m => m.FarmaciaComponent),
