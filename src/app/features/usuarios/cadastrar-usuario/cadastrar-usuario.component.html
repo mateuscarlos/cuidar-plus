@@ -1,5 +1,41 @@
 <div class="container-fluid py-4">
-  <div class="card shadow-sm">
+  <!-- Alerta de erro -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+  </div>
+
+  <!-- Overlay de carregamento -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+       *ngIf="isLoading"
+       style="background-color: rgba(255,255,255,0.7); z-index: 1050;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <!-- Indicador de Steps -->
+  <div class="mb-4">
+    <div class="steps d-flex flex-wrap flex-sm-nowrap justify-content-between">
+      <div class="step" [ngClass]="{'active': currentStep === 'userForm', 'completed': currentStep === 'passwordForm'}">
+        <div class="step-icon-wrap">
+          <div class="step-icon"><i class="bi bi-person-fill"></i></div>
+        </div>
+        <h4 class="step-title">Informações do Usuário</h4>
+      </div>
+      <div class="step" [ngClass]="{'active': currentStep === 'passwordForm'}">
+        <div class="step-icon-wrap">
+          <div class="step-icon"><i class="bi bi-lock-fill"></i></div>
+        </div>
+        <h4 class="step-title">Definição de Senha</h4>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: Formulário de Usuário -->
+  <div class="card shadow-sm" *ngIf="currentStep === 'userForm'">
+    <div class="card-header bg-transparent">
+      <h4 class="mb-0">{{ modoEdicao ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}</h4>
+    </div>
     <div class="card-body">
       <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
         <!-- Alerta de erro -->
@@ -138,6 +174,7 @@
           </h6>
           
           <div class="row g-3">
+            <!-- Campos de Setor e Função (removida a duplicação) -->
             <div class="col-md-6">
               <label for="setor" class="form-label">Setor*</label>
               <select class="form-select" id="setor" formControlName="setor"
@@ -163,14 +200,29 @@
               </div>
             </div>
             
+            <!-- Campos condicionais que aparecem quando há conselho profissional -->
             <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
-              <label [for]="labelConselhoProfissional" class="form-label">{{ labelConselhoProfissional }}</label>
-              <input type="text" class="form-control" [id]="labelConselhoProfissional" formControlName="registroCategoria">
+              <label for="registroCategoria" class="form-label">{{ labelConselhoProfissional }} *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="registroCategoria" 
+                formControlName="registroCategoria"
+                placeholder="Digite o número de registro"
+                [ngClass]="{'is-invalid': usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched}">
+              <div class="invalid-feedback" *ngIf="usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched">
+                {{ labelConselhoProfissional }} é obrigatório
+              </div>
             </div>
             
             <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
               <label for="especialidade" class="form-label">Especialidade</label>
-              <input type="text" class="form-control" id="especialidade" formControlName="especialidade">
+              <input 
+                type="text" 
+                class="form-control" 
+                id="especialidade" 
+                formControlName="especialidade"
+                placeholder="Digite a especialidade (se aplicável)">
             </div>
           </div>
         </div>
@@ -224,18 +276,35 @@
           </div>
         </div>
         
-        <!-- Botões de Ação -->
+        <!-- Botões de ação -->
         <div class="d-flex justify-content-between border-top pt-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
             <i class="bi bi-x-circle me-1"></i>Cancelar
           </button>
           
           <button type="submit" class="btn btn-primary" [disabled]="isLoading || usuarioForm.invalid">
-            <i class="bi" [ngClass]="modoEdicao ? 'bi-save' : 'bi-person-plus'"></i>
-            <span class="ms-1">{{ modoEdicao ? 'Salvar Alterações' : 'Cadastrar Usuário' }}</span>
+            <i class="bi" [ngClass]="modoEdicao ? 'bi-save' : 'bi-arrow-right'"></i>
+            <span class="ms-1">{{ modoEdicao ? 'Salvar Alterações' : 'Continuar' }}</span>
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Step 2: Formulário de Senha -->
+  <div *ngIf="currentStep === 'passwordForm'" class="mb-3">
+    <div class="card shadow-sm">
+      <div class="card-header bg-transparent">
+        <div class="d-flex justify-content-between align-items-center">
+          <h4 class="mb-0">Definir Senha do Usuário</h4>
+          <button type="button" class="btn btn-outline-secondary" (click)="voltarParaFormulario()">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <app-password-form (passwordSubmitted)="onPasswordSubmitted($event)"></app-password-form>
+      </div>
     </div>
   </div>
 </div>

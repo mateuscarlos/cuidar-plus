@@ -20,6 +20,7 @@ export interface User {
   tipoContratacao?: string;
   tipoContratacaoExtenso?: string; // Pode vir do backend, se quiser enviar já traduzido
   ativo?: boolean;
+  password_hash: string; 
 }
 
 export interface Endereco {

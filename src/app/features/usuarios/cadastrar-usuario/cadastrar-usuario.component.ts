@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap, map } from 'rxjs/operators';
+import { of, Subscription } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule, DatePipe } from '@angular/common';
 
@@ -11,16 +12,24 @@ import { CepService } from '../../../core/services/cep.service';
 import { User, Endereco } from '../models/user.model';
 import { Funcao } from '../models/funcao.model';
 import { Setor } from '../models/setor.model';
+// Corrigindo o caminho de importação do componente de senha
+import { PasswordFormComponent } from '../password/password-form.component';
+// Adicione essas importações
+import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
 
 @Component({
   selector: 'app-cadastrar-usuario',
   templateUrl: './cadastrar-usuario.component.html',
   styleUrls: ['./cadastrar-usuario.component.scss'],
-  imports: [ReactiveFormsModule, CommonModule],
-  providers: [DatePipe], // Add DatePipe to providers
+  imports: [
+    ReactiveFormsModule, 
+    CommonModule,
+    PasswordFormComponent // Importando diretamente o componente (assumindo que é standalone)
+  ],
+  providers: [DatePipe],
   standalone: true,
 })
-export class CadastrarUsuarioComponent implements OnInit {
+export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   usuarioForm!: FormGroup;
   setores: Setor[] = [];
   funcoes: Funcao[] = [];
@@ -28,6 +37,11 @@ export class CadastrarUsuarioComponent implements OnInit {
   error: string | null = null;
   modoEdicao = false;
   userId?: number;
+  funcaoSubscription?: Subscription;
+  
+  // Controle do fluxo de steps
+  currentStep: 'userForm' | 'passwordForm' = 'userForm';
+  tempUsuarioData: any = null;
   
   tiposContratacao = [
     { value: 'contratada', viewValue: 'Contratada' },
@@ -53,7 +67,8 @@ export class CadastrarUsuarioComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private conselhoService: ConselhosProfissionaisService
   ) { }
 
   ngOnInit(): void {
@@ -86,10 +101,10 @@ export class CadastrarUsuarioComponent implements OnInit {
       telefone: [''],
       setor: ['', [Validators.required]],
       funcao: ['', [Validators.required]],
-      registroCategoria: [''],
+      registroCategoria: [''], // Inicialmente sem validadores
       especialidade: [''],
       endereco: this.fb.group({
-        cep: ['', [Validators.required]], // CEP voltou para dentro do grupo endereco
+        cep: ['', [Validators.required]],
         rua: ['', [Validators.required]],
         numero: ['', [Validators.required]],
         bairro: ['', [Validators.required]],
@@ -118,8 +133,15 @@ export class CadastrarUsuarioComponent implements OnInit {
       });
   }
 
+  // Atualizando o método carregarFuncoes com a lógica para mostrar o campo de conselho profissional
+
   carregarFuncoes(setorId: number): void {
     this.isLoading = true;
+    // Verificar se já existe uma subscription para evitar duplicações
+    if (this.funcaoSubscription) {
+      this.funcaoSubscription.unsubscribe();
+    }
+
     this.setoresFuncoesService.getFuncoesPorSetor(setorId)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
@@ -129,21 +151,60 @@ export class CadastrarUsuarioComponent implements OnInit {
             tipo_contratacao: f.tipo_contratacao as any
           }));
           
-          // Reset função selecionada
-          this.usuarioForm.get('funcao')?.setValue('');
+          // Limpar as seleções e campos anteriores se não estiver em modo de edição
+          if (!this.modoEdicao) {
+            this.usuarioForm.get('funcao')?.setValue('');
+            this.usuarioForm.get('registroCategoria')?.setValue('');
+            this.usuarioForm.get('especialidade')?.setValue('');
+            
+            // Inicialmente ocultar o campo de conselho profissional
+            this.mostrarConselhoProfissional = false;
+            this.usuarioForm.get('registroCategoria')?.clearValidators();
+            this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
+          }
           
-          // Verificar se deve mostrar o campo de conselho profissional
-          this.usuarioForm.get('funcao')?.valueChanges.subscribe(funcaoId => {
+          // Configurar listener para mudanças na função selecionada
+          this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe(funcaoId => {
             if (funcaoId) {
-              const funcaoSelecionada = this.funcoes.find(f => f.id === funcaoId);
-              if (funcaoSelecionada && funcaoSelecionada.conselho_profissional) {
+              // Usar o serviço para verificar se a função requer registro
+              const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(+funcaoId, this.funcoes);
+              
+              if (conselhoInfo) {
+                // Função requer registro em conselho profissional
                 this.mostrarConselhoProfissional = true;
-                this.labelConselhoProfissional = `Digite o ${funcaoSelecionada.conselho_profissional}`;
+                this.labelConselhoProfissional = conselhoInfo.label;
+                
+                // Tornar o campo obrigatório
+                this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
               } else {
+                // Função não requer registro
                 this.mostrarConselhoProfissional = false;
+                this.usuarioForm.get('registroCategoria')?.clearValidators();
+                this.usuarioForm.get('registroCategoria')?.setValue('');
+                this.usuarioForm.get('especialidade')?.setValue('');
               }
+              
+              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
+            } else {
+              // Sem função selecionada
+              this.mostrarConselhoProfissional = false;
+              this.usuarioForm.get('registroCategoria')?.clearValidators();
+              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             }
           });
+          
+          // Verificar para modo de edição
+          if (this.modoEdicao && this.usuarioForm.get('funcao')?.value) {
+            const funcaoId = +this.usuarioForm.get('funcao')?.value;
+            const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(funcaoId, this.funcoes);
+            
+            if (conselhoInfo) {
+              this.mostrarConselhoProfissional = true;
+              this.labelConselhoProfissional = conselhoInfo.label;
+              this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
+              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
+            }
+          }
         },
         error: (err) => {
           this.error = 'Erro ao carregar funções';
@@ -192,65 +253,52 @@ export class CadastrarUsuarioComponent implements OnInit {
     }
   }
 
+  // Versão melhorada do carregarUsuario utilizando observáveis
+
   carregarUsuario(id: number): void {
     this.isLoading = true;
     this.usuarioService.obterPorId(id.toString())
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(
+        switchMap(usuario => {
+          // Preenchimento normal do formulário...
+          this.usuarioForm.patchValue({
+            // Dados normais do usuário...
+          });
+          
+          // Se o usuário tem um setor, carregamos as funções e depois voltamos para o fluxo principal
+          if (usuario.setor) {
+            const setorId = +usuario.setor;
+            return this.setoresFuncoesService.getFuncoesPorSetor(setorId).pipe(
+              map(funcoes => {
+                this.funcoes = funcoes.map(f => ({
+                  ...f,
+                  tipo_contratacao: f.tipo_contratacao as any
+                }));
+                return usuario; // Retorna o usuário para continuar o fluxo
+              })
+            );
+          }
+          
+          // Se não tiver setor, apenas continua o fluxo
+          return of(usuario);
+        }),
+        finalize(() => this.isLoading = false)
+      )
       .subscribe({
         next: (usuario: any) => {
-          if (usuario) {
-            // Garantir que o endereço seja um objeto válido
-            if (typeof usuario.endereco === 'string') {
-              try {
-                usuario.endereco = JSON.parse(usuario.endereco);
-              } catch (e) {
-                console.error('Erro ao desserializar o endereço:', e);
-                usuario.endereco = {};
-              }
+          // Agora que temos as funções carregadas, podemos configurar o campo de conselho profissional
+          if (usuario.funcao) {
+            const funcaoId = +usuario.funcao;
+            const funcaoSelecionada = this.funcoes.find(f => f.id === funcaoId);
+            
+            if (funcaoSelecionada && funcaoSelecionada.conselho_profissional) {
+              this.mostrarConselhoProfissional = true;
+              this.labelConselhoProfissional = `Número do ${funcaoSelecionada.conselho_profissional}`;
+              
+              // Definir validador de obrigatoriedade
+              this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
+              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             }
-
-            if (!usuario.endereco) {
-              usuario.endereco = {};
-            }
-
-            // Formatar a data de admissão para o formato esperado pelo input date
-            if (usuario.dataAdmissao) {
-              const dataFormatada = this.datePipe.transform(usuario.dataAdmissao, 'yyyy-MM-dd');
-              usuario.dataAdmissao = dataFormatada || '';
-            }
-
-            // Preencher o formulário com os dados do usuário
-            this.usuarioForm.patchValue({
-              nome: usuario.nome,
-              email: usuario.email,
-              cpf: usuario.cpf,
-              telefone: usuario.telefone || '',
-              setor: usuario.setor,
-              funcao: usuario.funcao,
-              registroCategoria: usuario.registroCategoria || '',
-              especialidade: usuario.especialidade || '',
-              endereco: {
-                cep: usuario.cep || '', // Colocar o CEP dentro do objeto endereco no formulário
-                rua: usuario.endereco?.rua || usuario.endereco?.logradouro || '',
-                numero: usuario.endereco?.numero || '',
-                bairro: usuario.endereco?.bairro || '',
-                cidade: usuario.endereco?.cidade || usuario.endereco?.localidade || '',
-                estado: usuario.endereco?.estado || usuario.endereco?.uf || ''
-              },
-              dataAdmissao: usuario.dataAdmissao,
-              tipoContratacao: usuario.tipoContratacao || 'contratada',
-              tipoAcesso: usuario.tipoAcesso || 'padrao',
-              status: usuario.status || 'ativo'
-            });
-
-            // Carregar as funções depois de definir o setor
-            if (usuario.setor) {
-              const setorId = +usuario.setor;
-              this.carregarFuncoes(setorId);
-            }
-          } else {
-            this.error = 'Usuário não encontrado';
-            this.showNotification('Usuário não encontrado', 'error');
           }
         },
         error: (err) => {
@@ -260,6 +308,7 @@ export class CadastrarUsuarioComponent implements OnInit {
       });
   }
 
+  // Modificamos o método onSubmit para implementar o fluxo de steps
   onSubmit(): void {
     if (this.usuarioForm.invalid) {
       this.usuarioForm.markAllAsTouched();
@@ -267,11 +316,13 @@ export class CadastrarUsuarioComponent implements OnInit {
       return;
     }
 
-    const usuarioData = this.prepararDadosUsuario();
-    this.isLoading = true;
+    // Preparar os dados do usuário
+    this.tempUsuarioData = this.prepararDadosUsuario();
 
     if (this.modoEdicao && this.userId) {
-      this.usuarioService.atualizar(this.userId.toString(), usuarioData)
+      // Para edição, não solicitar senha, apenas atualizar o usuário
+      this.isLoading = true;
+      this.usuarioService.atualizar(this.userId.toString(), this.tempUsuarioData)
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: () => {
@@ -284,19 +335,48 @@ export class CadastrarUsuarioComponent implements OnInit {
           }
         });
     } else {
-      this.usuarioService.criar(usuarioData)
-        .pipe(finalize(() => this.isLoading = false))
-        .subscribe({
-          next: () => {
-            this.showNotification('Usuário cadastrado com sucesso', 'success');
-            this.router.navigate(['/usuarios']);
-          },
-          error: (err) => {
-            this.error = 'Erro ao cadastrar usuário';
-            this.showNotification('Erro ao cadastrar usuário', 'error');
-          }
-        });
+      // Para cadastro novo, avançar para o passo de definição de senha
+      this.currentStep = 'passwordForm';
+      // Scroll para o topo da página para melhor visibilidade do novo formulário
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  // Método para voltar ao formulário de usuário
+  voltarParaFormulario(): void {
+    this.currentStep = 'userForm';
+  }
+
+  // Método chamado quando a senha for definida pelo componente de senha
+  onPasswordSubmitted(passwordHash: string): void {
+    if (!this.tempUsuarioData) {
+      this.showNotification('Erro ao processar dados do usuário', 'error');
+      return;
+    }
+    
+    // Adicionar o hash da senha aos dados do usuário
+    this.tempUsuarioData.password_hash = passwordHash;
+    
+    // Enviar os dados do usuário com a senha para a API
+    this.isLoading = true;
+    this.usuarioService.criar(this.tempUsuarioData)
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        this.tempUsuarioData = null; // Limpar os dados temporários
+      }))
+      .subscribe({
+        next: () => {
+          this.showNotification('Usuário cadastrado com sucesso', 'success');
+          this.router.navigate(['/usuarios']);
+        },
+        error: (err) => {
+          this.error = 'Erro ao cadastrar usuário';
+          this.showNotification('Erro ao cadastrar usuário: ' + 
+            (err.error?.message || 'Verifique a conexão com o servidor'), 'error');
+          // Voltar para o formulário de dados do usuário em caso de erro
+          this.currentStep = 'userForm';
+        }
+      });
   }
 
   private prepararDadosUsuario(): any {
@@ -339,8 +419,13 @@ export class CadastrarUsuarioComponent implements OnInit {
       panelClass: [`notification-${type}`]
     });
   }
-
   cancelar(): void {
     this.router.navigate(['/usuarios']);
+  }
+
+  ngOnDestroy(): void {
+    if (this.funcaoSubscription) {
+      this.funcaoSubscription.unsubscribe();
+    }
   }
 }
