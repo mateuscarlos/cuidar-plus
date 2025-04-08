@@ -4,90 +4,54 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Pacientes</h1>
         <div>
-          <button class="btn btn-success me-2" (click)="cadastrarNovoPaciente()">
+          <button class="btn btn-success" (click)="cadastrarNovoPaciente()">
             <i class="bi bi-person-plus me-2"></i>Novo Paciente
-          </button>
-          <button class="btn btn-info" (click)="acompanharPaciente('')">
-            <i class="bi bi-clipboard-pulse me-2"></i>Criar Acompanhamento
           </button>
         </div>
       </div>
       
       <div class="card">
         <div class="card-body">
-          <div class="table-responsive">
+          <div *ngIf="isLoading" class="text-center p-3">
+            <span class="spinner-border text-primary" role="status"></span>
+            <p class="mt-2">Carregando pacientes...</p>
+          </div>
+          
+          <div *ngIf="!isLoading && error" class="alert alert-danger">
+            {{ error }}
+          </div>
+          
+          <div *ngIf="!isLoading && !error" class="table-responsive">
             <table class="table table-hover">
               <thead>
                 <tr>
                   <th>Nome</th>
                   <th>Status</th>
                   <th>Últ. Atualização</th>
-                  <th class="text-end">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                <tr *ngFor="let paciente of pacientes" 
+                    (click)="selecionarPaciente((paciente.id ?? 0).toString())"
+                    class="paciente-row">
                   <td>
                     <div class="d-flex align-items-center">
-                      <app-paciente-avatar [nome]="'Maria Rodrigues'" class="me-3"></app-paciente-avatar>
+                      <app-paciente-avatar [nome]="paciente.nome_completo" class="me-3"></app-paciente-avatar>
                       <div>
-                        <p class="mb-0 fw-medium">Maria Rodrigues</p>
-                        <small class="text-muted">ID: 12345</small>
+                        <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
+                        <small class="text-muted">ID: {{ paciente.id }}</small>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <app-status-badge [status]="'ativo'"></app-status-badge>
+                    <app-status-badge [status]="paciente.status"></app-status-badge>
                   </td>
-                  <td>15/03/2025</td>
-                  <td class="text-end">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
-                            (click)="visualizarPaciente('12345'); $event.stopPropagation()">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-primary" title="Editar" 
-                            (click)="editarPaciente('12345'); $event.stopPropagation()">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
-                            (click)="acompanharPaciente('12345'); $event.stopPropagation()">
-                        <i class="bi bi-clipboard-pulse"></i>
-                      </button>
-                    </div>
-                  </td>
+                  <td>{{ paciente.updated_at | date: 'dd/MM/yyyy' }}</td>
                 </tr>
-                <tr>
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-light me-3">
-                        <span>JS</span>
-                      </div>
-                      <div>
-                        <p class="mb-0 fw-medium">João Silva</p>
-                        <small class="text-muted">ID: 12346</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge bg-warning text-dark">Em tratamento</span>
-                  </td>
-                  <td>28/03/2025</td>
-                  <td class="text-end">
-                    <div class="btn-group">
-                      <button class="btn btn-sm btn-outline-secondary" title="Visualizar" 
-                            (click)="visualizarPaciente('12346'); $event.stopPropagation()">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-primary" title="Editar" 
-                            (click)="editarPaciente('12346'); $event.stopPropagation()">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-info" title="Acompanhar" 
-                            (click)="acompanharPaciente('12346'); $event.stopPropagation()">
-                        <i class="bi bi-clipboard-pulse"></i>
-                      </button>
-                    </div>
+                
+                <tr *ngIf="!isLoading && pacientes.length === 0">
+                  <td colspan="3" class="text-center py-4">
+                    <p class="mb-0 text-muted">Nenhum paciente encontrado</p>
                   </td>
                 </tr>
               </tbody>

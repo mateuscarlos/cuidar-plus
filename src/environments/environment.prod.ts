@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.cuidarplus.com/api',
+  testing: false,
+  apiUrl: '/api', // Este path será redirecionado pelo Nginx para o backend
+  logLevel: 'error',
   mockEnabled: false
 };

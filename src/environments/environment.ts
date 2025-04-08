@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api',
-  mockEnabled: true
+  testing: true,
+  apiUrl: 'http://localhost:5001', // Ajuste para a porta correta do Flask
+  logLevel: 'debug',
+  mockEnabled: false
 };

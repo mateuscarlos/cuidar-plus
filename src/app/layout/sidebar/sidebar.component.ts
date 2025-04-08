@@ -17,6 +17,8 @@ interface SubMenuItem {
   title: string;
   route: string;
   icon?: string;
+  subItems?: SubMenuItem[];
+  active?: boolean;
 }
 
 @Component({
@@ -92,7 +94,36 @@ export class SidebarComponent implements OnInit {
       icon: 'bi-gear-fill', 
       route: '/configuracoes',
       active: false,
-      inConstruction: true
+      inConstruction: false,
+      subItems: [
+        {
+          title: 'Usuários',
+          route: '/usuarios',
+          icon: 'bi-people',
+          subItems: [
+            {
+              title: 'Listar Usuários',
+              route: '/usuarios',
+              icon: 'bi-list-ul'
+            },
+            {
+              title: 'Cadastrar Usuário',
+              route: '/usuarios/cadastrar',
+              icon: 'bi-person-plus'
+            }
+          ]
+        },
+        {
+          title: 'Setores',
+          route: '/setores',
+          icon: 'bi-building'
+        },
+        {
+          title: 'Funções',
+          route: '/funcoes',
+          icon: 'bi-briefcase'
+        }
+      ]
     }
   ];
   
@@ -153,6 +184,12 @@ export class SidebarComponent implements OnInit {
     // Se o item tem subitems, alternar estado ativo
     if (item.subItems && item.subItems.length > 0) {
       item.active = !item.active;
+    }
+  }
+  
+  toggleSubMenu(subItem: SubMenuItem): void {
+    if (subItem.subItems && subItem.subItems.length > 0) {
+      subItem.active = !subItem.active;
     }
   }
   

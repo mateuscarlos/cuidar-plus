@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -6,8 +6,8 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="avatar-circle {{backgroundClass}} {{sizeClass}}" [ngStyle]="customStyle">
-      <span>{{iniciais}}</span>
+    <div class="avatar-circle" [style.background-color]="backgroundColor">
+      {{ initials }}
     </div>
   `,
   styles: [`
@@ -40,24 +40,25 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class PacienteAvatarComponent {
+export class PacienteAvatarComponent implements OnInit {
   @Input() nome: string = '';
-  @Input() size: 'sm' | 'md' | 'lg' = 'md';
+  @Input() size: 'sm' | 'md' | 'lg' = 'lg';
   @Input() backgroundClass: string = 'bg-light';
   @Input() customStyle: {[key: string]: string} = {};
-  
-  get iniciais(): string {
-    if (!this.nome) return '';
-    
-    const partes = this.nome.split(' ');
-    if (partes.length === 1) {
-      return partes[0].charAt(0).toUpperCase();
-    }
-    
-    return (partes[0].charAt(0) + partes[partes.length > 1 ? 1 : 0].charAt(0)).toUpperCase();
+  initials: string = '';
+  backgroundColor: string = '#f0f0f0';
+
+  ngOnInit() {
+    this.initials = this.getInitials(this.nome);
   }
-  
-  get sizeClass(): string {
-    return `size-${this.size}`;
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    
+    return name
+      .split(' ')
+      .map(part => part.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('');
   }
 }

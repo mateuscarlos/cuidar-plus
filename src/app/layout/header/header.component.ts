@@ -1,6 +1,7 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -9,15 +10,24 @@ import { RouterModule } from '@angular/router';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent {
+export class HeaderComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
   
-  userName: string = 'João Silva';
+  userName: string = '';
   hasNotifications: boolean = true;
   
+  constructor(private authService: AuthService) {}
+  
+  ngOnInit() {
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.userName = user.nome;
+      }
+    });
+  }
+  
   logout() {
-    // Implement logout logic here
-    console.log('Logout clicked');
+    this.authService.logout();
   }
   
   onToggleSidebar() {

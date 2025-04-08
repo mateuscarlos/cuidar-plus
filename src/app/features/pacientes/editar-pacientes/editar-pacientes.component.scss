@@ -30,38 +30,17 @@ button.btn {
   padding: 8px 20px;
 }
 
-// Estilização da tabela
-.table {
-  margin-bottom: 0;
+// Estilizar cabeçalho de seção
+h2 {
+  color: #2c3e50;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.table tr {
-  transition: background-color 0.2s ease;
-}
-
-.table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.avatar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  color: #555;
-  border: 1px solid #dee2e6;
-}
-
-// Estilos para os resultados da busca
-.table-responsive {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-// Estilos para o avatar grande no cabeçalho do formulário
-.avatar-circle.bg-light {
-  background-color: #f0f0f0 !important;
+// Estilo para o card de busca
+.card-title {
+  font-weight: 600;
+  color: #2c3e50;
 }

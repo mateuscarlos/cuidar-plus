@@ -10,15 +10,14 @@ import { ACOMPANHAMENTOS_MOCK } from '../../../core/mocks/acompanhamentos.mock';
   providedIn: 'root'
 })
 export class AcompanhamentoService {
-  // Usando os mocks centralizados
-  private acompanhamentosMock = ACOMPANHAMENTOS_MOCK;
-
+  private acompanhamentosMock = [...ACOMPANHAMENTOS_MOCK];
+  
   constructor(private http: HttpClient) {}
 
   // Criar um novo acompanhamento
   criarAcompanhamento(acompanhamento: Acompanhamento): Observable<Acompanhamento> {
     if (environment.production) {
-      return this.http.post<Acompanhamento>(`${environment.apiUrl}/acompanhamentos`, acompanhamento);
+      return this.http.post<Acompanhamento>(`/acompanhamentos`, acompanhamento);
     }
     
     const novoAcompanhamento = {
@@ -27,31 +26,30 @@ export class AcompanhamentoService {
       created_at: new Date().toISOString()
     };
     
-    // Adicionar ao mock local
     this.acompanhamentosMock.push(novoAcompanhamento as any);
-    
     return of(novoAcompanhamento as any).pipe(delay(800));
   }
-
-  // Buscar acompanhamentos de um paciente
-  getAcompanhamentosPorPaciente(pacienteId: string): Observable<Acompanhamento[]> {
+  
+  // Obter acompanhamentos de um paciente
+  obterAcompanhamentosPorPaciente(pacienteId: string | number): Observable<Acompanhamento[]> {
     if (environment.production) {
-      return this.http.get<Acompanhamento[]>(`${environment.apiUrl}/pacientes/${pacienteId}/acompanhamentos`);
+      return this.http.get<Acompanhamento[]>(`/acompanhamentos/paciente/${pacienteId}`);
     }
     
-    const acompanhamentos = this.acompanhamentosMock.filter(a => 
-      a.paciente_id.toString() === pacienteId
-    );
+    const acompanhamentos = this.acompanhamentosMock
+      .filter(a => a.paciente_id === Number(pacienteId))
+      .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
+      
     return of(acompanhamentos).pipe(delay(500));
   }
-
+  
   // Obter um acompanhamento específico
-  getAcompanhamento(id: string): Observable<Acompanhamento | null> {
+  obterAcompanhamento(id: string): Observable<Acompanhamento> {
     if (environment.production) {
-      return this.http.get<Acompanhamento>(`${environment.apiUrl}/acompanhamentos/${id}`);
+      return this.http.get<Acompanhamento>(`/acompanhamentos/${id}`);
     }
     
-    const acompanhamento = this.acompanhamentosMock.find(a => a.id === id) || null;
-    return of(acompanhamento).pipe(delay(500));
+    const acompanhamento = this.acompanhamentosMock.find(a => a.id === id);
+    return of(acompanhamento as Acompanhamento).pipe(delay(300));
   }
 }
