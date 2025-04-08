@@ -23,8 +23,13 @@ export class ApiInterceptor implements HttpInterceptor {
     
     // Adicionar a URL base da API se a requisição não for absoluta
     if (!request.url.startsWith('http')) {
+      // Verificar se a URL já começa com /api/
+      const url = request.url.startsWith('/api/') 
+        ? request.url 
+        : `/api${request.url.startsWith('/') ? request.url : '/' + request.url}`;
+        
       request = request.clone({
-        url: `${environment.apiUrl}${request.url}`
+        url: `${environment.apiUrl}${url}`
       });
     }
     

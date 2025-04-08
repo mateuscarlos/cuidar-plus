@@ -48,7 +48,7 @@ export class AuthService {
   
   login(email: string, senha: string): Observable<AuthResponse> {
     if (environment.production) {
-      return this.http.post<AuthResponse>(`/auth/login`, { email, senha }).pipe(
+      return this.http.post<AuthResponse>(`/api/login`, { email, senha }).pipe(
         tap(response => {
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('current_user', JSON.stringify(response.user));
@@ -60,15 +60,15 @@ export class AuthService {
       );
     }
     
-    // Mock para desenvolvimento
-    if (email === 'admin@cuidar.com' && senha === 'senha123') {
+    // Mock para desenvolvimento - atualizado para incluir usuário root
+    if (email === 'admin@cuidarplus.com' && senha === 'CuidarPlus@2025') {
       const mockResponse: AuthResponse = {
         user: {
           id: '1',
-          nome: 'João Silva',
-          email: 'admin@cuidar.com',
+          nome: 'Administrador',
+          email: 'admin@cuidarplus.com',
           cargo: 'Administrador',
-          permissions: ['admin']
+          permissions: ['admin', 'view_all', 'edit_all', 'delete_all']
         },
         token: 'mock-jwt-token'
       };
@@ -77,7 +77,7 @@ export class AuthService {
       localStorage.setItem('current_user', JSON.stringify(mockResponse.user));
       this.currentUserSubject.next(mockResponse.user);
       
-      return of(mockResponse).pipe(delay(800));
+      return of(mockResponse).pipe(delay(500)); // Simula atraso da rede
     }
     
     return throwError(() => new Error('Credenciais inválidas'));
@@ -96,5 +96,14 @@ export class AuthService {
   
   get currentUser(): User | null {
     return this.currentUserSubject.value;
+  }
+  
+  // Método para verificar se o usuário tem uma permissão específica
+  hasPermission(permission: string): boolean {
+    const user = this.currentUser;
+    if (!user || !user.permissions) {
+      return false;
+    }
+    return user.permissions.includes(permission) || user.permissions.includes('admin');
   }
 }

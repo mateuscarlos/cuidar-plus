@@ -34,13 +34,31 @@
         <!-- Exibir subitens se disponíveis e o item estiver ativo -->
         <ul class="nav flex-column submenu" *ngIf="item.subItems && item.active">
           <li class="nav-item" *ngFor="let subItem of item.subItems">
-            <a class="nav-link d-flex align-items-center" 
-              [routerLink]="subItem.route" 
-              (click)="isMobile ? onToggleSidebar() : null"
-              routerLinkActive="active">
-              <i class="bi" [ngClass]="subItem.icon" *ngIf="subItem.icon"></i>
-              <span>{{ subItem.title }}</span>
+            <a class="nav-link d-flex align-items-center justify-content-between" 
+              [routerLink]="subItem.subItems && subItem.subItems.length > 0 ? null : subItem.route" 
+              (click)="toggleSubMenu(subItem)"
+              routerLinkActive="active"
+              (click)="isMobile ? onToggleSidebar() : null">
+              <div>
+                <i class="bi" [ngClass]="subItem.icon" *ngIf="subItem.icon"></i>
+                <span>{{ subItem.title }}</span>
+              </div>
+              <i class="bi bi-chevron-down ms-2 small" *ngIf="subItem.subItems && subItem.subItems.length > 0" 
+                 [class.bi-chevron-up]="subItem.active"></i>
             </a>
+            
+            <!-- Terceiro nível de menu -->
+            <ul class="nav flex-column submenu-nested" *ngIf="subItem.subItems && subItem.active">
+              <li class="nav-item" *ngFor="let nestedItem of subItem.subItems">
+                <a class="nav-link d-flex align-items-center" 
+                  [routerLink]="nestedItem.route" 
+                  routerLinkActive="active"
+                  (click)="isMobile ? onToggleSidebar() : null">
+                  <i class="bi" [ngClass]="nestedItem.icon" *ngIf="nestedItem.icon"></i>
+                  <span>{{ nestedItem.title }}</span>
+                </a>
+              </li>
+            </ul>
           </li>
         </ul>
       </li>

@@ -20,11 +20,7 @@ export class PacienteService {
   
   // Obter paciente por ID
   obterPacientePorId(id: string): Observable<Paciente> {
-    console.log(`Buscando paciente com ID: ${id}`);
-    return this.http.get<Paciente>(`${this.apiUrl}/${id}`).pipe(
-      tap(paciente => console.log('Resposta da API (dados do paciente):', paciente)),
-      catchError(this.handleError)
-    );
+    return this.http.get<Paciente>(`${this.apiUrl}/${id}`);
   }
   
   // Buscar pacientes por filtro
