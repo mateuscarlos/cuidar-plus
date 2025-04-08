@@ -4,6 +4,7 @@ export interface User {
   email: string;
   cargo?: string;
   cpf: string;
+  cep?: string;
   endereco?: Endereco;
   setor: string;
   funcao: string;
@@ -27,5 +28,5 @@ export interface Endereco {
   bairro?: string;
   cidade?: string;
   estado?: string;
-  cep?: string;
+  
 }

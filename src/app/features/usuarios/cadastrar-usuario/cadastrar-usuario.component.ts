@@ -89,7 +89,7 @@ export class CadastrarUsuarioComponent implements OnInit {
       registroCategoria: [''],
       especialidade: [''],
       endereco: this.fb.group({
-        cep: ['', [Validators.required]],
+        cep: ['', [Validators.required]], // CEP voltou para dentro do grupo endereco
         rua: ['', [Validators.required]],
         numero: ['', [Validators.required]],
         bairro: ['', [Validators.required]],
@@ -153,27 +153,39 @@ export class CadastrarUsuarioComponent implements OnInit {
   }
 
   consultarCep(): void {
-    const cep = this.usuarioForm.get('endereco.cep')?.value;
+    const cep = this.usuarioForm.get('endereco.cep')?.value; // Atualizado o caminho
+    
     if (cep && cep.length === 8) {
       this.isLoading = true;
       this.cepService.consultarCep(cep)
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: (endereco) => {
-            if (endereco) {
+            console.log('Resposta da API ViaCEP:', endereco);
+            if (endereco && !endereco.erro) {
+              // Mapear os dados da API para o formulário
               this.usuarioForm.patchValue({
                 endereco: {
-                  rua: endereco.logradouro || endereco.logradouro,
-                  bairro: endereco.bairro,
-                  cidade: endereco.localidade || endereco.localidade,
-                  estado: endereco.uf || endereco.estado
+                  rua: endereco.logradouro || '',
+                  bairro: endereco.bairro || '',
+                  cidade: endereco.localidade || '',
+                  estado: endereco.uf || ''
                 }
               });
+              
+              // Focar no campo número após preencher o endereço
+              setTimeout(() => {
+                const numeroInput = document.querySelector('input[formControlName="numero"]');
+                if (numeroInput) {
+                  (numeroInput as HTMLElement).focus();
+                }
+              }, 100);
             } else {
               this.showNotification('CEP não encontrado', 'warning');
             }
           },
-          error: () => {
+          error: (err) => {
+            console.error('Erro na consulta do CEP:', err);
             this.showNotification('Erro ao consultar CEP', 'error');
           }
         });
@@ -188,26 +200,23 @@ export class CadastrarUsuarioComponent implements OnInit {
         next: (usuario: any) => {
           if (usuario) {
             // Garantir que o endereço seja um objeto válido
-            if (usuario.endereco && typeof usuario.endereco === 'string') {
+            if (typeof usuario.endereco === 'string') {
               try {
                 usuario.endereco = JSON.parse(usuario.endereco);
               } catch (e) {
                 console.error('Erro ao desserializar o endereço:', e);
-                usuario.endereco = {
-                  rua: '',
-                  numero: '',
-                  bairro: '',
-                  cidade: '',
-                  estado: '',
-                  cep: ''
-                };
+                usuario.endereco = {};
               }
+            }
+
+            if (!usuario.endereco) {
+              usuario.endereco = {};
             }
 
             // Formatar a data de admissão para o formato esperado pelo input date
             if (usuario.dataAdmissao) {
               const dataFormatada = this.datePipe.transform(usuario.dataAdmissao, 'yyyy-MM-dd');
-              usuario.dataAdmissao = dataFormatada ? new Date(dataFormatada) : undefined;
+              usuario.dataAdmissao = dataFormatada || '';
             }
 
             // Preencher o formulário com os dados do usuário
@@ -221,12 +230,12 @@ export class CadastrarUsuarioComponent implements OnInit {
               registroCategoria: usuario.registroCategoria || '',
               especialidade: usuario.especialidade || '',
               endereco: {
-                cep: usuario.endereco?.cep || '',
-                rua: usuario.endereco?.rua || '',
+                cep: usuario.cep || '', // Colocar o CEP dentro do objeto endereco no formulário
+                rua: usuario.endereco?.rua || usuario.endereco?.logradouro || '',
                 numero: usuario.endereco?.numero || '',
                 bairro: usuario.endereco?.bairro || '',
-                cidade: usuario.endereco?.cidade || '',
-                estado: usuario.endereco?.estado || ''
+                cidade: usuario.endereco?.cidade || usuario.endereco?.localidade || '',
+                estado: usuario.endereco?.estado || usuario.endereco?.uf || ''
               },
               dataAdmissao: usuario.dataAdmissao,
               tipoContratacao: usuario.tipoContratacao || 'contratada',
@@ -299,8 +308,10 @@ export class CadastrarUsuarioComponent implements OnInit {
       dataAdmissao = new Date(dataAdmissao);
     }
 
-    // Preparar o endereço para serialização se necessário
-    const endereco = formValues.endereco;
+    // Extrair o CEP do objeto endereco para enviá-lo separado
+    const cep = formValues.endereco?.cep;
+    const enderecoSemCep = { ...formValues.endereco };
+    delete enderecoSemCep.cep; // Remover o CEP do objeto endereco
 
     return {
       id: this.userId?.toString(),
@@ -312,7 +323,8 @@ export class CadastrarUsuarioComponent implements OnInit {
       funcao: formValues.funcao,
       registroCategoria: formValues.registroCategoria,
       especialidade: formValues.especialidade,
-      endereco: endereco,
+      cep: cep, // Enviar o CEP como campo separado
+      endereco: enderecoSemCep, // Enviar o restante do endereço sem o CEP
       dataAdmissao: dataAdmissao,
       tipoContratacao: formValues.tipoContratacao,
       tipoAcesso: formValues.tipoAcesso,

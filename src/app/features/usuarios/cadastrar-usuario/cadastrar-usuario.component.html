@@ -61,29 +61,29 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Endereço -->
         <div class="mb-4" formGroupName="endereco">
           <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
             <i class="bi bi-geo-alt-fill me-2 text-primary"></i>Endereço
           </h6>
+
+          <div class="form-group mb-3">
+            <label for="cep" class="form-label">CEP*</label>
+            <input 
+              type="text" 
+              id="cep" 
+              formControlName="cep" 
+              maxlength="8" 
+              (blur)="consultarCep()" 
+              class="form-control"
+              [ngClass]="{'is-invalid': usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched}">
+            <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched">
+              CEP é obrigatório
+            </div>
+          </div>
           
           <div class="row g-3">
-            <div class="col-md-3">
-              <label for="cep" class="form-label">CEP*</label>
-              <div class="input-group">
-                <input type="text" class="form-control" id="cep" formControlName="cep" 
-                       [ngClass]="{'is-invalid': usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched}">
-                <button class="btn btn-outline-secondary" type="button" (click)="consultarCep()">
-                  <i class="bi bi-search"></i>
-                </button>
-              </div>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched">
-                CEP é obrigatório
-              </div>
-              <small class="form-text text-muted">Digite apenas números</small>
-            </div>
-            
             <div class="col-md-7">
               <label for="rua" class="form-label">Rua/Logradouro*</label>
               <input type="text" class="form-control" id="rua" formControlName="rua"
