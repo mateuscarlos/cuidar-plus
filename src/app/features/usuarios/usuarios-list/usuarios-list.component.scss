@@ -1,9 +1,61 @@
+.cursor-pointer {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}
+
 .table {
-  td, th {
+  th, td {
     vertical-align: middle;
   }
 }
 
 .btn-group .btn {
   padding: 0.25rem 0.5rem;
+}
+
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 500;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Estilo para badges com ícones
+.badge i {
+  margin-right: 4px;
+  font-size: 0.875rem;
+}
+
+// Adicionar efeito de hover nas linhas da tabela
+tr:hover {
+  background-color: rgba(0, 123, 255, 0.04) !important;
+}
+
+// Estilização para usuários inativos
+tr.table-light {
+  color: #6c757d;
+}
+
+// Classes de cores personalizadas caso necessário
+.bg-pink {
+  background-color: #e83e8c !important;
+  color: white;
+}
+
+.bg-pink-subtle {
+  background-color: rgba(232, 62, 140, 0.1) !important;
+}
+
+.text-pink {
+  color: #e83e8c !important;
+}
+
+.border-pink {
+  border-color: #e83e8c !important;
 }

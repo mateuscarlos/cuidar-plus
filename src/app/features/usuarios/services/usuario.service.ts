@@ -2,30 +2,51 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { Setor } from '../models/setor.model';
+import { Funcao } from '../models/funcao.model';
 
-export interface Usuario {
-  id?: string;
-  nome: string;
-  email: string;
-  senha?: string;
-  confirmacaoSenha?: string;
-  funcao_id?: string;
-  funcao?: any;
-  setor_id?: string;
-  setor?: any;
-  ativo?: boolean;
-  criado_em?: string;
-  atualizado_em?: string;
+export interface Endereco {
+  logradouro?: string;
+  numero?: string;
+  complemento?: string;
+  bairro?: string;
+  localidade?: string;
+  estado?: string;
+  uf?: string;
+  cep?: string;
 }
 
+export interface Usuario {
+  id?: number | string;
+  nome: string;
+  email: string;
+  cpf?: string;
+  document?: string; // Campo alternativo para CPF
+  telefone?: string;
+  setor?: string;
+  funcao?: string;
+  registroCategoria?: string;
+  especialidade?: string;
+  cep?: string;
+  endereco?: Endereco;
+  dataAdmissao?: Date | string;
+  tipoContratacao?: string;
+  tipoAcesso?: string;
+  status?: string;
+  ativo?: boolean;
+  password_hash?: string; // Para criar novos usuários
+  permissions?: string[];
+}
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioService {
-  private apiUrl = `${environment.apiUrl}/usuarios`;
 
+  private baseApiUrl = environment.apiUrl;
+  private apiUrl = `${this.baseApiUrl}/usuarios`;
+  
   constructor(private http: HttpClient) { }
-
+    
   listarTodos(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(this.apiUrl);
   }
@@ -34,12 +55,14 @@ export class UsuarioService {
     return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
   }
 
-  criar(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(this.apiUrl, usuario);
+  criar(usuario: Usuario): Observable<any> {
+    console.log('Enviando para API:', JSON.stringify(usuario)); // Adicione este log
+    return this.http.post(this.apiUrl, usuario);
   }
 
-  atualizar(id: string, usuario: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuario);
+  atualizar(id: string, usuario: Usuario): Observable<any> {
+    console.log('Enviando para API (atualização):', JSON.stringify(usuario)); // Adicione este log
+    return this.http.put(`${this.apiUrl}/${id}`, usuario);
   }
 
   excluir(id: string): Observable<any> {
@@ -48,5 +71,13 @@ export class UsuarioService {
 
   ativarDesativar(id: string, ativo: boolean): Observable<Usuario> {
     return this.http.patch<Usuario>(`${this.apiUrl}/${id}/status`, { ativo });
+  }
+
+  listarSetores(): Observable<Setor[]> {
+    return this.http.get<Setor[]>(`${this.baseApiUrl}/setores`);
+  }
+
+  listarFuncoes(): Observable<Funcao[]> {
+    return this.http.get<Funcao[]>(`${this.baseApiUrl}/funcoes`);
   }
 }

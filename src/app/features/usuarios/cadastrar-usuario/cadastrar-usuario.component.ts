@@ -9,13 +9,15 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { UsuarioService } from '../services/usuario.service';
 import { SetoresFuncoesService } from '../services/setor-funcoes.service';
 import { CepService } from '../../../core/services/cep.service';
-import { User, Endereco } from '../models/user.model';
+import { Usuario, Endereco, UserStatus } from '../models/user.model'; // Adicionando a importação do UserStatus
 import { Funcao } from '../models/funcao.model';
 import { Setor } from '../models/setor.model';
-// Corrigindo o caminho de importação do componente de senha
+import { UserStatusStyleService } from '../services/user-status-style.service'; // Importando o serviço de estilo
+
 import { PasswordFormComponent } from '../password/password-form.component';
-// Adicione essas importações
+
 import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
+
 
 @Component({
   selector: 'app-cadastrar-usuario',
@@ -38,6 +40,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   modoEdicao = false;
   userId?: number;
   funcaoSubscription?: Subscription;
+  
+  // Adicionar a propriedade userStatusOptions
+  userStatusOptions = Object.values(UserStatus);
   
   // Controle do fluxo de steps
   currentStep: 'userForm' | 'passwordForm' = 'userForm';
@@ -68,7 +73,8 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private datePipe: DatePipe,
-    private conselhoService: ConselhosProfissionaisService
+    private conselhoService: ConselhosProfissionaisService,
+    private userStatusStyle: UserStatusStyleService // Adicionando o serviço ao construtor
   ) { }
 
   ngOnInit(): void {
@@ -114,7 +120,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       dataAdmissao: [''],
       tipoContratacao: ['contratada', [Validators.required]],
       tipoAcesso: ['padrao', [Validators.required]],
-      status: ['ativo']
+      status: [UserStatus.ATIVO] // Agora usando o enum UserStatus
     });
   }
 
@@ -260,9 +266,28 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     this.usuarioService.obterPorId(id.toString())
       .pipe(
         switchMap(usuario => {
-          // Preenchimento normal do formulário...
+          // Preenchimento do formulário com os dados do usuário
           this.usuarioForm.patchValue({
-            // Dados normais do usuário...
+            nome: usuario.nome,
+            email: usuario.email,
+            cpf: usuario.cpf || '', // Handling both property names
+            telefone: usuario.telefone || '',
+            setor: usuario.setor,
+            funcao: usuario.funcao,
+            registroCategoria: usuario.registroCategoria || '',
+            especialidade: usuario.especialidade || '',
+            endereco: {
+              cep: usuario.cep || '',
+              rua: usuario.endereco?.logradouro || '',
+              numero: usuario.endereco?.numero || '',
+              bairro: usuario.endereco?.bairro || '',
+              cidade: usuario.endereco?.localidade || '',
+              estado: usuario.endereco?.uf || usuario.endereco?.estado || ''
+            },
+            dataAdmissao: usuario.dataAdmissao ? this.datePipe.transform(usuario.dataAdmissao, 'yyyy-MM-dd') : '',
+            tipoContratacao: usuario.tipoContratacao || 'contratada',
+            tipoAcesso: usuario.tipoAcesso || 'padrao',
+            status: usuario.status || 'ativo'
           });
           
           // Se o usuário tem um setor, carregamos as funções e depois voltamos para o fluxo principal
@@ -285,7 +310,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         finalize(() => this.isLoading = false)
       )
       .subscribe({
-        next: (usuario: any) => {
+        next: (usuario) => {
           // Agora que temos as funções carregadas, podemos configurar o campo de conselho profissional
           if (usuario.funcao) {
             const funcaoId = +usuario.funcao;
@@ -379,7 +404,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       });
   }
 
-  private prepararDadosUsuario(): any {
+  private prepararDadosUsuario(): Usuario {
     const formValues = this.usuarioForm.value;
     
     // Converter a data de string para objeto Date
@@ -393,7 +418,11 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     const enderecoSemCep = { ...formValues.endereco };
     delete enderecoSemCep.cep; // Remover o CEP do objeto endereco
 
-    return {
+    // Obter o status diretamente do formulário para garantir que estamos enviando exatamente o que foi selecionado
+    const status = formValues.status;
+    console.log('Status selecionado para envio:', status);
+
+    const dadosUsuario = {
       id: this.userId?.toString(),
       nome: formValues.nome,
       email: formValues.email,
@@ -408,9 +437,12 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       dataAdmissao: dataAdmissao,
       tipoContratacao: formValues.tipoContratacao,
       tipoAcesso: formValues.tipoAcesso,
-      status: formValues.status,
-      ativo: formValues.status === 'ativo'
+      status: status, // Usando o valor exato selecionado no formulário
+      ativo: status === UserStatus.ATIVO // Derivar o campo ativo do status
     };
+    
+    console.log('Dados do usuário preparados:', dadosUsuario);
+    return dadosUsuario;
   }
 
   showNotification(message: string, type: 'success' | 'error' | 'warning'): void {
@@ -426,6 +458,37 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.funcaoSubscription) {
       this.funcaoSubscription.unsubscribe();
+    }
+  }
+
+  // Adicionar estes métodos ao componente
+  getStatusClass(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'bg-success';
+      case UserStatus.INATIVO: return 'bg-danger';
+      case UserStatus.FERIAS: return 'bg-info';
+      case UserStatus.LICENCA_MEDICA: 
+      case UserStatus.LICENCA_MATERNIDADE:
+      case UserStatus.LICENCA_PATERNIDADE: return 'bg-warning';
+      default: return 'bg-secondary';
+    }
+  }
+  
+  getStatusIcon(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'bi bi-check-circle';
+      case UserStatus.INATIVO: return 'bi bi-x-circle';
+      case UserStatus.FERIAS: return 'bi bi-umbrella';
+      case UserStatus.LICENCA_MEDICA: return 'bi bi-hospital';
+      default: return 'bi bi-info-circle';
+    }
+  }
+  
+  getStatusTextClass(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'text-success';
+      case UserStatus.INATIVO: return 'text-danger';
+      default: return 'text-secondary';
     }
   }
 }

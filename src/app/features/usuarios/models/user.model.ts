@@ -1,33 +1,57 @@
-export interface User {
-  id: string;
+export interface Usuario {
+  id?: number | string;
   nome: string;
   email: string;
-  cargo?: string;
   cpf: string;
+  telefone?: string;
+  setor?: string;
+  funcao?: string;
+  registroCategoria?: string;
+  especialidade?: string;
   cep?: string;
   endereco?: Endereco;
-  setor: string;
-  funcao: string;
-  especialidade?: string;
-  registroCategoria?: string;
-  telefone?: string;
-  dataAdmissao?: Date;
-  status?: string;
-  tipoAcesso?: string;
-  permissions?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  dataAdmissao?: Date | string;
   tipoContratacao?: string;
-  tipoContratacaoExtenso?: string; // Pode vir do backend, se quiser enviar já traduzido
+  tipoAcesso?: string;
+  status?: string;
   ativo?: boolean;
-  password_hash: string; 
+  password_hash?: string;
+  permissions?: string[];
+  
+  // Campos adicionais para a UI (não serão enviados para o backend)
+  setorNome?: string;
+  funcaoNome?: string;
 }
 
 export interface Endereco {
+  logradouro?: string;
   rua?: string;
   numero?: string;
+  complemento?: string;
   bairro?: string;
   cidade?: string;
+  localidade?: string;
   estado?: string;
-  
+  uf?: string;
+  cep?: string;
+  ddd?: string;
+  ibge?: string;
+  gia?: string;
+  siafi?: string;
+  regiao?: string;
+  unidade?: string;
+}
+
+export enum UserStatus {
+  ATIVO = 'Ativo',
+  INATIVO = 'Inativo',
+  AFASTADO_ACIDENTE_DE_TRABALHO = 'Afastado Por Acidente de Trabalho',
+  AFASTADO_OUTROS = 'Afastado Por Outros Motivos',
+  FERIAS = 'Férias',
+  LICENCA_MEDICA = 'Licença médica',
+  LICENCA_MATERNIDADE = 'Licença maternidade',
+  LICENCA_PATERNIDADE = 'Licença paternidade',
+  SUSPENSAO_CONTRTATUAL = 'Suspensão Contratual',
+  AFASTAMENTO_NAO_REMUNERADO = 'Afastamento Não Remunerado',
+  APOSENTADO = 'Aposentado',
 }
