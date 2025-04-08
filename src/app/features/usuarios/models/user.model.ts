@@ -4,9 +4,13 @@ export interface Usuario {
   email: string;
   cpf: string;
   telefone?: string;
+  setorNome?: string;
+  funcaoNome?: string;
   setor?: string;
   funcao?: string;
   registroCategoria?: string;
+  registroNumero?: string;
+  numeroRegistro?: string; // Adicionado para corrigir o erro
   especialidade?: string;
   cep?: string;
   endereco?: Endereco;
@@ -16,11 +20,15 @@ export interface Usuario {
   status?: string;
   ativo?: boolean;
   password_hash?: string;
+  created_at?: Date | string;
+  updated_at?: Date | string;
   permissions?: string[];
+  tipo_contratacao?: string; // Adicionado para suportar o formato da API
   
   // Campos adicionais para a UI (não serão enviados para o backend)
-  setorNome?: string;
-  funcaoNome?: string;
+  
+  setor_id?: number;
+  funcao_id?: number;
 }
 
 export interface Endereco {

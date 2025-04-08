@@ -98,6 +98,10 @@ export const routes: Routes = [
     title: 'Visualizar Usuário - Cuidar+'
   },
   {
+    path: 'usuarios/:id',
+    component: VisualizarUsuarioComponent
+  },
+  {
     path: 'setores',
     component: SetoresListComponent
   },

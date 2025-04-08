@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 export interface Setor {
   id: number;
@@ -40,6 +41,27 @@ export class SetoresFuncoesService {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/setores/${id}`);
   }
 
+  getSetorPorId(id: string | number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/setores/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar setor ${id}:`, error);
+          return of({ nome: 'Não disponível' });
+        })
+      );
+  }
+
+  // Método para obter o dicionário de setores
+  getSetoresDicionario(): Observable<{ [key: string]: string }> {
+    return this.http.get<{ [key: string]: string }>(`${this.apiUrl}/setores/dicionario`)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao buscar dicionário de setores:', error);
+          return of({});
+        })
+      );
+  }
+
   getFuncoes(): Observable<Funcao[]> {
     return this.http.get<Funcao[]>(`${this.apiUrl}/funcoes`);
   }
@@ -58,5 +80,26 @@ export class SetoresFuncoesService {
 
   deleteFuncao(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.apiUrl}/funcoes/${id}`);
+  }
+
+  getFuncaoPorId(id: string | number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/funcoes/${id}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar função ${id}:`, error);
+          return of({ nome: 'Não disponível' });
+        })
+      );
+  }
+
+  // Método para obter o dicionário de funções
+  getFuncoesDicionario(): Observable<{ [key: string]: string }> {
+    return this.http.get<{ [key: string]: string }>(`${this.apiUrl}/funcoes/dicionario`)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao buscar dicionário de funções:', error);
+          return of({});
+        })
+      );
   }
 }
