@@ -63,3 +63,17 @@ export enum UserStatus {
   AFASTAMENTO_NAO_REMUNERADO = 'Afastamento Não Remunerado',
   APOSENTADO = 'Aposentado',
 }
+
+export enum TipoContratacao {
+  CLT = 'CLT',
+  PJ = 'PJ',
+  ESTAGIO = 'Estágio',
+  APOSENTADO = 'Aposentado',
+  OUTROS = 'Outros',
+}
+
+export enum TipoAcesso {
+  ADMINISTRADOR = 'Administrador',
+  USUARIO = 'Usuário',
+  VISITANTE = 'Visitante',
+}
