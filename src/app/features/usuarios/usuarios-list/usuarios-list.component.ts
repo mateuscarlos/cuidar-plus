@@ -62,9 +62,20 @@ export class UsuariosListComponent implements OnInit, AfterViewInit {
       usuarios: this.usuarioService.listarTodos()
     }).subscribe({
       next: (resultado) => {
+        console.log('Setores carregados:', resultado.setores);
+        console.log('Funções carregadas:', resultado.funcoes);
+        console.log('Usuários carregados:', resultado.usuarios);
+        
         // Armazenar setores em um mapa para acesso rápido
         resultado.setores.forEach(setor => {
+          console.log(`Adicionando setor ao mapa: ID=${setor.id} (${typeof setor.id}), Nome=${setor.nome}`);
           this.setoresMap.set(setor.id.toString(), setor.nome);
+        });
+        
+        // Exiba o conteúdo do mapa para depuração
+        console.log('Conteúdo do mapa de setores:');
+        this.setoresMap.forEach((nome, id) => {
+          console.log(`${id}: ${nome}`);
         });
         
         // Armazenar funções em um mapa para acesso rápido
@@ -73,19 +84,24 @@ export class UsuariosListComponent implements OnInit, AfterViewInit {
         });
         
         // Processar dados dos usuários
-        this.usuarios = resultado.usuarios.map(user => ({
-          ...user,
-          cpf: user.cpf || '',
-          status: user.status || 'Inativo', // Garantir que o status definido no backend seja usado
-          setorNome: this.getNomeSetor(user.setor),
-          funcaoNome: this.getNomeFuncao(user.funcao)
-        }));
+        this.usuarios = resultado.usuarios.map(user => {
+          const setorNome = this.getNomeSetor(user.setor);
+          console.log(`Usuário ${user.nome}, Setor ID=${user.setor} (${typeof user.setor}), Nome do Setor=${setorNome}`);
+          
+          return {
+            ...user,
+            cpf: user.cpf || '',
+            status: user.status || 'Inativo',
+            setorNome: setorNome,
+            funcaoNome: this.getNomeFuncao(user.funcao)
+          };
+        });
         
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Erro ao carregar dados:', error);
-        this.error = 'Erro ao carregar dados. Por favor, tente novamente mais tarde.';
+        this.error = `Erro ao carregar dados: ${error.message || 'Verifique a conexão com o servidor'}`;
         this.isLoading = false;
       }
     });
@@ -159,8 +175,10 @@ export class UsuariosListComponent implements OnInit, AfterViewInit {
     return this.funcoesMap.get(funcaoId) || 'Não encontrado';
   }
   
-  getNomeSetor(setorId: string | undefined): string {
+  getNomeSetor(setorId: string | number | undefined): string {
     if (!setorId) return 'Não definido';
-    return this.setoresMap.get(setorId) || 'Não encontrado';
+    // Converte o ID para string independentemente de ser número ou string
+    const id = setorId.toString();
+    return this.setoresMap.get(id) || 'Não encontrado';
   }
 }

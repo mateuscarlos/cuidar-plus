@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 export interface Setor {
   id: number;
@@ -21,12 +22,17 @@ export interface Funcao {
   providedIn: 'root',
 })
 export class SetoresFuncoesService {
-  private apiUrl = 'http://localhost:5001'; // URL base da API
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
   getSetores(): Observable<Setor[]> {
-    return this.http.get<Setor[]>(`${this.apiUrl}/setores`);
+    return this.http.get<Setor[]>(`${this.apiUrl}/setores`).pipe(
+      catchError(error => {
+        console.error('Erro ao buscar setores:', error);
+        return of([]);
+      })
+    );
   }
 
   createSetor(setor: Setor): Observable<Setor> {
@@ -53,13 +59,12 @@ export class SetoresFuncoesService {
 
   // Método para obter o dicionário de setores
   getSetoresDicionario(): Observable<{ [key: string]: string }> {
-    return this.http.get<{ [key: string]: string }>(`${this.apiUrl}/setores/dicionario`)
-      .pipe(
-        catchError(error => {
-          console.error('Erro ao buscar dicionário de setores:', error);
-          return of({});
-        })
-      );
+    return this.http.get<{ [key: string]: string }>(`${this.apiUrl}/setores/dicionario`).pipe(
+      catchError(error => {
+        console.error('Erro ao buscar dicionário de setores:', error);
+        return of({});
+      })
+    );
   }
 
   getFuncoes(): Observable<Funcao[]> {
