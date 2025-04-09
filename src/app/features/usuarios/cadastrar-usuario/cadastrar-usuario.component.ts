@@ -143,8 +143,14 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   // Atualizando o método carregarFuncoes com a lógica para mostrar o campo de conselho profissional
 
+/**
+ * Carrega as funções para um setor especificado
+ *
+ * @param {number} setorId - ID do setor
+ */
   carregarFuncoes(setorId: number): void {
     this.isLoading = true;
+    console.log('Carregando funções para o setor:', setorId);
 
     // Unsubscribe from previous funcao valueChanges subscription if it exists
     if (this.funcaoSubscription) {
@@ -154,8 +160,22 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     this.setoresFuncoesService.getFuncoesPorSetor(setorId)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
+/**
+ * Updates the available functions for a selected sector and manages form field visibility 
+ * and validation based on the selected function.
+ *
+ * @param {Funcao[]} funcoes - The list of functions available for the selected sector.
+ *
+ * This method sets the available functions, resets form fields and visibility flags,
+ * and subscribes to changes in the 'funcao' form field. Based on the selected function,
+ * it maps to the corresponding sector and professional council, updating form visibility 
+ * and validation for professional registration and specialty fields accordingly.
+ */
+
         next: (funcoes) => {
           this.funcoes = funcoes;
+
+          console.log(this.funcoes, 'carrega funções por setor', setorId);
 
           // Reset form fields and visibility flags
           this.usuarioForm.get('funcao')?.setValue('');
@@ -166,10 +186,13 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
           // Subscribe to funcao valueChanges
           this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe((funcaoId: number) => {
+            console.log('Função selecionada:', funcaoId);
             if (funcaoId) {
               const setor = FUNCAO_SETOR_MAP[funcaoId as FuncoesComRegistro]; // Mapear função para setor
               const conselho = SETOR_CONSELHO_MAP[setor as SetorProfissional]; // Mapear setor para conselho
-
+              console.log(FUNCAO_SETOR_MAP, SETOR_CONSELHO_MAP);
+              console.log('Setor encontrado:', setor);
+              console.log('Conselho encontrado:', setor, conselho);
               if (conselho) {
                 this.mostrarConselhoProfissional = true;
                 this.labelConselhoProfissional = `Número do ${conselho}`; // Define o nome do conselho como label

@@ -51,6 +51,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "lru-cache": "^11.1.0",
+    "typedoc": "^0.28.2",
     "typescript": "^5.8.2"
   }
 }
