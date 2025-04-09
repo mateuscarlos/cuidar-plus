@@ -9,7 +9,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { UsuarioService } from '../services/usuario.service';
 import { SetoresFuncoesService } from '../services/setor-funcoes.service';
 import { CepService } from '../../../core/services/cep.service';
-import { Usuario, Endereco, UserStatus } from '../models/user.model'; // Adicionando a importação do UserStatus
+import { Usuario, Endereco, UserStatus, TipoContratacao } from '../models/user.model'; // Adicionando a importação do UserStatus e TipoContratacao
 import { Funcao } from '../models/funcao.model';
 import { Setor } from '../models/setor.model';
 import { UserStatusStyleService } from '../services/user-status-style.service'; // Importando o serviço de estilo
@@ -17,7 +17,7 @@ import { UserStatusStyleService } from '../services/user-status-style.service'; 
 import { PasswordFormComponent } from '../password/password-form.component';
 
 import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
-
+import { SETOR_CONSELHO_MAP, FUNCAO_SETOR_MAP, ConselhoProfissional, FuncoesComRegistro, SetorProfissional } from '../models/conselhos-profissionais.model';
 
 @Component({
   selector: 'app-cadastrar-usuario',
@@ -61,8 +61,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     { value: 'restrito', viewValue: 'Restrito' }
   ];
 
-  labelConselhoProfissional = 'Conselho Profissional';
-  mostrarConselhoProfissional = false;
+  labelConselhoProfissional = ''; // Label dinâmica para o campo de conselho
+  mostrarConselhoProfissional = false; // Controle de exibição do campo de conselho
+  mostrarEspecialidade = false; // Controle de exibição do campo de especialidade
 
   constructor(
     private fb: FormBuilder,
@@ -115,7 +116,8 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         numero: ['', [Validators.required]],
         bairro: ['', [Validators.required]],
         cidade: ['', [Validators.required]],
-        estado: ['', [Validators.required]]
+        estado: ['', [Validators.required]],
+        complemento: ['']
       }),
       dataAdmissao: [''],
       tipoContratacao: ['contratada', [Validators.required]],
@@ -143,7 +145,8 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   carregarFuncoes(setorId: number): void {
     this.isLoading = true;
-    // Verificar se já existe uma subscription para evitar duplicações
+
+    // Unsubscribe from previous funcao valueChanges subscription if it exists
     if (this.funcaoSubscription) {
       this.funcaoSubscription.unsubscribe();
     }
@@ -152,65 +155,42 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (funcoes) => {
-          this.funcoes = funcoes.map(f => ({
-            ...f,
-            tipo_contratacao: f.tipo_contratacao as any
-          }));
-          
-          // Limpar as seleções e campos anteriores se não estiver em modo de edição
-          if (!this.modoEdicao) {
-            this.usuarioForm.get('funcao')?.setValue('');
-            this.usuarioForm.get('registroCategoria')?.setValue('');
-            this.usuarioForm.get('especialidade')?.setValue('');
-            
-            // Inicialmente ocultar o campo de conselho profissional
-            this.mostrarConselhoProfissional = false;
-            this.usuarioForm.get('registroCategoria')?.clearValidators();
-            this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
-          }
-          
-          // Configurar listener para mudanças na função selecionada
-          this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe(funcaoId => {
+          this.funcoes = funcoes;
+
+          // Reset form fields and visibility flags
+          this.usuarioForm.get('funcao')?.setValue('');
+          this.usuarioForm.get('registroCategoria')?.setValue('');
+          this.usuarioForm.get('especialidade')?.setValue('');
+          this.mostrarConselhoProfissional = false;
+          this.mostrarEspecialidade = false;
+
+          // Subscribe to funcao valueChanges
+          this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe((funcaoId: number) => {
             if (funcaoId) {
-              // Usar o serviço para verificar se a função requer registro
-              const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(+funcaoId, this.funcoes);
-              
-              if (conselhoInfo) {
-                // Função requer registro em conselho profissional
+              const setor = FUNCAO_SETOR_MAP[funcaoId as FuncoesComRegistro]; // Mapear função para setor
+              const conselho = SETOR_CONSELHO_MAP[setor as SetorProfissional]; // Mapear setor para conselho
+
+              if (conselho) {
                 this.mostrarConselhoProfissional = true;
-                this.labelConselhoProfissional = conselhoInfo.label;
-                
-                // Tornar o campo obrigatório
+                this.labelConselhoProfissional = `Número do ${conselho}`; // Define o nome do conselho como label
+                this.mostrarEspecialidade = true;
+
+                // Tornar o campo "Registro de Conselho" obrigatório
                 this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
               } else {
-                // Função não requer registro
                 this.mostrarConselhoProfissional = false;
+                this.mostrarEspecialidade = false;
                 this.usuarioForm.get('registroCategoria')?.clearValidators();
-                this.usuarioForm.get('registroCategoria')?.setValue('');
-                this.usuarioForm.get('especialidade')?.setValue('');
               }
-              
+
               this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             } else {
-              // Sem função selecionada
               this.mostrarConselhoProfissional = false;
+              this.mostrarEspecialidade = false;
               this.usuarioForm.get('registroCategoria')?.clearValidators();
               this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             }
           });
-          
-          // Verificar para modo de edição
-          if (this.modoEdicao && this.usuarioForm.get('funcao')?.value) {
-            const funcaoId = +this.usuarioForm.get('funcao')?.value;
-            const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(funcaoId, this.funcoes);
-            
-            if (conselhoInfo) {
-              this.mostrarConselhoProfissional = true;
-              this.labelConselhoProfissional = conselhoInfo.label;
-              this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
-              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
-            }
-          }
         },
         error: (err) => {
           this.error = 'Erro ao carregar funções';

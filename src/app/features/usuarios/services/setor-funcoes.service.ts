@@ -71,7 +71,7 @@ export class SetoresFuncoesService {
   }
 
   createFuncao(funcao: Funcao): Observable<Funcao> {
-    return this.http.post<Funcao>(`${this.apiUrl}/funcoes`, funcao);
+    return this.http.post<Funcao>(`${this.apiUrl}/create-funcoes`, funcao);
   }
 
   updateFuncao(id: number, funcao: Funcao): Observable<Funcao> {

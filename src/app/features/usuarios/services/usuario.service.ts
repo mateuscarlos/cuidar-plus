@@ -56,7 +56,17 @@ export class UsuarioService {
   }
 
   criar(usuario: Usuario): Observable<any> {
-    console.log('Enviando para API:', JSON.stringify(usuario)); // Adicione este log
+    // Mapeia os valores de tipoContratacao para os valores esperados pelo backend
+    const tipoContratacaoMap: { [key: string]: string } = {
+      'Contratada': 'c',
+      'Terceirizada': 't',
+      'Pessoa Jurídica': 'p'
+    };
+
+    // Substitui o valor de tipoContratacao pelo mapeado
+    usuario.tipoContratacao = tipoContratacaoMap[usuario.tipoContratacao || ''] || usuario.tipoContratacao;
+
+    console.log('Enviando para API:', JSON.stringify(usuario)); // Log para depuração
     return this.http.post(this.apiUrl, usuario);
   }
 
