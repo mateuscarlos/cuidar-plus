@@ -239,7 +239,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
                   rua: endereco.logradouro || '',
                   bairro: endereco.bairro || '',
                   cidade: endereco.localidade || '',
-                  estado: endereco.uf || ''
+                  estado: endereco.uf || '',
                 }
               });
               
@@ -283,6 +283,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
               cep: usuario.cep || '',
               rua: usuario.endereco?.logradouro || '',
               numero: usuario.endereco?.numero || '',
+              complemento: usuario.endereco?.complemento || '',
               bairro: usuario.endereco?.bairro || '',
               cidade: usuario.endereco?.localidade || '',
               estado: usuario.endereco?.uf || usuario.endereco?.estado || ''
@@ -292,6 +293,8 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
             tipoAcesso: usuario.tipoAcesso || 'padrao',
             status: usuario.status || 'ativo'
           });
+
+          console.log('Dados do usuário carregados:', usuario);
           
           // Se o usuário tem um setor, carregamos as funções e depois voltamos para o fluxo principal
           if (usuario.setor) {
@@ -395,6 +398,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.showNotification('Usuário cadastrado com sucesso', 'success');
+          console.log(this.usuarioForm.value, 'Dados do usuário enviados para o servidor');
           this.router.navigate(['/usuarios']);
         },
         error: (err) => {
@@ -453,7 +457,10 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       duration: 5000,
       panelClass: [`notification-${type}`]
     });
+    
   }
+
+    
   cancelar(): void {
     this.router.navigate(['/usuarios']);
   }
