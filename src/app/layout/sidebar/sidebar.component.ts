@@ -110,6 +110,11 @@ export class SidebarComponent implements OnInit {
               title: 'Cadastrar Usuário',
               route: '/usuarios/cadastrar',
               icon: 'bi-person-plus'
+            },
+            {
+              title: 'Editar Usuário',
+              route: '/usuarios/editar',
+              icon: 'bi-pencil-square'
             }
           ]
         },

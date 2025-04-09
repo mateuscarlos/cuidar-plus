@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Setor } from '../models/setor.model';
 import { Funcao } from '../models/funcao.model';
+import { Usuario } from '../models/user.model';
 
 export interface Endereco {
   logradouro?: string;
@@ -16,7 +17,7 @@ export interface Endereco {
   cep?: string;
 }
 
-export interface Usuario {
+/* export interface Usuario {
   id?: number | string;
   nome: string;
   email: string;
@@ -36,7 +37,7 @@ export interface Usuario {
   ativo?: boolean;
   password_hash?: string; // Para criar novos usuários
   permissions?: string[];
-}
+} */
 @Injectable({
   providedIn: 'root'
 })
@@ -89,5 +90,30 @@ export class UsuarioService {
 
   listarFuncoes(): Observable<Funcao[]> {
     return this.http.get<Funcao[]>(`${this.baseApiUrl}/funcoes`);
+  }
+
+  getUsuarioPorId(id: number): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
+  }
+
+  atualizarUsuario(id: number, usuario: Usuario): Observable<any> {
+    // Mapeia os valores de tipoContratacao para os valores esperados pelo backend
+    const tipoContratacaoMap: { [key: string]: string } = {
+      'contratada': 'c',
+      'terceirizada': 't',
+      'pj': 'p'
+    };
+
+    // Substitui o valor de tipoContratacao pelo mapeado, se necessário
+    if (usuario.tipoContratacao && tipoContratacaoMap[usuario.tipoContratacao]) {
+      usuario.tipoContratacao = tipoContratacaoMap[usuario.tipoContratacao];
+    }
+
+    console.log('Enviando para API (atualização):', JSON.stringify(usuario));
+    return this.http.put<any>(`${this.apiUrl}/${id}`, usuario);
+  }
+
+  excluirUsuario(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
   }
 }

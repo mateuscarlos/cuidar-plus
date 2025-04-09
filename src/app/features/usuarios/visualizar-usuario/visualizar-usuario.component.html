@@ -19,8 +19,10 @@
       <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
         <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
       </button>
-      <button class="btn btn-primary" (click)="irParaEdicao()">
-        <i class="bi bi-pencil me-2"></i>Editar Usuário
+      <button 
+        class="btn btn-primary me-2" 
+        [routerLink]="['/usuarios/editar', this.usuario.id]">
+        <i class="bi bi-pencil-square me-1"></i>Editar Usuário
       </button>
     </div>
     
@@ -170,8 +172,10 @@
       <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
         <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
       </button>
-      <button class="btn btn-primary" (click)="irParaEdicao()">
-        <i class="bi bi-pencil me-2"></i>Editar Usuário
+      <button 
+        class="btn btn-primary me-2" 
+        [routerLink]="['/usuarios/editar', this.usuario.id]">
+        <i class="bi bi-pencil-square me-1"></i>Editar Usuário
       </button>
     </div>
   </div>

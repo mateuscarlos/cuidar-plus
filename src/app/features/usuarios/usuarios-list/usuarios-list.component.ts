@@ -93,7 +93,7 @@ export class UsuariosListComponent implements OnInit, AfterViewInit {
             cpf: user.cpf || '',
             status: user.status || 'Inativo',
             setorNome: setorNome,
-            funcaoNome: this.getNomeFuncao(user.funcao)
+            funcaoNome: this.getNomeFuncao(user.funcao?.toString())
           };
         });
         

@@ -2,78 +2,80 @@ export interface Usuario {
   id?: number | string;
   nome: string;
   email: string;
-  cpf: string;
+  cpf?: string;
+  document?: string; // Campo alternativo para CPF
   telefone?: string;
-  setorNome?: string;
+  setor?: string | number;
+  funcao?: string | number;
   funcaoNome?: string;
-  setor?: string;
-  funcao?: string;
+  setorNome?: string;
   registroCategoria?: string;
-  registroNumero?: string;
-  numeroRegistro?: string; // Adicionado para corrigir o erro
+  registro_categoria?: string; // Nome do campo usado pelo backend
   especialidade?: string;
   cep?: string;
-  endereco?: Endereco;
+  endereco?: {
+    logradouro?: string;
+    rua?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    localidade?: string;
+    cidade?: string;
+    estado?: string;
+    uf?: string;
+    cep?: string;
+  };
   dataAdmissao?: Date | string;
+  data_admissao?: Date | string; // Nome do campo usado pelo backend
   tipoContratacao?: string;
+  tipo_contratacao?: string; // Nome do campo usado pelo backend
   tipoAcesso?: string;
+  tipo_acesso?: string; // Nome do campo usado pelo backend
   status?: string;
   ativo?: boolean;
   password_hash?: string;
-  created_at?: Date | string;
-  updated_at?: Date | string;
   permissions?: string[];
-  tipo_contratacao?: string; // Adicionado para suportar o formato da API
-  
-  // Campos adicionais para a UI (não serão enviados para o backend)
-  
-  setor_id?: number;
-  funcao_id?: number;
+  cargo?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Enumeração para os status possíveis de um usuário
+export enum UserStatus {
+  ATIVO = 'Ativo',
+  INATIVO = 'Inativo',
+  FERIAS = 'Férias',
+  LICENCA_MEDICA = 'Licença Médica',
+  LICENCA_MATERNIDADE = 'Licença Maternidade',
+  LICENCA_PATERNIDADE = 'Licença Paternidade',
+  AFASTADO_ACIDENTE_DE_TRABALHO = 'Afastado por Acidente de Trabalho',
+  AFASTAMENTO_NAO_REMUNERADO = 'Afastamento Não Remunerado',
+  SUSPENSAO_CONTRTATUAL = 'Suspensão Contratual',
+  APOSENTADO = 'Aposentado',
+  AFASTADO_OUTROS = 'Afastado por Outros Motivos',
+}
+
+
+
+export enum TipoContratacao {
+  C = 'Contratação Direta',
+  T = 'Terceirizado',
+  P = 'Pessoa Jurídica'
+}
+
+export enum TipoAcesso {
+  Administrador = 'Administrador',
+  Usuario = 'Usuário',
+  Gestor = 'Gestor',
 }
 
 export interface Endereco {
   logradouro?: string;
-  rua?: string;
   numero?: string;
   complemento?: string;
   bairro?: string;
-  cidade?: string;
   localidade?: string;
   estado?: string;
   uf?: string;
   cep?: string;
-  ddd?: string;
-  ibge?: string;
-  gia?: string;
-  siafi?: string;
-  regiao?: string;
-  unidade?: string;
-}
-
-export enum UserStatus {
-  ATIVO = 'Ativo',
-  INATIVO = 'Inativo',
-  AFASTADO_ACIDENTE_DE_TRABALHO = 'Afastado Por Acidente de Trabalho',
-  AFASTADO_OUTROS = 'Afastado Por Outros Motivos',
-  FERIAS = 'Férias',
-  LICENCA_MEDICA = 'Licença médica',
-  LICENCA_MATERNIDADE = 'Licença maternidade',
-  LICENCA_PATERNIDADE = 'Licença paternidade',
-  SUSPENSAO_CONTRTATUAL = 'Suspensão Contratual',
-  AFASTAMENTO_NAO_REMUNERADO = 'Afastamento Não Remunerado',
-  APOSENTADO = 'Aposentado',
-}
-
-export enum TipoContratacao {
-  CLT = 'CLT',
-  PJ = 'PJ',
-  ESTAGIO = 'Estágio',
-  APOSENTADO = 'Aposentado',
-  OUTROS = 'Outros',
-}
-
-export enum TipoAcesso {
-  ADMINISTRADOR = 'Administrador',
-  USUARIO = 'Usuário',
-  VISITANTE = 'Visitante',
 }
