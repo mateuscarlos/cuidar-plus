@@ -1,0 +1,34 @@
+.cursor-pointer {
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Destacar filtros aplicados
+.is-invalid {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+}
+
+// Animações para melhorar UX
+.badge {
+  transition: all 0.2s ease;
+  
+  i.cursor-pointer {
+    font-size: 0.85em;
+  }
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+// Melhorar aparência do select com muitos itens
+select.form-select {
+  max-height: 38px;
+  overflow-y: auto;
+}

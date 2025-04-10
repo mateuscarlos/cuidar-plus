@@ -1,0 +1,204 @@
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-light">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-search me-2"></i>Buscar Pacientes
+      </h5>
+      <button 
+        class="btn btn-sm btn-outline-secondary" 
+        *ngIf="temFiltrosAtivos()" 
+        (click)="limparTodosFiltros()"
+        [disabled]="isLoading">
+        <i class="bi bi-x-circle me-1"></i>Limpar Filtros
+      </button>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <form [formGroup]="buscaForm" class="row g-3">
+      <!-- Nome -->
+      <div class="col-lg-3 col-md-6">
+        <div class="form-group">
+          <label for="nome" class="form-label">Nome</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="nome" 
+              placeholder="Buscar por nome" 
+              formControlName="nome"
+              [class.is-invalid]="temFiltro('nome')">
+            <button 
+              *ngIf="temFiltro('nome')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('nome')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- CPF -->
+      <div class="col-lg-2 col-md-6">
+        <div class="form-group">
+          <label for="cpf" class="form-label">CPF</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="cpf" 
+              placeholder="Digite o CPF" 
+              formControlName="cpf"
+              [class.is-invalid]="temFiltro('cpf')">
+            <button 
+              *ngIf="temFiltro('cpf')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('cpf')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ID/Matrícula -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="id" class="form-label">ID/Matrícula</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="id" 
+              placeholder="Digite o ID" 
+              formControlName="id"
+              [class.is-invalid]="temFiltro('id')">
+            <button 
+              *ngIf="temFiltro('id')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('id')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Data de Nascimento -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+          <div class="input-group">
+            <input 
+              type="date" 
+              class="form-control" 
+              id="dataNascimento" 
+              formControlName="dataNascimento"
+              [class.is-invalid]="temFiltro('dataNascimento')">
+            <button 
+              *ngIf="temFiltro('dataNascimento')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('dataNascimento')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Convênio (Atualizado para usar dados da API) -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="convenio" class="form-label">Convênio</label>
+          <div class="input-group">
+            <select 
+              class="form-select" 
+              id="convenio" 
+              formControlName="convenio"
+              [class.is-invalid]="temFiltro('convenio')"
+              [disabled]="carregandoConvenios">
+              <option value="">Todos</option>
+              <!-- Spinner enquanto carrega os convênios -->
+              <option value="" *ngIf="carregandoConvenios" disabled>
+                Carregando...
+              </option>
+              <!-- Lista de convênios carregados da API -->
+              <option 
+                *ngFor="let convenio of convenios" 
+                [value]="convenio.id">
+                {{ formatarNomeConvenio(convenio) }}
+              </option>
+            </select>
+            <button 
+              *ngIf="temFiltro('convenio')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('convenio')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Status -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="status" class="form-label">Status</label>
+          <div class="input-group">
+            <select 
+              class="form-select" 
+              id="status" 
+              formControlName="status"
+              [class.is-invalid]="temFiltro('status')">
+              <option value="">Todos</option>
+              <option *ngFor="let status of statusPaciente" [value]="status">{{ status }}</option>
+            </select>
+            <button 
+              *ngIf="temFiltro('status')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('status')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Estado de filtros ativos -->
+    <div class="mt-3" *ngIf="buscaAtiva">
+      <div class="d-flex align-items-center flex-wrap">
+        <span class="badge bg-light text-dark me-2 mb-2">
+          <i class="bi bi-funnel-fill me-1"></i>Filtros ativos
+        </span>
+        <div class="d-flex flex-wrap gap-1">
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('nome')">
+            Nome: {{ buscaForm.get('nome')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('nome')"></i>
+          </span>
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('cpf')">
+            CPF: {{ buscaForm.get('cpf')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('cpf')"></i>
+          </span>
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('id')">
+            ID: {{ buscaForm.get('id')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('id')"></i>
+          </span>
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('dataNascimento')">
+            Data de Nascimento: {{ buscaForm.get('dataNascimento')?.value | date: 'dd/MM/yyyy' }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('dataNascimento')"></i>
+          </span>
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('convenio')">
+            Convênio: {{ getConvenioNomeById(buscaForm.get('convenio')?.value) }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('convenio')"></i>
+          </span>
+          <span class="badge bg-primary mb-2" *ngIf="temFiltro('status')">
+            Status: {{ buscaForm.get('status')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('status')"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
