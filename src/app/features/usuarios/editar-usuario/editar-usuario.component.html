@@ -5,29 +5,21 @@
   </div>
 
   <!-- Overlay de carregamento -->
-  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
        *ngIf="isLoading"
-       style="background-color: rgba(255,255,255,0.7); z-index: 1050;">
+       style="z-index: 1050;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
     </div>
   </div>
 
   <!-- Card principal do formulário -->
-  <div class="card shadow-sm">
-    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
-      <h4 class="mb-0">Editar Usuário</h4>
+  <div class="card shadow">
+    <div class="card-header bg-white py-3">
+      <h4 class="card-title mb-0">Editar Usuário</h4>
     </div>
     <div class="card-body">
       <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
-        <!-- Overlay de carregamento -->
-        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
-             *ngIf="isLoading" style="z-index: 1000;">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-        
         <!-- Dados Pessoais -->
         <div class="mb-4">
           <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
@@ -97,8 +89,8 @@
                 </div>
               </div>
 
-              <div class="col-md-9">
-                <label for="rua" class="form-label">Logradouro*</label>
+              <div class="col-md-7">
+                <label for="rua" class="form-label">Rua/Logradouro*</label>
                 <input type="text" class="form-control" id="rua" formControlName="rua"
                        [ngClass]="{'is-invalid': usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched}">
                 <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched">
@@ -115,14 +107,14 @@
                 </div>
               </div>
 
-              <div class="col-md-6">
-                  <label for="complemento" class="form-label">Complemento</label>
-                  <input 
-                    type="text" 
-                    id="complemento" 
-                    class="form-control" 
-                    formControlName="complemento" 
-                    placeholder="Ex: Apto 101, Bloco B">
+              <div class="col-md-3">
+                <label for="complemento" class="form-label">Complemento</label>
+                <input 
+                  type="text" 
+                  id="complemento" 
+                  class="form-control" 
+                  formControlName="complemento" 
+                  placeholder="Ex: Apto 101, Bloco B">
               </div>
 
               <div class="col-md-4">
@@ -134,7 +126,7 @@
                 </div>
               </div>
               
-              <div class="col-md-6">
+              <div class="col-md-5">
                 <label for="cidade" class="form-label">Cidade*</label>
                 <input type="text" class="form-control" id="cidade" formControlName="cidade"
                        [ngClass]="{'is-invalid': usuarioForm.get('endereco.cidade')?.invalid && usuarioForm.get('endereco.cidade')?.touched}">
@@ -143,7 +135,7 @@
                 </div>
               </div>
               
-              <div class="col-md-6">
+              <div class="col-md-3">
                 <label for="estado" class="form-label">Estado*</label>
                 <input type="text" class="form-control" id="estado" formControlName="estado"
                        [ngClass]="{'is-invalid': usuarioForm.get('endereco.estado')?.invalid && usuarioForm.get('endereco.estado')?.touched}">
@@ -189,8 +181,8 @@
 
             <!-- Campo Dinâmico para Conselho Profissional -->
             <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
-              <label [for]="'registroCategoria'" class="form-label">{{ labelConselhoProfissional }}*</label>
-              <input type="text" class="form-control" [id]="'registroCategoria'" formControlName="registroCategoria"
+              <label for="registroCategoria" class="form-label">{{ labelConselhoProfissional }}*</label>
+              <input type="text" class="form-control" id="registroCategoria" formControlName="registroCategoria"
                      [ngClass]="{'is-invalid': usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched}">
               <div class="invalid-feedback" *ngIf="usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched">
                 {{ labelConselhoProfissional }} é obrigatório
@@ -202,7 +194,16 @@
               <label for="especialidade" class="form-label">Especialidade</label>
               <input type="text" class="form-control" id="especialidade" formControlName="especialidade">
             </div>
-
+          </div>
+        </div>
+        
+        <!-- Contratação e Acesso -->
+        <div class="mb-4">
+          <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
+            <i class="bi bi-shield-lock me-2 text-primary"></i>Contratação e Acesso
+          </h6>
+          
+          <div class="row g-3">
             <div class="col-md-4">
               <label for="dataAdmissao" class="form-label">Data de Admissão</label>
               <input type="date" class="form-control" id="dataAdmissao" formControlName="dataAdmissao">
@@ -250,7 +251,7 @@
             </div>
           </div>
 
-          <!-- Opcionalmente, você pode mostrar uma prévia de como o status ficará -->
+          <!-- Visualização do status -->
           <div class="col-md-6" *ngIf="usuarioForm.get('status')?.value">
             <label class="form-label">Visualização do Status:</label>
             <div class="d-flex align-items-center mt-2">
@@ -266,7 +267,7 @@
         </div>
         
         <!-- Botões de ação -->
-        <div class="d-flex justify-content-between border-top pt-3 mt-4">
+        <div class="d-flex justify-content-between border-top pt-4 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
             <i class="bi bi-x-circle me-1"></i>Cancelar
           </button>

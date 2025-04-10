@@ -65,8 +65,9 @@ export enum TipoContratacao {
 
 export enum TipoAcesso {
   Administrador = 'Administrador',
-  Usuario = 'Usuário',
   Gestor = 'Gestor',
+  Padrao = 'Padrão',
+  Restrito = 'Restrito'
 }
 
 export interface Endereco {
