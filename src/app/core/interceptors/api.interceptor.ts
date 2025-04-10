@@ -16,27 +16,46 @@ export class ApiInterceptor implements HttpInterceptor {
   constructor(private router: Router) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    console.log(`[HTTP ${request.method}] Enviando requisição para: ${request.url}`);
+    console.log(`[HTTP ${request.method}] Início da requisição para: ${request.url}`);
+    console.log('Request original:', {
+      url: request.url,
+      method: request.method,
+      headers: request.headers.keys(),
+      body: request.body
+    });
     
     // Verificar se a requisição é para um domínio externo
     const isExternalRequest = request.url.startsWith('http') && !request.url.includes(environment.apiUrl);
     
+    let modifiedRequest = request;
+    
     // Adicionar a URL base da API se a requisição não for absoluta
     if (!request.url.startsWith('http')) {
-      // Verificar se a URL já começa com /api/
-      const url = request.url.startsWith('/api/') 
-        ? request.url 
-        : `/api${request.url.startsWith('/') ? request.url : '/' + request.url}`;
+      // CORREÇÃO: Não adicionar o prefixo /api para rotas de pacientes
+      let url;
+      if (request.url.includes('/pacientes')) {
+        // Para rotas de pacientes, não adicionar /api
+        url = request.url.startsWith('/') ? request.url : '/' + request.url;
+      } else {
+        // Para outras rotas, verificar e adicionar /api se necessário
+        url = request.url.startsWith('/api/') 
+          ? request.url 
+          : `/api${request.url.startsWith('/') ? request.url : '/' + request.url}`;
+      }
         
-      request = request.clone({
+      modifiedRequest = request.clone({
         url: `${environment.apiUrl}${url}`
       });
+      
+      console.log(`[HTTP] URL modificada para: ${modifiedRequest.url}`);
     }
+    
+    console.log(`[HTTP ${modifiedRequest.method}] Requisição final para: ${modifiedRequest.url}`);
     
     // Adicionar token de autenticação se disponível
     const token = localStorage.getItem('auth_token');
     if (token) {
-      request = request.clone({
+      modifiedRequest = modifiedRequest.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`
         }
@@ -45,26 +64,26 @@ export class ApiInterceptor implements HttpInterceptor {
 
     // Add testing headers if we're in the test environment and NOT sending to external API
     if (environment.testing && !isExternalRequest) {
-      request = request.clone({
+      modifiedRequest = modifiedRequest.clone({
         setHeaders: {
           'X-Test-Environment': 'true'
         }
       });
     }
 
-    return next.handle(request).pipe(
+    return next.handle(modifiedRequest).pipe(
       tap(event => {
         if (event.type !== 0) { // Ignorar eventos "sent"
-          console.log(`[HTTP] Resposta recebida de ${request.url}`, event);
+          console.log(`[HTTP] Resposta recebida de ${modifiedRequest.url}`, event);
         }
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error(`[HTTP Error] ${request.url}:`, error);
+        console.error(`[HTTP Error] ${modifiedRequest.url}:`, error);
         
         // Enhanced error logging in test environment
         if (environment.testing && environment.logLevel === 'debug') {
           console.group('API Error in Test Environment');
-          console.error('Request URL:', request.url);
+          console.error('Request URL:', modifiedRequest.url);
           console.error('Status:', error.status);
           console.error('Error:', error);
           console.groupEnd();
@@ -72,7 +91,7 @@ export class ApiInterceptor implements HttpInterceptor {
         
         // Log mais detalhado para erros 404
         if (error.status === 404) {
-          console.error(`Rota não encontrada: ${request.url}`);
+          console.error(`Rota não encontrada: ${modifiedRequest.url}`);
         }
         
         if (error.status === 401) {

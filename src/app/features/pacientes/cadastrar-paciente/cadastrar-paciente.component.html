@@ -233,7 +233,8 @@
                     [ngClass]="{'is-invalid': isEnderecoFieldValid('cep')}"
                   >
                   <button class="btn btn-outline-secondary" type="button" (click)="onCepChange()">
-                    <i class="bi bi-search"></i>
+                    <i *ngIf="!isBuscandoCep" class="bi bi-search"></i>
+                    <span *ngIf="isBuscandoCep" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                   </button>
                 </div>
                 <div class="invalid-feedback">
@@ -437,7 +438,7 @@
               <div class="col-md-3">
                 <label for="plano_id" class="form-label field-required">
                   Plano
-                  <span *ngIf="isLoading" class="ms-2">
+                  <span *ngIf="isBuscandoPlanos" class="ms-2">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span class="visually-hidden">Carregando...</span>
                   </span>

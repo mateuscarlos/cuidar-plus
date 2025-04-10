@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map, retry } from 'rxjs/operators';
 import { Convenio } from '../models/convenio.model';
 import { Plano } from '../models/plano.model';
 import { environment } from '../../../../environments/environment';
@@ -10,161 +10,181 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class ConvenioPlanoService {
-  private apiUrl = environment.apiUrl;
+  private apiUrl = `${environment.apiUrl}`;
 
-  constructor(private http: HttpClient) {
-    console.log('API URL configurada:', this.apiUrl);
-  }
+  constructor(private http: HttpClient) {}
 
-  // CONVÊNIOS
-  
   /**
-   * Listar todos os convênios ativos
+   * Lista todos os convênios cadastrados
    */
   listarConvenios(): Observable<Convenio[]> {
-    const url = `${this.apiUrl}/convenios/listar`;
-    console.log('Solicitando convênios de:', url);
-    return this.http.get<Convenio[]>(url).pipe(
-      map(response => {
-        console.log('Resposta da API (convênios):', response);
-        return response;
-      }),
-      catchError(error => {
-        console.error(`Erro ao obter convênios (${url}):`, error);
-        
-        // Se for erro 404, verificar os blueprints no backend
-        if (error.status === 404) {
-          console.error('Rota não encontrada. Verifique se o blueprint convenio_plano_routes está registrado no backend.');
-        }
-        
-        return of([]);
-      })
+    return this.http.get<Convenio[]>(`${this.apiUrl}/convenios/listar`).pipe(
+      retry(1),
+      map(convenios => this.normalizarConvenios(convenios)),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Obter um convênio pelo ID
+   * Obtém um convênio específico pelo ID
    */
-  obterConvenioPorId(id: number): Observable<Convenio> {
-    console.log(`Solicitando convênio ID ${id} da API`);
+  obterConvenio(id: number): Observable<Convenio> {
     return this.http.get<Convenio>(`${this.apiUrl}/convenios/${id}`).pipe(
-      map(response => {
-        console.log(`Resposta da API (convênio ${id}):`, response);
-        return response;
-      }),
-      catchError(error => {
-        console.error(`Erro ao obter convênio ${id}:`, error);
-        throw error;
-      })
+      retry(1),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Criar um novo convênio
-   */
-  criarConvenio(convenio: Omit<Convenio, 'id'>): Observable<Convenio> {
-    return this.http.post<Convenio>(`${this.apiUrl}/convenios/criar`, convenio).pipe(
-      catchError(error => {
-        console.error('Erro ao criar convênio:', error);
-        throw error;
-      })
-    );
-  }
-
-  /**
-   * Atualizar um convênio existente
-   */
-  atualizarConvenio(id: number, convenio: Partial<Convenio>): Observable<Convenio> {
-    return this.http.put<Convenio>(`${this.apiUrl}/convenios/${id}`, convenio).pipe(
-      catchError(error => {
-        console.error(`Erro ao atualizar convênio ${id}:`, error);
-        throw error;
-      })
-    );
-  }
-
-  // PLANOS
-
-  /**
-   * Listar todos os planos
-   */
-  listarPlanos(): Observable<Plano[]> {
-    console.log('Solicitando lista de planos da API');
-    return this.http.get<Plano[]>(`${this.apiUrl}/planos/listar`).pipe(
-      map(response => {
-        console.log('Resposta da API (planos):', response);
-        return response;
-      }),
-      catchError(error => {
-        console.error('Erro ao obter planos:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * Listar planos por convênio
+   * Lista todos os planos de um convênio específico
    */
   listarPlanosPorConvenio(convenioId: number): Observable<Plano[]> {
-    const url = `${this.apiUrl}/planos/convenios/${convenioId}`; // Ajuste para a rota correta
-    console.log(`Solicitando planos do convênio ID ${convenioId} de:`, url);
-    return this.http.get<Plano[]>(url).pipe(
-      map(response => {
-        console.log(`Resposta da API (planos do convênio ${convenioId}):`, response);
-        return response;
-      }),
-      catchError(error => {
-        console.error(`Erro ao obter planos para convênio ${convenioId} (${url}):`, error);
-        return of([]); // Retorna uma lista vazia em caso de erro
-      })
+    return this.http.get<Plano[]>(`${this.apiUrl}/planos/convenios/${convenioId}`).pipe(
+      retry(1),
+      map(planos => this.normalizarPlanos(planos)),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Obter um plano pelo ID
+   * Obtém informações de um plano específico
    */
-  obterPlanoPorId(id: number): Observable<Plano> {
+  obterPlano(id: number): Observable<Plano> {
     return this.http.get<Plano>(`${this.apiUrl}/planos/${id}`).pipe(
-      catchError(error => {
-        console.error(`Erro ao obter plano ${id}:`, error);
-        throw error;
-      })
+      retry(1),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Criar um novo plano
+   * Cria um novo convênio
    */
-  criarPlano(plano: Omit<Plano, 'id'>): Observable<Plano> {
-    return this.http.post<Plano>(`${this.apiUrl}/planos/criar`, plano).pipe(
-      catchError(error => {
-        console.error('Erro ao criar plano:', error);
-        throw error;
-      })
+  criarConvenio(convenio: Convenio): Observable<Convenio> {
+    return this.http.post<Convenio>(`${this.apiUrl}/convenios/criar`, convenio).pipe(
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Atualizar um plano existente
+   * Atualiza um convênio existente
    */
-  atualizarPlano(id: number, plano: Partial<Plano>): Observable<Plano> {
+  atualizarConvenio(id: number, convenio: Convenio): Observable<Convenio> {
+    return this.http.put<Convenio>(`${this.apiUrl}/convenios/${id}`, convenio).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Remove um convênio
+   */
+  removerConvenio(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/convenios/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Cria um novo plano para um convênio específico
+   */
+  criarPlano(convenioId: number, plano: Plano): Observable<Plano> {
+    return this.http.post<Plano>(`${this.apiUrl}/convenios/${convenioId}/planos`, plano).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Atualiza um plano existente
+   */
+  atualizarPlano(id: number, plano: Plano): Observable<Plano> {
     return this.http.put<Plano>(`${this.apiUrl}/planos/${id}`, plano).pipe(
-      catchError(error => {
-        console.error(`Erro ao atualizar plano ${id}:`, error);
-        throw error;
-      })
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Alterar status de um plano (ativar/desativar)
+   * Remove um plano
    */
-  alterarStatusPlano(id: number, ativo: boolean): Observable<Plano> {
-    return this.http.patch<Plano>(`${this.apiUrl}/planos/${id}/status`, { ativo }).pipe(
-      catchError(error => {
-        console.error(`Erro ao alterar status do plano ${id}:`, error);
-        throw error;
-      })
+  removerPlano(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/planos/${id}`).pipe(
+      catchError(this.handleError)
     );
+  }
+
+  /**
+   * Normaliza um array de convênios
+   */
+  private normalizarConvenios(convenios: any[]): Convenio[] {
+    if (!convenios || !Array.isArray(convenios)) return [];
+    
+    return convenios.map(c => {
+      // Garantir que todos os campos necessários estejam presentes
+      return {
+        id: c.id,
+        nome: c.nome || 'Sem nome',
+        codigo: c.codigo || '',
+        ativo: c.ativo === undefined ? true : c.ativo,
+        created_at: c.created_at || '',
+        updated_at: c.updated_at || ''
+      };
+    });
+  }
+
+  /**
+   * Normaliza um array de planos
+   */
+  private normalizarPlanos(planos: any[]): Plano[] {
+    if (!planos || !Array.isArray(planos)) return [];
+    
+    return planos.map(p => {
+      // Garantir que todos os campos necessários estejam presentes
+      return {
+        id: p.id,
+        convenio_id: p.convenio_id,
+        nome: p.nome || 'Sem nome',
+        codigo: p.codigo || '',
+        tipo_acomodacao: p.tipo_acomodacao || '',
+        ativo: p.ativo === undefined ? true : p.ativo,
+        created_at: p.created_at || '',
+        updated_at: p.updated_at || '',
+        convenio: p.convenio || undefined
+      };
+    });
+  }
+
+  /**
+   * Tratamento centralizado de erros
+   */
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Erro desconhecido ao processar a solicitação';
+    
+    if (error.error instanceof ErrorEvent) {
+      // Erro do lado do cliente (rede, etc)
+      errorMessage = `Erro: ${error.error.message}`;
+    } else {
+      // Erro do lado do servidor
+      if (error.status === 0) {
+        errorMessage = 'Sem conexão com o servidor. Verifique sua conexão de internet.';
+      } else if (error.status === 404) {
+        errorMessage = 'Recurso não encontrado.';
+      } else if (error.status === 401) {
+        errorMessage = 'Você não está autorizado a realizar esta operação. Por favor, faça login novamente.';
+      } else if (error.status === 403) {
+        errorMessage = 'Você não tem permissão para realizar esta operação.';
+      } else if (error.status === 422 || error.status === 400) {
+        // Erros de validação ou bad request
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.error?.error) {
+          errorMessage = error.error.error;
+        } else {
+          errorMessage = 'Dados inválidos. Por favor, verifique os campos preenchidos.';
+        }
+      } else {
+        errorMessage = `Erro ${error.status}: ${error.message || 'Erro desconhecido'}`;
+      }
+    }
+    
+    console.error('Erro na requisição:', error);
+    return throwError(() => new Error(errorMessage));
   }
 }

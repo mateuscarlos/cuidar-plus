@@ -208,7 +208,7 @@ export class EditarUsuarioComponent implements OnInit, OnDestroy {
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: (data) => {
-            if (data && !data.erro) {
+            if (data && !(data as any).erro) {
               this.usuarioForm.patchValue({
                 endereco: {
                   rua: data.logradouro,

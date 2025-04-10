@@ -1,23 +1,41 @@
 <div class="container-fluid py-4">
-  <!-- Loader que será exibido durante o carregamento -->
-  <div class="d-flex justify-content-center my-5" *ngIf="isLoading">
+  <!-- Loading spinner -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+       style="z-index: 1050;" *ngIf="isLoading">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="mb-1">Visualização de Paciente</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
+          <li class="breadcrumb-item active">Visualizar Paciente</li>
+        </ol>
+      </nav>
     </div>
   </div>
   
   <!-- Modo de busca - exibido quando não estiver no modo de visualização -->
   <div *ngIf="!modoVisualizacao && !isLoading">
-    <div class="card">
-      <div class="card-header bg-info text-white">
-        <h5 class="mb-0">Visualizar Paciente</h5>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-info text-white py-3">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-search me-2"></i>Buscar Paciente
+        </h5>
       </div>
-      <div class="card-body">
+      <div class="card-body p-4">
         <!-- Componente de busca -->
-        <app-busca-paciente (resultadoBusca)="buscarPaciente($event)"></app-busca-paciente>
+        <!-- Replace the line with the component in the file -->
+            <app-busca-paciente (resultadoBusca)="buscarPacientePorResultado($event)" [modoVisualizacao]="'padrao'"></app-busca-paciente>
 
         <!-- Resultados da busca - exibidos apenas quando houver resultados -->
-        <div class="card border-0 shadow-sm mb-4" *ngIf="resultadosBusca.length > 0">
+        <div class="card border-0 shadow-sm mt-4" *ngIf="resultadosBusca.length > 0">
           <div class="card-body">
             <h6 class="card-title mb-3">Resultados da Busca</h6>
             
@@ -33,26 +51,26 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let paciente of resultadosBusca" (click)="selecionarPaciente(paciente)" style="cursor: pointer;">
+                  <tr *ngFor="let paciente of resultadosBusca" style="cursor: pointer;" (click)="selecionarPaciente(paciente)">
                     <td>
                       <div class="d-flex align-items-center">
-                        <app-paciente-avatar [nome]="paciente.nome || ''" class="me-3"></app-paciente-avatar>
+                        <app-paciente-avatar [nome]="paciente.nome_completo" class="me-2" size="sm"></app-paciente-avatar>
                         <div>
-                          <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
+                          <p class="mb-0 fw-medium">{{ paciente.nome_completo }}</p>
                           <small class="text-muted">ID: {{ paciente.id }}</small>
                         </div>
                       </div>
                     </td>
                     <td>{{ paciente.cpf }}</td>
                     <td>
-                      <app-formatted-date [date]="paciente?.data_nascimento || paciente?.dataNascimento" format="displayDateOnly"></app-formatted-date>
+                      <app-formatted-date [date]="paciente?.data_nascimento" format="displayDateOnly"></app-formatted-date>
                     </td>
                     <td>
                       <app-status-badge [status]="paciente.status"></app-status-badge>
                     </td>
                     <td>
                       <button class="btn btn-sm btn-info" (click)="selecionarPaciente(paciente); $event.stopPropagation();">
-                        <i class="bi bi-eye me-1"></i> Visualizar
+                        <i class="bi bi-eye me-1"></i>Visualizar
                       </button>
                     </td>
                   </tr>
@@ -78,13 +96,13 @@
   
   <!-- Modo de visualização - exibido quando o paciente for selecionado -->
   <div *ngIf="modoVisualizacao && paciente && !isLoading">
-    <!-- Botões de navegação -->
+    <!-- Botões de navegação (topo) -->
     <div class="d-flex justify-content-between mb-4">
       <div>
-        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+        <button class="btn btn-outline-secondary me-2" (click)="voltarParaBusca()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
         </button>
-        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
         </button>
       </div>
@@ -92,7 +110,7 @@
         <button class="btn btn-primary me-2" (click)="irParaEdicao()">
           <i class="bi bi-pencil me-2"></i>Editar Paciente
         </button>
-        <button class="btn btn-info" (click)="irParaAcompanhamento()">
+        <button class="btn btn-primary me-2" (click)="irParaAcompanhamento()">
           <i class="bi bi-clipboard-pulse me-2"></i>Acompanhamento
         </button>
       </div>
@@ -104,9 +122,9 @@
         <div class="d-flex justify-content-between flex-wrap">
           <!-- Informações básicas do paciente -->
           <div class="d-flex align-items-center mb-3 mb-md-0">
-            <app-paciente-avatar [nome]="paciente.nome || ''" size="lg" class="me-3"></app-paciente-avatar>
+            <app-paciente-avatar [nome]="paciente.nome_completo" size="lg" class="me-3"></app-paciente-avatar>
             <div>
-              <h4 class="mb-0">{{ paciente.nome }}</h4>
+              <h4 class="mb-0">{{ paciente.nome_completo }}</h4>
               <p class="text-muted mb-0">
                 <app-status-badge [status]="paciente.status" class="me-2"></app-status-badge>
                 ID: {{ paciente.id }} | CPF: {{ paciente.cpf }}
@@ -136,7 +154,7 @@
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Data de Nascimento:</span>
               <strong>
-                <app-formatted-date [date]="paciente?.data_nascimento || paciente?.dataNascimento" format="displayDateOnly"></app-formatted-date>
+                <app-formatted-date [date]="paciente?.data_nascimento" format="displayDateOnly"></app-formatted-date>
               </strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
@@ -190,16 +208,17 @@
       <!-- Endereço -->
       <div class="col-md-12 mb-4">
         <app-info-card title="Endereço" icon="house-fill">
-          <p class="mb-0">{{ paciente.endereco && paciente.endereco.logradouro ? formatarEndereco($any(paciente.endereco)) : 'Endereço não informado' }}</p>
+          <p class="mb-0">{{ formatarEndereco(paciente.endereco) }}</p>
         </app-info-card>
       </div>
+      
       <!-- Informações Médicas -->
       <div class="col-md-6 mb-4">
         <app-info-card title="Informações Médicas" icon="heart-pulse-fill">
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">CID Primário:</span>
-              <strong>{{ paciente.cid_primario }}</strong>
+              <strong>{{ paciente.cid_primario || 'Não informado' }}</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">CID Secundário:</span>
@@ -207,7 +226,7 @@
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Acomodação:</span>
-              <strong>{{ paciente.acomodacao }}</strong>
+              <strong>{{ paciente.acomodacao || 'Não informado' }}</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Médico Responsável:</span>
@@ -253,8 +272,8 @@
       
       <!-- Acompanhamento Médico -->
       <div class="col-md-12 mb-4">
-        <app-info-card title="Acompanhamento Médico" icon="file-medical-fill">
-          <div class="text-center p-4">
+        <app-info-card title="Acompanhamento Médico" icon="clipboard-pulse-fill">
+          <div class="text-center py-4">
             <i class="bi bi-clipboard-pulse fs-1 text-muted"></i>
             <p class="mt-3 mb-1">Clique no botão abaixo para registrar um novo acompanhamento para este paciente.</p>
             <button class="btn btn-info mt-3" (click)="irParaAcompanhamento()">
@@ -268,17 +287,21 @@
     <!-- Botões de navegação (rodapé) -->
     <div class="d-flex justify-content-between mb-4">
       <div>
-        <button class="btn btn-outline-secondary" (click)="voltarParaBusca()">
+        <button class="btn btn-outline-secondary me-2" (click)="voltarParaBusca()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Busca
         </button>
-        <button class="btn btn-outline-secondary ms-2" (click)="voltarParaLista()">
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
           <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
         </button>
       </div>
-      <button class="btn btn-info" (click)="irParaAcompanhamento()">
-        <i class="bi bi-clipboard-pulse me-2"></i>Acompanhamento
-      </button>
-    </div>
-
+      <div>
+        <button class="btn btn-primary me-2" (click)="irParaEdicao()">
+          <i class="bi bi-pencil me-2"></i>Editar Paciente
+        </button>
+        <button class="btn btn-info" (click)="irParaAcompanhamento()">
+          <i class="bi bi-clipboard-pulse me-2"></i>Acompanhamento
+        </button>
+      </div>
     </div>
   </div>
+</div>

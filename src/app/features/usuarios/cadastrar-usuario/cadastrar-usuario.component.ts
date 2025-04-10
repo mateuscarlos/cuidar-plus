@@ -232,7 +232,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (endereco) => {
             console.log('Resposta da API ViaCEP:', endereco);
-            if (endereco && !endereco.erro) {
+            if (endereco && !(endereco as any).erro) {
               // Mapear os dados da API para o formulário
               this.usuarioForm.patchValue({
                 endereco: {

@@ -2,6 +2,7 @@ import { Endereco } from './endereco.model';
 export interface Paciente {
   id?: number;
   nome_completo: string;
+  nome?: string;
   cpf: string;
   data_nascimento: string;
   genero: string;
@@ -28,6 +29,14 @@ export interface Paciente {
   created_at?: string;
   updated_at?: string;
 }
+  export interface ResultadoBusca {
+    nome?: string;
+    cpf?: string;
+    telefone?: string;
+    status?: string;
+    id?: number;
+  }
+
 
 export enum StatusPaciente {
   ATIVO = 'Ativo',
