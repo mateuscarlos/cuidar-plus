@@ -1,12 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioRoutesService {
-  
-  constructor(private router: Router) { }
+  private readonly router = inject(Router);
   
   /**
    * Navega para a lista de usuários
@@ -26,7 +25,7 @@ export class UsuarioRoutesService {
    * Navega para a página de edição do usuário
    * @param id ID do usuário a ser editado
    */
-  navegarParaEdicao(id: string): void {
+  navegarParaEdicao(id: string | number): void {
     this.router.navigate(['/usuarios/editar', id]);
   }
   
@@ -34,7 +33,7 @@ export class UsuarioRoutesService {
    * Navega para a página de visualização do usuário
    * @param id ID do usuário a ser visualizado
    */
-  navegarParaVisualizacao(id: string): void {
+  navegarParaVisualizacao(id: string | number): void {
     this.router.navigate(['/usuarios/visualizar', id]);
   }
 }

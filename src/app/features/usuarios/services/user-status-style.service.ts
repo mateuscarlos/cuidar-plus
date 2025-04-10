@@ -95,9 +95,6 @@ export const USER_STATUS_BOOTSTRAP_CLASSES: Record<UserStatus, UserStatusClasses
   providedIn: 'root'
 })
 export class UserStatusStyleService {
-  
-  constructor() {}
-  
   /**
    * Retorna as classes Bootstrap para estilizar elementos baseados no status do usuário
    * @param status Status do usuário
@@ -122,44 +119,26 @@ export class UserStatusStyleService {
     };
   }
   
-  /**
-   * Retorna a classe para a cor de fundo do status
-   */
   getBgClass(status: string): string {
     return this.getStatusClasses(status).bgColor;
   }
   
-  /**
-   * Retorna a classe para a cor do texto do status
-   */
   getTextClass(status: string): string {
     return this.getStatusClasses(status).textColor;
   }
   
-  /**
-   * Retorna a classe para a cor da borda do status
-   */
   getBorderClass(status: string): string {
     return this.getStatusClasses(status).borderColor;
   }
   
-  /**
-   * Retorna o ícone do Bootstrap para o status
-   */
   getIcon(status: string): string {
     return this.getStatusClasses(status).icon;
   }
   
-  /**
-   * Retorna a classe do badge para o status
-   */
   getBadgeClass(status: string): string {
     return this.getStatusClasses(status).badgeClass;
   }
   
-  /**
-   * Retorna todas as classes combinadas (background, texto e borda)
-   */
   getAllClasses(status: string): string {
     const classes = this.getStatusClasses(status);
     return `${classes.bgColor} ${classes.textColor} ${classes.borderColor}`;

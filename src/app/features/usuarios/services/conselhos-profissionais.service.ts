@@ -6,9 +6,6 @@ import { Funcao } from '../models/funcao.model';
   providedIn: 'root'
 })
 export class ConselhosProfissionaisService {
-  
-  constructor() { }
-  
   /**
    * Verifica se um setor requer algum tipo de conselho profissional
    * @param setorId ID do setor a ser verificado
@@ -24,7 +21,6 @@ export class ConselhosProfissionaisService {
    * @returns Informações do conselho ou null se não exigir registro
    */
   verificarConselhoFuncao(funcaoId: number): { conselho: ConselhoProfissional; label: string } | null {
-    // Verifica se a função está no dicionário de funções detalhadas
     const detalhes = FUNCOES_DETALHES[funcaoId as FuncoesComRegistro];
     
     if (detalhes) {
