@@ -1,40 +1,39 @@
-import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { RoutesService } from '../../../core/services/routes.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UsuarioRoutesService {
-  
-  constructor(private router: Router) { }
+  private readonly routesService = inject(RoutesService);
   
   /**
    * Navega para a lista de usuários
    */
   navegarParaLista(): void {
-    this.router.navigate(['/usuarios']);
+    this.routesService.navegarParaUsuarios();
   }
   
   /**
    * Navega para o formulário de cadastro de usuário
    */
   navegarParaCadastro(): void {
-    this.router.navigate(['/usuarios/cadastrar']);
+    this.routesService.navegarParaCadastroUsuario();
   }
   
   /**
    * Navega para a página de edição do usuário
    * @param id ID do usuário a ser editado
    */
-  navegarParaEdicao(id: string): void {
-    this.router.navigate(['/usuarios/editar', id]);
+  navegarParaEdicao(id: string | number): void {
+    this.routesService.navegarParaEdicaoUsuario(id);
   }
   
   /**
    * Navega para a página de visualização do usuário
    * @param id ID do usuário a ser visualizado
    */
-  navegarParaVisualizacao(id: string): void {
-    this.router.navigate(['/usuarios/visualizar', id]);
+  navegarParaVisualizacao(id: string | number): void {
+    this.routesService.navegarParaVisualizacaoUsuario(id);
   }
 }

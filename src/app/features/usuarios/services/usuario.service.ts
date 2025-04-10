@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Setor } from '../models/setor.model';
 import { Funcao } from '../models/funcao.model';
-import { Usuario } from '../models/user.model';
+import { Usuario, UsuarioAdapter } from '../models/user.model';
+import { ResultadoBusca } from '../models/busca-usuario.model';
+import { FUNCOES_DETALHES, FuncoesComRegistro } from '../models/conselhos-profissionais.model';
 
 export interface Endereco {
   logradouro?: string;
@@ -17,27 +20,6 @@ export interface Endereco {
   cep?: string;
 }
 
-/* export interface Usuario {
-  id?: number | string;
-  nome: string;
-  email: string;
-  cpf?: string;
-  document?: string; // Campo alternativo para CPF
-  telefone?: string;
-  setor?: string;
-  funcao?: string;
-  registroCategoria?: string;
-  especialidade?: string;
-  cep?: string;
-  endereco?: Endereco;
-  dataAdmissao?: Date | string;
-  tipoContratacao?: string;
-  tipoAcesso?: string;
-  status?: string;
-  ativo?: boolean;
-  password_hash?: string; // Para criar novos usuários
-  permissions?: string[];
-} */
 @Injectable({
   providedIn: 'root'
 })
@@ -48,40 +30,113 @@ export class UsuarioService {
   
   constructor(private http: HttpClient) { }
     
-  listarTodos(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl);
+  listarUsuarios(pagina: number = 1, tamanhoPagina: number = 10): Observable<{ items: Usuario[], total: number }> {
+    const params = new HttpParams()
+      .set('pagina', pagina.toString())
+      .set('tamanho', tamanhoPagina.toString());
+
+    return this.http.get<{ items: Usuario[], total: number }>(`${this.apiUrl}`, { params });
   }
 
-  obterPorId(id: string): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
+  obterUsuarioPorId(id: string): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.apiUrl}/visualizar/${id}`)
+      .pipe(
+        switchMap((usuario: Usuario) => {
+          // Primeiro adaptamos o usuário
+          const usuarioAdaptado = UsuarioAdapter.adapt(usuario);
+          
+          // Preparar as requisições para obter dados de setor e função
+          const requisicoes = [];
+          
+          // Se o usuário tem um setor mas não tem o nome, vamos buscar essa informação
+          if (usuarioAdaptado.setor && !usuarioAdaptado.setorNome) {
+            requisicoes.push(
+              this.obterNomeSetor(usuarioAdaptado.setor).pipe(
+                tap(nome => usuarioAdaptado.setorNome = nome)
+              )
+            );
+          }
+          
+          // Se o usuário tem uma função mas não tem o nome, vamos buscar essa informação
+          if (usuarioAdaptado.funcao && !usuarioAdaptado.funcaoNome) {
+            requisicoes.push(
+              this.obterNomeFuncao(usuarioAdaptado.funcao).pipe(
+                tap(nome => usuarioAdaptado.funcaoNome = nome)
+              )
+            );
+          }
+          
+          // Se não há requisições a fazer, retornamos o usuário como está
+          if (requisicoes.length === 0) {
+            return of(usuarioAdaptado);
+          }
+          
+          // Caso contrário, esperamos todas as requisições terminarem
+          return forkJoin(requisicoes).pipe(
+            map(() => usuarioAdaptado) // Retorna o usuário com os dados adicionados
+          );
+        })
+      );
+  }
+  
+  // Métodos auxiliares para obter nomes de setor e função caso não venham no objeto original
+  obterNomeSetor(idSetor: string | number | undefined | null): Observable<string> {
+    if (!idSetor) return of('Não informado');
+    
+    return this.http.get<{id: number, nome: string}>(`${this.baseApiUrl}/setores/dicionario/${idSetor}`).pipe(
+      map(setor => setor?.nome || 'Nome não disponível'),
+      catchError(erro => {
+        console.error(`Erro ao obter nome do setor ${idSetor}:`, erro);
+        return of('Nome não disponível');
+      })
+    );
+  }
+  
+  obterNomeFuncao(idFuncao: string | number | undefined | null): Observable<string> {
+    if (!idFuncao) return of('Não informado');
+    
+    // Verifica primeiro se é uma função mapeada
+    const funcaoNumerica = Number(idFuncao);
+    if (!isNaN(funcaoNumerica) && funcaoNumerica in FUNCOES_DETALHES) {
+      return of(FUNCOES_DETALHES[funcaoNumerica as FuncoesComRegistro].nome);
+    }
+    
+    return this.http.get<{id: number, nome: string, setor_id: number, especializacao_recomendada: string}>(`${this.baseApiUrl}/funcoes/dicionario/${idFuncao}`).pipe(
+      map(funcao => funcao?.nome || 'Nome não disponível'),
+      catchError(erro => {
+        console.error(`Erro ao obter nome da função ${idFuncao}:`, erro);
+        return of('Nome não disponível');
+      })
+    );
   }
 
-  criar(usuario: Usuario): Observable<any> {
-    // Mapeia os valores de tipoContratacao para os valores esperados pelo backend
-    const tipoContratacaoMap: { [key: string]: string } = {
-      'Contratada': 'c',
-      'Terceirizada': 't',
-      'Pessoa Jurídica': 'p'
-    };
+  buscarUsuarios(params: ResultadoBusca): Observable<Usuario[]> {
+    let httpParams = new HttpParams();
+    
+    // Adicionar parâmetros de busca
+    Object.keys(params).forEach(key => {
+      if (params[key]) {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
 
-    // Substitui o valor de tipoContratacao pelo mapeado
-    usuario.tipoContratacao = tipoContratacaoMap[usuario.tipoContratacao || ''] || usuario.tipoContratacao;
-
-    console.log('Enviando para API:', JSON.stringify(usuario)); // Log para depuração
-    return this.http.post(this.apiUrl, usuario);
+    return this.http.get<Usuario[]>(`${this.apiUrl}/buscar`, { params: httpParams });
   }
 
-  atualizar(id: string, usuario: Usuario): Observable<any> {
-    console.log('Enviando para API (atualização):', JSON.stringify(usuario)); // Adicione este log
-    return this.http.put(`${this.apiUrl}/${id}`, usuario);
+  criarUsuario(usuario: Usuario): Observable<Usuario> {
+    return this.http.post<Usuario>(`${this.apiUrl}`, usuario);
   }
 
-  excluir(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  atualizarUsuario(id: string, usuario: Usuario): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuario);
   }
 
-  ativarDesativar(id: string, ativo: boolean): Observable<Usuario> {
-    return this.http.patch<Usuario>(`${this.apiUrl}/${id}/status`, { ativo });
+  excluirUsuario(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+  
+  alterarStatus(id: string, status: string): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/${id}/status`, { status });
   }
 
   listarSetores(): Observable<Setor[]> {
@@ -96,24 +151,16 @@ export class UsuarioService {
     return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
   }
 
-  atualizarUsuario(id: number, usuario: Usuario): Observable<any> {
-    // Mapeia os valores de tipoContratacao para os valores esperados pelo backend
-    const tipoContratacaoMap: { [key: string]: string } = {
-      'contratada': 'c',
-      'terceirizada': 't',
-      'pj': 'p'
-    };
-
-    // Substitui o valor de tipoContratacao pelo mapeado, se necessário
-    if (usuario.tipoContratacao && tipoContratacaoMap[usuario.tipoContratacao]) {
-      usuario.tipoContratacao = tipoContratacaoMap[usuario.tipoContratacao];
-    }
-
-    console.log('Enviando para API (atualização):', JSON.stringify(usuario));
-    return this.http.put<any>(`${this.apiUrl}/${id}`, usuario);
+  atualizar(id: string, usuario: Usuario): Observable<any> {
+    console.log('Enviando para API (atualização):', JSON.stringify(usuario)); // Adicione este log
+    return this.http.put(`${this.apiUrl}/${id}`, usuario);
   }
 
-  excluirUsuario(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  excluir(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
+  ativarDesativar(id: string, ativo: boolean): Observable<Usuario> {
+    return this.http.patch<Usuario>(`${this.apiUrl}/${id}/status`, { ativo });
   }
 }

@@ -1,0 +1,172 @@
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-light">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-search me-2"></i>Buscar Usuários
+      </h5>
+      <button 
+        class="btn btn-sm btn-outline-secondary" 
+        *ngIf="temFiltrosAtivos()" 
+        (click)="limparTodosFiltros()"
+        [disabled]="isLoading">
+        <i class="bi bi-x-circle me-1"></i>Limpar Filtros
+      </button>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <form [formGroup]="buscaForm" class="row g-3">
+      <!-- Nome -->
+      <div class="col-lg-3 col-md-6">
+        <div class="form-group">
+          <label for="nome" class="form-label">Nome</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="nome" 
+              placeholder="Buscar por nome" 
+              formControlName="nome"
+              [class.is-invalid]="temFiltro('nome')">
+            <button 
+              *ngIf="temFiltro('nome')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('nome')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Email -->
+      <div class="col-lg-3 col-md-6">
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="email" 
+              placeholder="Buscar por email" 
+              formControlName="email"
+              [class.is-invalid]="temFiltro('email')">
+            <button 
+              *ngIf="temFiltro('email')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('email')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Status -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="status" class="form-label">Status</label>
+          <div class="input-group">
+            <select 
+              class="form-select" 
+              id="status" 
+              formControlName="status"
+              [class.is-invalid]="temFiltro('status')">
+              <option value="">Todos</option>
+              <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+            </select>
+            <button 
+              *ngIf="temFiltro('status')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('status')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Setor -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="setor" class="form-label">Setor</label>
+          <div class="input-group">
+            <select 
+              class="form-select" 
+              id="setor" 
+              formControlName="setor"
+              [class.is-invalid]="temFiltro('setor')">
+              <option value="">Todos</option>
+              <option *ngFor="let setor of setores" [value]="setor.id">{{ setor.nome }}</option>
+            </select>
+            <button 
+              *ngIf="temFiltro('setor')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('setor')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Função (disponível somente se um setor estiver selecionado) -->
+      <div class="col-lg-2 col-md-4">
+        <div class="form-group">
+          <label for="funcao" class="form-label">Função</label>
+          <div class="input-group">
+            <select 
+              class="form-select" 
+              id="funcao" 
+              formControlName="funcao"
+              [disabled]="!buscaForm.get('setor')?.value || funcoesFiltradas.length === 0"
+              [class.is-invalid]="temFiltro('funcao')">
+              <option value="">Todas</option>
+              <option *ngFor="let funcao of funcoesFiltradas" [value]="funcao.id">
+                {{ funcao.nome }}
+              </option>
+            </select>
+            <button 
+              *ngIf="temFiltro('funcao')" 
+              class="btn btn-outline-secondary" 
+              type="button"
+              (click)="limparFiltro('funcao')">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Estado de filtros ativos -->
+    <div class="mt-3" *ngIf="buscaAtiva">
+      <div class="d-flex align-items-center">
+        <span class="badge bg-light text-dark me-2">
+          <i class="bi bi-funnel-fill me-1"></i>Filtros ativos
+        </span>
+        <div class="d-flex flex-wrap gap-1">
+          <span class="badge bg-primary" *ngIf="temFiltro('nome')">
+            Nome: {{ buscaForm.get('nome')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('nome')"></i>
+          </span>
+          <span class="badge bg-primary" *ngIf="temFiltro('email')">
+            Email: {{ buscaForm.get('email')?.value }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('email')"></i>
+          </span>
+          <span class="badge bg-primary" *ngIf="temFiltro('status')">
+            Status: {{ getStatusNome() }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('status')"></i>
+          </span>
+          <span class="badge bg-primary" *ngIf="temFiltro('setor')">
+            Setor: {{ getSetorNome() }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('setor')"></i>
+          </span>
+          <span class="badge bg-primary" *ngIf="temFiltro('funcao')">
+            Função: {{ getFuncaoNome() }}
+            <i class="bi bi-x-circle ms-1 cursor-pointer" (click)="limparFiltro('funcao')"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

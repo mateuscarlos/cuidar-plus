@@ -5,9 +5,9 @@
   </div>
 
   <!-- Overlay de carregamento -->
-  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
        *ngIf="isLoading"
-       style="background-color: rgba(255,255,255,0.7); z-index: 1050;">
+       style="z-index: 1050;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
     </div>
@@ -32,25 +32,12 @@
   </div>
 
   <!-- Step 1: Formulário de Usuário -->
-  <div class="card shadow-sm" *ngIf="currentStep === 'userForm'">
-    <div class="card-header bg-transparent">
-      <h4 class="mb-0">{{ modoEdicao ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}</h4>
+  <div class="card shadow" *ngIf="currentStep === 'userForm'">
+    <div class="card-header bg-white py-3">
+      <h4 class="card-title mb-0">{{ modoEdicao ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}</h4>
     </div>
     <div class="card-body">
       <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
-        <!-- Alerta de erro -->
-        <div class="alert alert-danger" *ngIf="error">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-        </div>
-
-        <!-- Overlay de carregamento -->
-        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
-             *ngIf="isLoading" style="z-index: 1000;">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-        
         <!-- Dados Pessoais -->
         <div class="mb-4">
           <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
@@ -138,15 +125,15 @@
               </div>
             </div>
 
-            <div class="col-md-6">
-                <label for="complemento" class="form-label">Complemento</label>
-                <input 
-                  type="text" 
-                  id="complemento" 
-                  class="form-control" 
-                  formControlName="complemento" 
-                  placeholder="Ex: Apto 101, Bloco B">
-              </div>
+            <div class="col-md-3">
+              <label for="complemento" class="form-label">Complemento</label>
+              <input 
+                type="text" 
+                id="complemento" 
+                class="form-control" 
+                formControlName="complemento" 
+                placeholder="Ex: Apto 101, Bloco B">
+            </div>
             
             <div class="col-md-4">
               <label for="bairro" class="form-label">Bairro*</label>
@@ -184,7 +171,7 @@
           </h6>
           
           <div class="row g-3">
-            <!-- Campos de Setor e Função (removida a duplicação) -->
+            <!-- Campos de Setor e Função -->
             <div class="col-md-6">
               <label for="setor" class="form-label">Setor*</label>
               <select class="form-select" id="setor" formControlName="setor"
@@ -209,7 +196,7 @@
                 Função é obrigatória
               </div>
             </div>
-            
+
             <!-- Campos condicionais que aparecem quando há conselho profissional -->
             <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
               <label for="registroCategoria" class="form-label">{{ labelConselhoProfissional }} *</label>
@@ -247,10 +234,7 @@
             <div class="col-md-4">
               <label for="tipoContratacao" class="form-label">Tipo de Contratação*</label>
               <select class="form-select" id="tipoContratacao" formControlName="tipoContratacao">
-                <option value="" disabled selected>Selecione o tipo de contratação</option>
-                <option value="Contratada">Contratada</option>
-                <option value="Terceirizada">Terceirizada</option>
-                <option value="Pessoa Jurídica">Pessoa Jurídica</option>
+                <option *ngFor="let tipo of tiposContratacao" [value]="tipo.value">{{ tipo.viewValue }}</option>
               </select>
               <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched">
                 Tipo de contratação é obrigatório
@@ -275,12 +259,10 @@
                 Nível de acesso é obrigatório
               </div>
             </div>
-            
-            
           </div>
         </div>
 
-        <!-- Adicione este código na seção apropriada do seu formulário -->
+        <!-- Status do usuário -->
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="status" class="form-label">Status do Usuário</label>
@@ -288,7 +270,7 @@
               id="status" 
               formControlName="status"
               class="form-select"
-              [class.is-invalid]="usuarioForm.get('status')?.invalid && usuarioForm.get('status')?.touched">
+              [ngClass]="{'is-invalid': usuarioForm.get('status')?.invalid && usuarioForm.get('status')?.touched}">
               <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption">
                 {{ statusOption }}
               </option>
@@ -299,7 +281,7 @@
           </div>
         </div>
 
-        <!-- Opcionalmente, você pode mostrar uma prévia de como o status ficará -->
+        <!-- Visualização do status -->
         <div class="row mb-3" *ngIf="usuarioForm.get('status')?.value">
           <div class="col-md-6">
             <label class="form-label">Visualização do Status:</label>
@@ -316,11 +298,10 @@
         </div>
         
         <!-- Botões de ação -->
-        <div class="d-flex justify-content-between border-top pt-3 mt-4">
+        <div class="d-flex justify-content-between border-top pt-4 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
             <i class="bi bi-x-circle me-1"></i>Cancelar
           </button>
-          
           <button type="submit" class="btn btn-primary" [disabled]="isLoading || usuarioForm.invalid">
             <i class="bi" [ngClass]="modoEdicao ? 'bi-save' : 'bi-arrow-right'"></i>
             <span class="ms-1">{{ modoEdicao ? 'Salvar Alterações' : 'Continuar' }}</span>
@@ -332,10 +313,10 @@
 
   <!-- Step 2: Formulário de Senha -->
   <div *ngIf="currentStep === 'passwordForm'" class="mb-3">
-    <div class="card shadow-sm">
-      <div class="card-header bg-transparent">
+    <div class="card shadow">
+      <div class="card-header bg-white py-3">
         <div class="d-flex justify-content-between align-items-center">
-          <h4 class="mb-0">Definir Senha do Usuário</h4>
+          <h4 class="card-title mb-0">Definir Senha do Usuário</h4>
           <button type="button" class="btn btn-outline-secondary" (click)="voltarParaFormulario()">
             <i class="bi bi-arrow-left me-1"></i>Voltar
           </button>

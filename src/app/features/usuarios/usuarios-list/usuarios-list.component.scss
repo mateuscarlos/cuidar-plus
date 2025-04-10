@@ -37,25 +37,30 @@ tr:hover {
   background-color: rgba(0, 123, 255, 0.04) !important;
 }
 
-// Estilização para usuários inativos
-tr.table-light {
-  color: #6c757d;
+// Estilos para estado vazio
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
 }
 
-// Classes de cores personalizadas caso necessário
-.bg-pink {
-  background-color: #e83e8c !important;
-  color: white;
+// Avatar para foto de usuário
+.avatar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.avatar-sm {
+    width: 32px;
+    height: 32px;
+  }
 }
 
-.bg-pink-subtle {
-  background-color: rgba(232, 62, 140, 0.1) !important;
-}
-
-.text-pink {
-  color: #e83e8c !important;
-}
-
-.border-pink {
-  border-color: #e83e8c !important;
+// Estilização para loading
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
 }
