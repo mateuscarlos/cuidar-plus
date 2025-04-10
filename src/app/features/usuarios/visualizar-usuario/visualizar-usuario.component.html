@@ -105,17 +105,7 @@
               <span class="text-muted">Tipo de Contratação:</span>
               <strong>{{ usuario.tipo_contratacao || usuario.tipoContratacao || 'Não informado' }}</strong>
             </li>
-            <!-- Para o registro profissional -->
-            <li class="list-group-item d-flex justify-content-between" *ngIf="funcaoRequerRegistro() && temRegistro()">
-              <span class="text-muted">{{ obterNomeConselho() }}:</span>
-              <strong>{{ usuario?.registro_categoria || 'Não informado' }}</strong>
-            </li>
-                   
-            <!-- Para a especialidade profissional -->
-            <li class="list-group-item d-flex justify-content-between" *ngIf="temEspecialidade()">
-              <span class="text-muted">Especialidade:</span>
-              <strong>{{ usuario?.especialidade }}</strong>
-            </li>
+            
           </ul>
         </app-info-card>
       </div>

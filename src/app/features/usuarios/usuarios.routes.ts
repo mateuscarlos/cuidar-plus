@@ -22,7 +22,7 @@ export const USUARIOS_ROUTES: Routes = [
     title: 'Login - Cuidar+'
   },
   {
-    path: 'cadastrar',
+    path: 'criar',
     component: CadastrarUsuarioComponent,
     canActivate: [AuthGuard],
     title: 'Cadastrar Usuário - Cuidar+'

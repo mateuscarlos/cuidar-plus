@@ -320,7 +320,12 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   }
 
   navegarParaCadastro(): void {
-    this.router.navigate(['/usuarios/criar']);
+    this.router.navigate(['/usuarios/criar']).then(success => {
+      if (!success) {
+        console.error('Navegação para cadastro de usuário falhou');
+        this.notificacaoService.mostrarErro('Não foi possível acessar a página de cadastro de usuários');
+      }
+    });
   }
   
   /**
