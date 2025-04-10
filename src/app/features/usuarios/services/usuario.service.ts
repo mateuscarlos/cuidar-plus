@@ -83,11 +83,8 @@ export class UsuarioService {
   obterNomeSetor(idSetor: string | number | undefined | null): Observable<string> {
     if (!idSetor) return of('Não informado');
     
-    return this.listarSetores().pipe(
-      map(setores => {
-        const setorEncontrado = setores.find(setor => setor.id === idSetor);
-        return setorEncontrado?.nome || 'Nome não disponível';
-      }),
+    return this.http.get<{id: number, nome: string}>(`${this.baseApiUrl}/setores/dicionario/${idSetor}`).pipe(
+      map(setor => setor?.nome || 'Nome não disponível'),
       catchError(erro => {
         console.error(`Erro ao obter nome do setor ${idSetor}:`, erro);
         return of('Nome não disponível');
@@ -104,7 +101,7 @@ export class UsuarioService {
       return of(FUNCOES_DETALHES[funcaoNumerica as FuncoesComRegistro].nome);
     }
     
-    return this.http.get<Funcao>(`${this.baseApiUrl}/funcoes/${idFuncao}`).pipe(
+    return this.http.get<{id: number, nome: string, setor_id: number, especializacao_recomendada: string}>(`${this.baseApiUrl}/funcoes/dicionario/${idFuncao}`).pipe(
       map(funcao => funcao?.nome || 'Nome não disponível'),
       catchError(erro => {
         console.error(`Erro ao obter nome da função ${idFuncao}:`, erro);

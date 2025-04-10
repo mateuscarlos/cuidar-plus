@@ -153,11 +153,19 @@ export class VisualizarUsuarioComponent implements OnInit {
     }
     
     // Se não encontrou nos mapeamentos, busca no serviço
-    this.usuarioService.obterNomeFuncao(funcaoId).subscribe(nome => {
-      if (this.usuario) {
-        this.usuario.funcaoNome = nome;
-      }
-    });
+    this.usuarioService.obterNomeFuncao(funcaoId)
+      .pipe(
+        catchError(erro => {
+          console.error('Erro ao obter nome da função:', erro);
+          // Fornecer um valor fallback quando a API falha
+          return of(`Função ${funcaoId}`);
+        })
+      )
+      .subscribe(nome => {
+        if (this.usuario) {
+          this.usuario.funcaoNome = nome;
+        }
+      });
   }
   
   /**
@@ -283,5 +291,18 @@ export class VisualizarUsuarioComponent implements OnInit {
   obterDetalhesFuncao() {
     if (!this.usuario || !this.usuario.funcao) return null;
     return UsuarioAdapter.obterDetalhesFuncao(this.usuario.funcao);
+  }
+
+  /**
+   * Verifica se a informação de registro deve ser exibida
+   */
+  temRegistro(): boolean {
+    return !!this.usuario?.registro_categoria && this.usuario.registro_categoria.trim() !== '';
+  }
+  /**
+   * Verifica se a informação de especialidade deve ser exibida
+   */
+  temEspecialidade(): boolean {
+    return !!this.usuario?.especialidade && this.usuario.especialidade.trim() !== '';
   }
 }
