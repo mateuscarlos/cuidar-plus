@@ -355,7 +355,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
 
   excluirUsuario(id: number): void {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
-      this.usuarioService.excluirUsuario(id).subscribe({
+      this.usuarioService.excluirUsuario(id.toString()).subscribe({
         next: () => {
           this.notificacaoService.mostrarSucesso('Usuário excluído com sucesso!');
           this.carregarUsuarios();

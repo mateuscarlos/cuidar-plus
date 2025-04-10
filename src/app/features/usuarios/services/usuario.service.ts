@@ -151,4 +151,9 @@ export class UsuarioService {
   ativarDesativar(id: string, ativo: boolean): Observable<Usuario> {
     return this.http.patch<Usuario>(`${this.apiUrl}/${id}/status`, { ativo });
   }
+
+  listarFuncoesPorSetor(setorId: number): Observable<Funcao[]> {
+    return this.http.get<Funcao[]>(`${this.baseApiUrl}/funcoes/${setorId}`);
+  }
+
 }

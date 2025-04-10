@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 
 // Novo serviço unificado
-import { ApiUsuarioService } from '../services/api-usuario.service';
+import { UsuarioService } from '../services/usuario.service';
 import { UsuarioRoutesService } from '../services/usuario-routes.service';
 import { UserStatusStyleService } from '../services/user-status-style.service';
 import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
@@ -74,7 +74,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private apiUsuarioService: ApiUsuarioService,
+    private usuarioService: UsuarioService,
     private usuarioRoutesService: UsuarioRoutesService,
     private cepService: CepService,
     private router: Router,
@@ -143,7 +143,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   carregarSetores(): void {
     this.isLoading = true;
-    this.apiUsuarioService.listarSetores()
+    this.usuarioService.listarSetores()
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (setores) => {
@@ -164,7 +164,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       this.funcaoSubscription.unsubscribe();
     }
 
-    this.apiUsuarioService.listarFuncoesPorSetor(setorId)
+    this.usuarioService.listarFuncoesPorSetor(setorId)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (funcoes) => {
@@ -193,6 +193,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       });
   }
 
+  
   // Método separado para configurar o observador de mudanças na função
   configuraObservadorFuncao(): void {
     // Cancela a assinatura anterior, se existir
@@ -289,13 +290,13 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   carregarUsuario(id: number): void {
     this.isLoading = true;
-    this.apiUsuarioService.obterUsuarioPorId(id.toString())
+    this.usuarioService.obterUsuarioPorId(id.toString())
       .pipe(
         switchMap(usuario => {
           // Primeiro carregamos o setor, que disparará o carregamento das funções
           if (usuario.setor) {
             const setorId = +usuario.setor;
-            return this.apiUsuarioService.listarFuncoesPorSetor(setorId).pipe(
+            return this.usuarioService.listarFuncoesPorSetor(setorId).pipe(
               map(funcoes => {
                 this.funcoes = funcoes;
                 return usuario; // Retorna o usuário para continuar o fluxo
@@ -355,7 +356,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       return;
     }
   
-    this.apiUsuarioService.criarUsuario(this.usuarioForm.value).subscribe({
+    this.usuarioService.criarUsuario(this.usuarioForm.value).subscribe({
       next: () => {
         this.notificacaoService.mostrarSucesso('Usuário cadastrado com sucesso!');
         this.usuarioForm.reset();
@@ -394,7 +395,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     
     // Enviar os dados do usuário com a senha para a API
     this.isLoading = true;
-    this.apiUsuarioService.criarUsuario(this.tempUsuarioData)
+    this.usuarioService.criarUsuario(this.tempUsuarioData)
       .pipe(finalize(() => {
         this.isLoading = false;
         this.tempUsuarioData = null; // Limpar os dados temporários
