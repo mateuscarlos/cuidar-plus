@@ -1,236 +1,326 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Usuario, UserStatus } from '../models/user.model';
-import { UsuarioService } from '../services/usuario.service';
-import { SetoresFuncoesService } from '../services/setor-funcoes.service';
-import { UserStatusStyleService } from '../services/user-status-style.service';
-import { DateFormatPipe } from '../../../shared/pipes/date-format.pipe';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
+import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
-import { finalize } from 'rxjs/operators';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { UsuarioAvatarComponent } from '../../../shared/components/usuario-avatar/usuario-avatar.component';
+import { Usuario } from '../models/user.model';
+import { Permissao } from '../models/permissao.model';
+import { Atividade } from '../models/atividade.model';
+import { ResultadoBusca } from '../models/busca-usuario.model';
+import { UsuarioService } from '../services/usuario.service';
+import { ApiUsuarioService } from '../services/api-usuario.service';
+import { PermissaoService } from '../services/permissao.service';
+import { AtividadeService } from '../services/atividade.service';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { finalize, catchError, tap, of, Subject, takeUntil } from 'rxjs';
 
+/**
+ * Componente responsável pela visualização detalhada de usuários
+ */
 @Component({
   selector: 'app-visualizar-usuario',
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
+    UsuarioBuscaComponent,
     InfoCardComponent,
-    DateFormatPipe
+    StatusBadgeComponent,
+    UsuarioAvatarComponent,
+    FormattedDateComponent
   ],
-  providers: [DateFormatPipe],
   templateUrl: './visualizar-usuario.component.html',
   styleUrls: ['./visualizar-usuario.component.scss']
 })
-export class VisualizarUsuarioComponent implements OnInit {
-  usuario: any = null;
-  isLoading: boolean = true;
+export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
+  // Dados principais
+  usuario: Usuario | null = null;
+  permissoes: Permissao[] = [];
+  atividades: Atividade[] = [];
+  
+  // Estados da UI
+  isLoading: boolean = false;
   error: string | null = null;
-
-  setorNomeUsuario: string = 'Carregando...'; // Variável global para o nome do setor
-  funcaoNomeUsuario: string = 'Carregando...'; 
-
+  modoVisualizacao: boolean = false;
+  resultadosBusca: Usuario[] = [];
+  possuiPermissaoEditar: boolean = true; // Por padrão, todos podem editar já que não há perfis de acesso
+  temMaisAtividades: boolean = false;
+  paginaAtual: number = 1;
+  tamanhoPagina: number = 10;
+  
+  // Para gerenciar subscriptions
+  private destroy$ = new Subject<void>();
+  
   constructor(
     private usuarioService: UsuarioService,
-    private setoresFuncoesService: SetoresFuncoesService,
-    private route: ActivatedRoute,
+    private apiUsuarioService: ApiUsuarioService,
+    private permissaoService: PermissaoService,
+    private atividadeService: AtividadeService,
+    private notificacaoService: NotificacaoService,
     private router: Router,
-    private userStatusStyle: UserStatusStyleService,
-    private dateFormatPipe: DateFormatPipe
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.carregarUsuario(id);
-    } else {
-      this.error = 'ID do usuário não fornecido.';
-      this.isLoading = false;
-    }
+    // Resetamos o estado inicial
+    this.resetComponent();
+    
+    // Verificar os parâmetros de rota
+    this.route.params.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
+      if (params['id']) {
+        this.carregarUsuarioPorId(params['id']);
+      } else {
+        // Verificar parâmetros de consulta
+        this.route.queryParams.pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(queryParams => {
+          if (queryParams['usuarioId']) {
+            this.carregarUsuarioPorId(queryParams['usuarioId']);
+          } else {
+            // Se não há parâmetros, mostramos a tela de busca
+            this.isLoading = false;
+            this.modoVisualizacao = false;
+          }
+        });
+      }
+    });
   }
 
-  carregarUsuario(id: string): void {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  /**
+   * Reseta o componente para o estado inicial
+   */
+  resetComponent(): void {
+    this.usuario = null;
+    this.permissoes = [];
+    this.atividades = [];
+    this.error = null;
+    this.resultadosBusca = [];
+    this.modoVisualizacao = false;
+    this.paginaAtual = 1;
+    this.temMaisAtividades = false;
+  }
+  
+  /**
+   * Carrega os dados de um usuário pelo ID
+   */
+  carregarUsuarioPorId(id: string): void {
     this.isLoading = true;
-    this.usuarioService.obterPorId(id)
-      .pipe(finalize(() => (this.isLoading = false)))
+    this.error = null;
+    
+    // Usando o serviço ApiUsuarioService que usa o modelo de user.model.ts
+    this.apiUsuarioService.obterUsuarioPorId(id)
+      .pipe(
+        tap(usuario => {
+          if (usuario) {
+            this.usuario = usuario;
+            this.modoVisualizacao = true;
+            
+            // Carregar permissões e atividades
+            this.carregarPermissoes(id);
+            this.carregarAtividades(id);
+          } else {
+            this.error = 'Usuário não encontrado';
+            this.notificacaoService.mostrarAviso('Usuário não encontrado.');
+            this.modoVisualizacao = false;
+          }
+        }),
+        catchError(erro => {
+          this.error = 'Erro ao carregar dados do usuário';
+          this.modoVisualizacao = false;
+          this.notificacaoService.mostrarErro('Erro ao carregar dados do usuário.');
+          console.error('Erro ao carregar usuário:', erro);
+          return of(null);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe();
+  }
+  
+  /**
+   * Carrega as permissões do usuário
+   */
+  carregarPermissoes(usuarioId: string): void {
+    this.permissaoService.listarPermissoesPorUsuario(usuarioId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (permissoes) => {
+        this.permissoes = permissoes;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar permissões:', err);
+        this.notificacaoService.mostrarErro('Erro ao carregar permissões do usuário.');
+      }
+    });
+  }
+  
+  /**
+   * Carrega o histórico de atividades do usuário
+   */
+  carregarAtividades(usuarioId: string): void {
+    this.atividadeService.listarAtividadesPorUsuario(usuarioId, this.paginaAtual, this.tamanhoPagina).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (resultado) => {
+        this.atividades = resultado.items;
+        this.temMaisAtividades = resultado.total > (this.paginaAtual * this.tamanhoPagina);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar atividades:', err);
+        this.notificacaoService.mostrarErro('Erro ao carregar histórico de atividades.');
+      }
+    });
+  }
+  
+  /**
+   * Carrega mais atividades (paginação)
+   */
+  carregarMaisAtividades(): void {
+    if (!this.usuario || !this.temMaisAtividades) return;
+    
+    this.paginaAtual++;
+    
+    this.atividadeService.listarAtividadesPorUsuario(String(this.usuario.id), this.paginaAtual, this.tamanhoPagina).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (resultado) => {
+        this.atividades = [...this.atividades, ...resultado.items];
+        this.temMaisAtividades = resultado.total > (this.paginaAtual * this.tamanhoPagina);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar mais atividades:', err);
+        this.notificacaoService.mostrarErro('Erro ao carregar mais atividades.');
+        this.paginaAtual--; // Reverter o incremento da página em caso de erro
+      }
+    });
+  }
+  
+  /**
+   * Processa o resultado da busca de usuários
+   */
+  buscarUsuario(resultado: ResultadoBusca): void {
+    this.isLoading = true;
+    this.error = null;
+    this.modoVisualizacao = false;
+    
+    this.usuarioService.buscarUsuarios(resultado)
+      .pipe(finalize(() => this.isLoading = false))
       .subscribe({
-        next: (usuario) => {
-          this.usuario = usuario;
-
-          // Carregar o nome do setor
-          this.setoresFuncoesService.getSetoresDicionario().subscribe({
-            next: (setores) => {
-              this.setorNomeUsuario = usuario.setor && setores[usuario.setor] || 'Não encontrado';
-            },
-            error: () => {
-              this.setorNomeUsuario = 'Erro ao carregar setor';
-            }
-          });
-
-          // Carregar o nome da função
-          this.setoresFuncoesService.getFuncoesDicionario().subscribe({
-            next: (funcoes) => {
-              this.funcaoNomeUsuario = usuario.funcao && funcoes[usuario.funcao] || 'Não encontrada';
-            },
-            error: () => {
-              this.funcaoNomeUsuario = 'Erro ao carregar função';
-            }
-          });
+        next: (usuarios) => {
+          this.resultadosBusca = usuarios;
+          
+          if (usuarios.length === 0) {
+            this.error = 'Nenhum usuário encontrado com os critérios informados.';
+          } else if (usuarios.length === 1) {
+            // Selecionar automaticamente se houver apenas um resultado
+            this.selecionarUsuario(usuarios[0]);
+          }
         },
-        error: () => {
-          this.error = 'Erro ao carregar dados do usuário.';
+        error: (err) => {
+          this.error = 'Erro ao buscar usuários';
+          this.resultadosBusca = [];
+          this.notificacaoService.mostrarErro('Erro ao buscar usuários.');
+          console.error('Erro na busca:', err);
         }
       });
   }
-
-  carregarNomeSetor(setorId: string | number): void {
-    this.setoresFuncoesService.getSetorPorId(setorId).subscribe({
-      next: (setor) => {
-        this.setorNomeUsuario = setor?.nome || 'Não encontrado';
-      },
-      error: () => {
-        this.setorNomeUsuario = 'Erro ao carregar setor';
-      }
-    });
+  
+  /**
+   * Seleciona um usuário da lista de resultados
+   */
+  selecionarUsuario(usuario: Usuario): void {
+    this.carregarUsuarioPorId(String(usuario.id));
   }
-
-  carregarNomeFuncao(funcaoId: string | number): void {
-    this.setoresFuncoesService.getFuncaoPorId(funcaoId).subscribe({
-      next: (funcao) => {
-        this.funcaoNomeUsuario = funcao?.nome || 'Não encontrada';
-      },
-      error: () => {
-        this.funcaoNomeUsuario = 'Erro ao carregar função';
-      }
-    });
-  }
-
-  voltarParaLista(): void {
-    this.router.navigate(['/usuarios']);
-  }
-
+  
+  /**
+   * Navega para a página de edição do usuário
+   */
   irParaEdicao(): void {
     if (this.usuario && this.usuario.id) {
       this.router.navigate(['/usuarios/editar', this.usuario.id]);
+    } else {
+      this.notificacaoService.mostrarErro('Não é possível editar: usuário não encontrado ou sem ID.');
     }
-  }
-
-  // Métodos para lidar com o status
-  getStatusClass(status: string): string {
-    return this.userStatusStyle.getBadgeClass(status);
   }
   
-  getStatusIcon(status: string): string {
-    return this.userStatusStyle.getIcon(status);
+  /**
+   * Navega de volta para a tela de busca
+   */
+  voltarParaBusca(): void {
+    this.modoVisualizacao = false;
+    this.usuario = null;
+    this.resultadosBusca = [];
+    this.permissoes = [];
+    this.atividades = [];
+  }
+
+  /**
+   * Navega de volta para a lista de usuários
+   */
+  voltarParaLista(): void {
+    this.router.navigate(['/usuarios']);
   }
   
-  getStatusTextClass(status: string): string {
-    return this.userStatusStyle.getTextClass(status);
-  }
-
-  formatarData(data: string | Date | undefined): string {
-    if (!data) {
-      return 'Não informada';
+  /**
+   * Retorna a classe de estilo para o badge de atividade baseado no tipo
+   */
+  getBadgeClassForAtividade(tipo: string): string {
+    switch (tipo?.toLowerCase()) {
+      case 'login':
+        return 'bg-success';
+      case 'logout':
+        return 'bg-secondary';
+      case 'erro':
+      case 'falha':
+        return 'bg-danger';
+      case 'alteração':
+      case 'alteracao':
+        return 'bg-warning';
+      case 'acesso':
+        return 'bg-info';
+      default:
+        return 'bg-secondary';
     }
-    
-    try {
-      // Remove any timezone information if present
-      const cleanDate = data.toString().split('T')[0];
-      const dataObj = new Date(cleanDate);
-      
-      // Check if date is valid
-      if (isNaN(dataObj.getTime())) {
-        return 'Data inválida';
-      }
-      
-      // Format the date to Brazilian format
-      return dataObj.toLocaleDateString('pt-BR');
-    } catch (e) {
-      console.error('Erro ao formatar data:', e, data);
-      return 'Não informada';
-    }
-  }
-
-  formatarEndereco(): string {
-    if (!this.usuario) return 'Não informado';
-    
-    // Se não houver endereço, retornar mensagem informativa
-    if (!this.usuario.endereco) return 'Endereço não cadastrado';
-    
-    const endereco = this.usuario.endereco;
-    
-    // Verificar se há alguma propriedade do endereço disponível
-    const isEnderecoVazio = !endereco.logradouro?.trim() && !endereco.rua?.trim() &&
-                            !endereco.numero?.trim() && !endereco.bairro?.trim() &&
-                            !endereco.localidade?.trim() && !endereco.cidade?.trim();
-    if (isEnderecoVazio) {
-      return 'Endereço não cadastrado';
-    }
-    
-    const logradouro = endereco.logradouro?.trim() || endereco.rua?.trim() || 'Logradouro não informado';
-    
-    let enderecoCompleto = `${logradouro}, ${endereco.numero?.trim() || 'S/N'}`;
-
-    if (endereco.complemento?.trim()) {
-      enderecoCompleto += ` - ${endereco.complemento.trim()}`;
-    }
-
-    enderecoCompleto += ` - ${endereco.bairro?.trim() || 'Bairro não informado'}, ${endereco.localidade?.trim() || endereco.cidade?.trim() || 'Cidade não informada'}/${endereco.uf?.trim() || endereco.estado?.trim() || 'UF não informado'}`;
-
-    if (endereco.cep?.trim()) {
-      enderecoCompleto += ` - CEP: ${this.formatarCep(endereco.cep.trim())}`;
-    }
-
-    return enderecoCompleto;
-  }
-
-  formatarCep(cep: string): string {
-    if (!cep) return '';
-    
-    // Remove caracteres não numéricos
-    const numeros = cep.replace(/\D/g, '');
-    
-    // Aplica a máscara de CEP: 00000-000
-    if (numeros.length === 8) {
-      return `${numeros.substring(0, 5)}-${numeros.substring(5)}`;
-    }
-    
-    return cep;
-  }
-
-formatarRegistroProfissional(): string {
-  if (!this.usuario) return 'Não informado';
-  
-  if (this.usuario.registroCategoria && this.usuario.registroNumero) {
-    return `${this.usuario.registroCategoria}: ${this.usuario.registroNumero}`;
-  } else if (this.usuario.registroCategoria) {
-    return this.usuario.registroCategoria;
   }
   
-  return 'Não informado';
-}
+  /**
+   * Método adaptador para lidar com o evento resultadoBusca do componente app-busca-usuario
+   * @param resultado O resultado emitido pelo componente de busca
+   */
+  buscarUsuarioPorResultado(resultado: any): void {
+    if (resultado) {
+      this.buscarUsuario(resultado);
+    }
+  }
 
-  // Adicione este método na classe do componente
-  getTipoContratacaoTexto(): string {
-    if (!this.usuario) return 'Não informado';
+  /**
+   * Retorna o tipo de acesso do usuário formatado para exibição
+   */
+  getTipoAcessoFormatado(): string {
+    const tipoAcesso = this.usuario?.tipoAcesso || this.usuario?.tipo_acesso;
     
-    // Verificar se já temos o texto completo do tipo de contratação
-    if (this.usuario.tipoContratacao) {
-      return this.usuario.tipoContratacao;
+    switch (tipoAcesso?.toLowerCase()) {
+      case 'admin':
+        return 'Administrador';
+      case 'gestor':
+        return 'Gestor';
+      case 'padrao':
+        return 'Padrão';
+      case 'restrito':
+        return 'Restrito';
+      default:
+        return tipoAcesso || 'Não definido';
     }
-    
-    // Se tivermos apenas o código, converter para o texto completo
-    const tiposContratacao: Record<string, string> = {
-      'c': 'Contratação Direta',
-      't': 'Terceirizado',
-      'p': 'Pessoa Jurídica'
-    };
-    
-    // Tentar obter o tipo de contratação pelo código (tipo_contratacao)
-    if (this.usuario.tipo_contratacao) {
-      return tiposContratacao[this.usuario.tipo_contratacao] || this.usuario.tipo_contratacao;
-    }
-    
-    return 'Não informado';
   }
 }
