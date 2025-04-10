@@ -1,65 +1,70 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { PacienteAvatarComponent } from '../../shared/components/paciente-avatar/paciente-avatar.component';
-import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { Router, RouterModule } from '@angular/router';
 import { PacienteService } from './services/paciente.service';
-import { Paciente } from './models/paciente.model';
-import { map } from 'rxjs/operators';
+import { NotificacaoService } from '../../shared/services/notificacao.service';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, PacienteAvatarComponent, StatusBadgeComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.scss']
 })
-export class PacientesComponent implements OnInit {
-  pacientes: Paciente[] = [];
-  isLoading = true;
-  error: string | null = null;
+export class PacientesComponent {
+  totalPacientes: number = 0;
+  totalAtivos: number = 0;
+  totalEmAvaliacao: number = 0;
+  totalInativos: number = 0;
+  isLoading: boolean = true;
 
-  constructor(private router: Router, private pacienteService: PacienteService) {}
+  constructor(
+    private router: Router, 
+    private pacienteService: PacienteService,
+    private notificacaoService: NotificacaoService
+  ) {}
 
   ngOnInit(): void {
-    this.carregarPacientes();
+    this.carregarEstatisticas();
   }
 
-  carregarPacientes(): void {
+  carregarEstatisticas(): void {
     this.isLoading = true;
+    
     this.pacienteService.listarTodosPacientes()
       .pipe(
         map(pacientes => {
-          // Garantir que nome está disponível para os componentes que o usam
-          return pacientes.map(p => ({
-            ...p,
-            nome: p.nome_completo // Adiciona nome como alias para nome_completo
-          }));
+          this.totalPacientes = pacientes.length;
+          this.totalAtivos = pacientes.filter(p => p.status === 'Ativo').length;
+          this.totalEmAvaliacao = pacientes.filter(p => p.status === 'Em Avaliação').length;
+          this.totalInativos = pacientes.filter(p => p.status === 'Inativo').length;
+          this.isLoading = false;
+        }),
+        catchError(error => {
+          console.error('Erro ao carregar estatísticas:', error);
+          this.notificacaoService.mostrarErro('Erro ao carregar estatísticas de pacientes.');
+          this.isLoading = false;
+          return of(null);
         })
       )
-      .subscribe({
-        next: (pacientes) => {
-          this.pacientes = pacientes;
-          console.log('Pacientes carregados:', this.pacientes);
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Erro ao carregar pacientes:', err);
-          this.error = 'Erro ao carregar pacientes.';
-          this.isLoading = false;
-        }
-      });
+      .subscribe();
+  }
+
+  navegarParaLista(): void {
+    this.router.navigate(['/pacientes/lista']);
   }
   
-  // Métodos para navegação
-  cadastrarNovoPaciente(): void {
+  navegarParaCadastro(): void {
     this.router.navigate(['/pacientes/cadastrar']);
   }
   
-  // Novo método para navegar ao clicar no paciente
-  selecionarPaciente(pacienteId: string): void {
-    this.router.navigate(['/pacientes/visualizar'], {
-      queryParams: { pacienteId }
-    });
+  navegarParaBusca(): void {
+    this.router.navigate(['/pacientes/visualizar']);
+  }
+  
+  navegarParaAcompanhamento(): void {
+    this.router.navigate(['/pacientes/acompanhamento']);
   }
 }

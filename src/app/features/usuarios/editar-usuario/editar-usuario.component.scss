@@ -1,0 +1,59 @@
+.card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card-header {
+  border-radius: 8px 8px 0 0 !important;
+}
+
+h6 {
+  color: #555;
+  font-weight: 600;
+}
+
+.invalid-feedback {
+  display: block;
+}
+
+.form-control.is-invalid, .form-select.is-invalid {
+  border-color: #dc3545;
+  background-image: none;
+}
+
+// Estilos para status
+.badge {
+  padding: 0.5em 0.75em;
+  font-weight: 500;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+// Estilo para badges com ícones
+.badge i {
+  margin-right: 4px;
+  font-size: 0.875rem;
+}
+
+// Animações para melhorar a experiência do usuário
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+  }
+  
+  .d-flex.justify-content-between button {
+    margin-bottom: 0.5rem;
+  }
+}

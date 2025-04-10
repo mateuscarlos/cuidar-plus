@@ -1,5 +1,9 @@
 import { Injectable } from '@angular/core';
 
+/**
+ * Serviço para formatação e manipulação de datas
+ * Trabalha com formatos específicos necessários para a API e para a UI
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -250,6 +254,15 @@ export class DateFormatterService {
     }
     
     return data;
+  }
+
+  /**
+   * Formata uma data para exibição no frontend
+   * Método de conveniência para casos gerais
+   */
+  formatDateForDisplay(date: string | Date | null | undefined): string {
+    if (!date) return '';
+    return this.toDisplayDateOnly(date);
   }
 
   /**

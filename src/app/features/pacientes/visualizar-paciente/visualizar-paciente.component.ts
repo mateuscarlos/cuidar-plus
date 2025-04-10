@@ -1,27 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
-// Import the formatted date component and date pipe
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
 import { DateFormatPipe } from '../../../shared/pipes/date-format.pipe';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
-import { Paciente, StatusPaciente } from '../models/paciente.model'; // Import as a type, not for DI
+import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { Plano } from '../models/plano.model';
 import { Convenio } from '../models/convenio.model';
 import { Endereco } from '../models/endereco.model';
 import { ResultadoBusca } from '../models/busca-paciente.model';
 import { PacienteService } from '../services/paciente.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
-import { finalize } from 'rxjs/operators';
+import { StatusStyleService } from '../../../core/services/status-style.service';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { PacienteAvatarComponent } from '../../../shared/components/paciente-avatar/paciente-avatar.component';
+import { finalize, catchError, tap, of } from 'rxjs';
+import { ResultadoBusca as BuscaPacienteResultadoBusca } from '../models/busca-paciente.model';
 
 @Component({
   selector: 'app-visualizar-paciente',
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
+    RouterModule,
     BuscaPacienteComponent,
     InfoCardComponent,
     StatusBadgeComponent,
@@ -30,126 +33,132 @@ import { PacienteAvatarComponent } from '../../../shared/components/paciente-ava
     FormattedDateComponent
   ],
   providers: [
-    DateFormatPipe // Add this line to provide the pipe
+    DateFormatPipe
   ],
   templateUrl: './visualizar-paciente.component.html',
   styleUrls: ['./visualizar-paciente.component.scss']
 })
 export class VisualizarPacienteComponent implements OnInit {
+  // Dados principais
   paciente: Paciente | null = null;
   convenio: string = '';
   plano: string = '';
-  isLoading: boolean = false; // Inicializa como false até que seja necessário carregar
-  error: string | null = null;
   
-  // Controle da tela
+  // Estados da UI
+  isLoading: boolean = false;
+  error: string | null = null;
   modoVisualizacao: boolean = false;
   resultadosBusca: Paciente[] = [];
   
-  // Mapeamento de status para texto amigável
-  statusMap: {[key: string]: {texto: string, classe: string}} = {
-    'em-avaliacao': { texto: 'Em Avaliação', classe: 'bg-warning' },
-    'ativo': { texto: 'Ativo', classe: 'bg-success' },
-    'inativo': { texto: 'Inativo', classe: 'bg-secondary' },
-    'alta': { texto: 'Alta', classe: 'bg-info' },
-    'em-tratamento': { texto: 'Em Tratamento', classe: 'bg-warning text-dark' },
-    'obito': { texto: 'Óbito', classe: 'bg-danger' }
-  };
-
-  // Use the enum directly as a property or reference StatusPaciente directly when needed
+  // Referência para enum de status
   statusPacienteEnum = StatusPaciente;
-
+  
   constructor(
     private pacienteService: PacienteService,
-    private convenioService: ConvenioPlanoService,
-    // Remove StatusPaciente from here - it's an enum, not a service
+    private convenioPlanoService: ConvenioPlanoService,
+    private notificacaoService: NotificacaoService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    public statusStyle: StatusStyleService
   ) {}
 
   ngOnInit(): void {
     // Resetamos o estado inicial antes de qualquer carregamento
     this.resetComponent();
     
-    this.route.queryParams.subscribe(params => {
-      if (params['pacienteId']) {
-        this.carregarPacienteParaEdicao(params['pacienteId']);
+    // Verificar os parâmetros de rota
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.carregarPacientePorId(params['id']);
       } else {
-        // Se não há parâmetros, mostramos a tela de busca
-        this.isLoading = false;
-        this.modoVisualizacao = false;
+        // Verificar parâmetros de consulta (se não houver parâmetros de rota)
+        this.route.queryParams.subscribe(queryParams => {
+          if (queryParams['pacienteId']) {
+            this.carregarPacientePorId(queryParams['pacienteId']);
+          } else {
+            // Se não há parâmetros, mostramos a tela de busca
+            this.isLoading = false;
+            this.modoVisualizacao = false;
+          }
+        });
       }
     });
   }
   
-  // Método para resetar o componente a um estado inicial consistente
+  /**
+   * Reseta o componente para o estado inicial
+   */
   resetComponent(): void {
     this.paciente = null;
     this.convenio = '';
     this.plano = '';
     this.error = null;
     this.resultadosBusca = [];
+    this.modoVisualizacao = false;
   }
-
-  carregarPacienteParaEdicao(id: string): void {
+  
+  /**
+   * Carrega os dados de um paciente pelo ID
+   */
+  carregarPacientePorId(id: string): void {
     this.isLoading = true;
-    this.resetComponent(); // Reseta o estado antes de começar o carregamento
+    this.error = null;
     
     this.pacienteService.obterPacientePorId(id)
       .pipe(
-        finalize(() => {
-          this.isLoading = false; // Sempre garante que o loading será desativado
-          console.log('Finalizou a chamada de API para obter paciente');
-        })
-      )
-      .subscribe({
-        next: (paciente) => {
+        tap(paciente => {
           if (paciente) {
-            console.log('Paciente recebido com sucesso:', paciente.id);
-            
             // Garantir que o campo nome esteja sempre preenchido
             if (!paciente.nome && paciente.nome_completo) {
               paciente.nome = paciente.nome_completo;
-            } else if (!paciente.nome_completo && paciente.nome) {
-              paciente.nome_completo = paciente.nome;
             }
             
-            // Processar os dados do paciente
             this.paciente = paciente;
             this.modoVisualizacao = true;
             
+            // Carregar informações adicionais se houver convênio
             if (paciente.convenio_id) {
-              this.loadInsuranceInfo(paciente);
+              this.carregarInformacoesConvenio(paciente);
             }
           } else {
             this.error = 'Paciente não encontrado';
+            this.notificacaoService.mostrarAviso('Paciente não encontrado.');
             this.modoVisualizacao = false;
           }
-        },
-        error: (err) => {
-          this.error = 'Erro ao carregar dados do paciente para edição';
+        }),
+        catchError(erro => {
+          this.error = 'Erro ao carregar dados do paciente';
           this.modoVisualizacao = false;
-          console.error('Erro ao carregar paciente:', err);
-        }
-      });
+          this.notificacaoService.mostrarErro('Erro ao carregar dados do paciente.');
+          console.error('Erro ao carregar paciente:', erro);
+          return of(null);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe();
   }
-
-  loadInsuranceInfo(paciente: Paciente): void {
-    this.convenioService.listarConvenios().subscribe({
+  
+  /**
+   * Carrega informações de convênio e plano do paciente
+   */
+  carregarInformacoesConvenio(paciente: Paciente): void {
+    // Buscar informações do convênio
+    this.convenioPlanoService.listarConvenios().subscribe({
       next: (convenios: Convenio[]) => {
-        const convenio = convenios.find((c: Convenio) => String(c.id) === String(paciente.convenio_id));
+        const convenio = convenios.find(c => String(c.id) === String(paciente.convenio_id));
         this.convenio = convenio ? convenio.nome : 'Não informado';
-
+        
+        // Buscar informações do plano se houver convênio e plano
         if (paciente.plano_id && paciente.convenio_id) {
-          // Convert convenio_id to number if the method expects a number
           const convenioId = typeof paciente.convenio_id === 'string' 
             ? parseInt(paciente.convenio_id, 10) 
             : paciente.convenio_id;
           
-          this.convenioService.listarPlanosPorConvenio(convenioId).subscribe({
+          this.convenioPlanoService.listarPlanosPorConvenio(convenioId).subscribe({
             next: (planos: Plano[]) => {
-              const planosMapeados = planos.map((p: Plano) => ({ id: String(p.id), nome: p.nome }));
-              const plano = planosMapeados.find((p: { id: string; nome: string }) => p.id === String(paciente.plano_id));
+              const plano = planos.find(p => String(p.id) === String(paciente.plano_id));
               this.plano = plano ? plano.nome : 'Não informado';
             },
             error: (err) => {
@@ -165,59 +174,16 @@ export class VisualizarPacienteComponent implements OnInit {
       }
     });
   }
-
-  carregarPaciente(id: string): void {
-    this.isLoading = true;
-    this.error = null;
-    
-    console.log('Iniciando carregamento do paciente ID:', id);
-
-    this.pacienteService.obterPacientePorId(id)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-          console.log('Finalizou carregamento do paciente');
-        })
-      )
-      .subscribe({
-        next: (paciente) => {
-          if (paciente) {
-            console.log('Paciente recebido com sucesso:', paciente.id);
-            
-            // Garantir que o campo nome esteja sempre preenchido
-            if (!paciente.nome && paciente.nome_completo) {
-              paciente.nome = paciente.nome_completo;
-            } else if (!paciente.nome_completo && paciente.nome) {
-              paciente.nome_completo = paciente.nome;
-            }
-            
-            // Processar os dados do paciente
-            this.paciente = paciente;
-            this.modoVisualizacao = true;
-            
-            // If the patient has insurance, load additional information
-            if (paciente.convenio_id) {
-              this.loadInsuranceInfo(paciente);
-            }
-          } else {
-            this.error = 'Paciente não encontrado';
-            this.modoVisualizacao = false;
-          }
-        },
-        error: (err) => {
-          this.error = 'Erro ao carregar dados do paciente';
-          this.modoVisualizacao = false;
-          console.error('Erro ao carregar paciente:', err);
-        }
-      });
-  }
   
+  /**
+   * Processa o resultado da busca de pacientes
+   */
   buscarPaciente(resultado: ResultadoBusca): void {
     this.isLoading = true;
     this.error = null;
     this.modoVisualizacao = false;
     
-    this.pacienteService.buscarPacientes(resultado)
+    this.pacienteService.buscarPacientes(resultado as any)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (pacientes) => {
@@ -225,86 +191,72 @@ export class VisualizarPacienteComponent implements OnInit {
           
           if (pacientes.length === 0) {
             this.error = 'Nenhum paciente encontrado com os critérios informados.';
+          } else if (pacientes.length === 1) {
+            // Selecionar automaticamente se houver apenas um resultado
+            this.selecionarPaciente(pacientes[0]);
           }
         },
         error: (err) => {
           this.error = 'Erro ao buscar pacientes';
           this.resultadosBusca = [];
+          this.notificacaoService.mostrarErro('Erro ao buscar pacientes.');
+          console.error('Erro na busca:', err);
         }
       });
   }
   
+  /**
+   * Seleciona um paciente da lista de resultados
+   */
   selecionarPaciente(paciente: Paciente): void {
-    this.carregarPaciente(String(paciente.id));
+    this.carregarPacientePorId(String(paciente.id));
   }
-
+  
+  /**
+   * Navega para a página de edição do paciente
+   */
+  irParaEdicao(): void {
+    if (this.paciente && this.paciente.id) {
+      this.router.navigate(['/pacientes/editar', this.paciente.id]);
+    } else {
+      this.notificacaoService.mostrarErro('Não é possível editar: paciente não encontrado ou sem ID.');
+    }
+  }
+  
+  /**
+   * Navega para a página de acompanhamento do paciente
+   */
+  irParaAcompanhamento(): void {
+    if (this.paciente && this.paciente.id) {
+      this.router.navigate(['/pacientes/acompanhamento'], {
+        queryParams: { pacienteId: this.paciente.id }
+      });
+    }
+  }
+  
+  /**
+   * Navega de volta para a tela de busca
+   */
   voltarParaBusca(): void {
     this.modoVisualizacao = false;
     this.paciente = null;
     this.resultadosBusca = [];
   }
 
+  /**
+   * Navega de volta para a lista de pacientes
+   */
   voltarParaLista(): void {
     this.router.navigate(['/pacientes']);
   }
-
-  irParaAcompanhamento(): void {
-    this.router.navigate(['/pacientes/acompanhamento'], {
-      queryParams: { pacienteId: this.paciente?.id }
-    });
-  }
   
-  irParaEdicao(): void {
-    if (this.paciente && this.paciente.id) {
-      // Navegar para a rota de edição com o ID como parâmetro
-      this.router.navigate(['/pacientes/editar'], {
-        queryParams: { 
-          pacienteId: this.paciente.id,
-          autoLoad: 'true'  // Adicionar um parâmetro para sinalizar carregamento automático
-        }
-      });
-    } else {
-      console.error('Não é possível editar: paciente não encontrado ou sem ID');
-    }
-  }
-  
-  getStatusInfo(statusCode: string): {texto: string, classe: string} {
-    return this.statusMap[statusCode] || { texto: statusCode, classe: 'bg-secondary' };
-  }
-
-  formatarData(data: string | undefined): string {
-    if (!data) {
-      // Check if this.paciente exists and has a dataNascimento field
-      if (this.paciente?.dataNascimento) {
-        data = this.paciente.dataNascimento;
-      } else if (this.paciente?.data_nascimento) {
-        data = this.paciente.data_nascimento;
-      } else {
-        return 'Não informado';
-      }
-    }
-    
-    try {
-      // Remove any timezone information if present
-      const cleanDate = data.toString().split('T')[0];
-      const dataObj = new Date(cleanDate);
-      
-      // Check if date is valid
-      if (isNaN(dataObj.getTime())) {
-        console.warn('Data inválida:', data);
-        return 'Não informado';
-      }
-      
-      // Format the date to Brazilian format
-      return dataObj.toLocaleDateString('pt-BR');
-    } catch (e) {
-      console.error('Erro ao formatar data:', e, data);
+  /**
+   * Formata um endereço para exibição
+   */
+  formatarEndereco(endereco: Endereco): string {
+    if (!endereco) {
       return 'Não informado';
     }
-  }
-
-  formatarEndereco(endereco: Endereco): string {
-    if (!endereco) return 'Não informado';
 
     const logradouro = endereco.logradouro || 'Logradouro não informado';
     
@@ -313,14 +265,23 @@ export class VisualizarPacienteComponent implements OnInit {
     if (endereco.complemento) {
       enderecoCompleto += ` - ${endereco.complemento}`;
     }
+    
+    // Cidade e Estado podem estar em campos diferentes dependendo da fonte
+    const cidade = endereco.cidade || endereco.localidade || 'Cidade não informada';
+    const estado = endereco.estado || endereco.uf || 'UF não informado';
+    const bairro = endereco.bairro || 'Bairro não informado';
+    const cep = this.formatarCep(endereco.cep || '');
 
-    enderecoCompleto += ` - ${endereco.bairro || 'Bairro não informado'}, ${endereco.localidade || 'Cidade não informada'}/${endereco.uf || 'UF não informado'} - ${this.formatarCep(endereco.cep || '')}`;
+    enderecoCompleto += ` - ${bairro}, ${cidade}/${estado} - ${cep}`;
 
     return enderecoCompleto;
   }
-
+  
+  /**
+   * Formata um CEP para exibição
+   */
   formatarCep(cep: string): string {
-    if (!cep) return '';
+    if (!cep) return 'Não informado';
     
     // Remove caracteres não numéricos
     const numeros = cep.replace(/\D/g, '');
@@ -331,5 +292,46 @@ export class VisualizarPacienteComponent implements OnInit {
     }
     
     return cep;
+  }
+  
+  /**
+   * Formata uma data para exibição
+   */
+  formatarData(data: string | undefined): string {
+    if (!data) {
+      return 'Não informado';
+    }
+    
+    try {
+      // Remove informações de timezone se presentes
+      const cleanDate = data.toString().split('T')[0];
+      const dataObj = new Date(cleanDate);
+      
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        return 'Data inválida';
+      }
+      
+      // Formata para o padrão brasileiro
+      return dataObj.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return 'Data inválida';
+    }
+  }
+
+  /**
+   * Método adaptador para lidar com o evento resultadoBusca do componente app-busca-paciente
+   * @param resultado O resultado emitido pelo componente de busca
+   */
+  buscarPacientePorResultado(resultado: any): void {
+    // Adaptar o resultado para o formato esperado pelo método buscarPaciente
+    // ou lidar diretamente com o resultado aqui
+    if (resultado) {
+      // Se o resultado já estiver no formato esperado pelo buscarPaciente
+      this.buscarPaciente(resultado);
+      // Caso contrário, adapte o formato conforme necessário:
+      // const adaptedResult = { tipo: resultado.tipoBusca, valor: resultado.valorBusca };
+      // this.buscarPaciente(adaptedResult);
+    }
   }
 }

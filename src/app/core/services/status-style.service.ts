@@ -5,65 +5,70 @@ import { StatusPaciente, STATUS_BOOTSTRAP_CLASSES } from '../../features/pacient
   providedIn: 'root'
 })
 export class StatusStyleService {
-  
-  constructor() {}
-  
   /**
-   * Retorna as classes Bootstrap para estilizar elementos baseados no status do paciente
-   * @param status Status do paciente
-   * @returns Objeto com classes Bootstrap 5.3
+   * Retorna a classe CSS para a cor de fundo com base no status
    */
-  getStatusClasses(status: string): { bgColor: string, textColor: string, borderColor: string, icon: string } {
-    // Verificar se o status existe no enum
-    const statusKey = Object.entries(StatusPaciente)
-      .find(([_, value]) => value === status)?.[0] as keyof typeof StatusPaciente;
-    
-    if (statusKey && StatusPaciente[statusKey]) {
-      return STATUS_BOOTSTRAP_CLASSES[StatusPaciente[statusKey]];
+  getBgClass(status: string | undefined | null): string {
+    if (!status) return '';
+    const statusKey = this.getStatusKey(status);
+    return statusKey ? STATUS_BOOTSTRAP_CLASSES[statusKey].bgColor : '';
+  }
+
+  /**
+   * Retorna a classe CSS para a cor de texto com base no status
+   */
+  getTextClass(status: string | undefined | null): string {
+    if (!status) return '';
+    const statusKey = this.getStatusKey(status);
+    return statusKey ? STATUS_BOOTSTRAP_CLASSES[statusKey].textColor : '';
+  }
+
+  /**
+   * Retorna a classe CSS para a cor de borda com base no status
+   */
+  getBorderClass(status: string | undefined | null): string {
+    if (!status) return '';
+    const statusKey = this.getStatusKey(status);
+    return statusKey ? STATUS_BOOTSTRAP_CLASSES[statusKey].borderColor : '';
+  }
+
+  /**
+   * Retorna a classe de ícone para o status
+   */
+  getIcon(status: string | undefined | null): string {
+    if (!status) return 'bi bi-question-circle';
+    const statusKey = this.getStatusKey(status);
+    return statusKey ? STATUS_BOOTSTRAP_CLASSES[statusKey].icon : 'bi bi-question-circle';
+  }
+
+  /**
+   * Retorna todas as classes CSS para um status (background, texto e borda)
+   */
+  getAllClasses(status: string | undefined | null): string {
+    if (!status) return '';
+    return `${this.getBgClass(status)} ${this.getTextClass(status)}`;
+  }
+
+  /**
+   * Retorna a chave do enum StatusPaciente com base no valor de texto
+   * @private
+   */
+  private getStatusKey(status: string): StatusPaciente | undefined {
+    // Verificar se o status já é uma chave válida do enum
+    if (Object.values(StatusPaciente).includes(status as StatusPaciente)) {
+      return status as StatusPaciente;
     }
     
-    // Retornar classes padrão se o status não for encontrado
-    return {
-      bgColor: 'bg-secondary-subtle',
-      textColor: 'text-secondary',
-      borderColor: 'border-secondary',
-      icon: 'bi bi-question-circle-fill'
-    };
-  }
-  
-  /**
-   * Retorna a classe para a cor de fundo do status
-   */
-  getBgClass(status: string): string {
-    return this.getStatusClasses(status).bgColor;
-  }
-  
-  /**
-   * Retorna a classe para a cor do texto do status
-   */
-  getTextClass(status: string): string {
-    return this.getStatusClasses(status).textColor;
-  }
-  
-  /**
-   * Retorna a classe para a cor da borda do status
-   */
-  getBorderClass(status: string): string {
-    return this.getStatusClasses(status).borderColor;
-  }
-  
-  /**
-   * Retorna o ícone do Bootstrap para o status
-   */
-  getIcon(status: string): string {
-    return this.getStatusClasses(status).icon;
-  }
-  
-  /**
-   * Retorna todas as classes combinadas (background, texto e borda)
-   */
-  getAllClasses(status: string): string {
-    const classes = this.getStatusClasses(status);
-    return `${classes.bgColor} ${classes.textColor} ${classes.borderColor}`;
+    // Caso contrário, tentar encontrar uma correspondência parcial
+    const statusLower = status.toLowerCase();
+    
+    for (const key of Object.values(StatusPaciente)) {
+      if (key.toLowerCase().includes(statusLower) || 
+          statusLower.includes(key.toLowerCase())) {
+        return key;
+      }
+    }
+    
+    return undefined;
   }
 }

@@ -1,62 +1,138 @@
-<div class="container-fluid">
+<div class="container-fluid py-4">
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h3 class="mb-1 fw-bold">Pacientes</h3>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item active">Pacientes</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+  
+  <!-- Cards de estatísticas -->
+  <div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-bg bg-primary-subtle rounded-circle me-3">
+            <i class="bi bi-people-fill text-primary fs-4"></i>
+          </div>
+          <div>
+            <h6 class="text-muted mb-1">Total de Pacientes</h6>
+            <h3 class="mb-0 fw-bold">{{ isLoading ? '-' : totalPacientes }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-bg bg-success-subtle rounded-circle me-3">
+            <i class="bi bi-check-circle-fill text-success fs-4"></i>
+          </div>
+          <div>
+            <h6 class="text-muted mb-1">Pacientes Ativos</h6>
+            <h3 class="mb-0 fw-bold">{{ isLoading ? '-' : totalAtivos }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-bg bg-warning-subtle rounded-circle me-3">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+          </div>
+          <div>
+            <h6 class="text-muted mb-1">Em Avaliação</h6>
+            <h3 class="mb-0 fw-bold">{{ isLoading ? '-' : totalEmAvaliacao }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body d-flex align-items-center">
+          <div class="icon-bg bg-danger-subtle rounded-circle me-3">
+            <i class="bi bi-x-circle-fill text-danger fs-4"></i>
+          </div>
+          <div>
+            <h6 class="text-muted mb-1">Pacientes Inativos</h6>
+            <h3 class="mb-0 fw-bold">{{ isLoading ? '-' : totalInativos }}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Cards de acesso rápido -->
   <div class="row">
     <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Pacientes</h1>
-        <div>
-          <button class="btn btn-success" (click)="cadastrarNovoPaciente()">
-            <i class="bi bi-person-plus me-2"></i>Novo Paciente
+      <h4 class="mb-3">Gerenciamento de Pacientes</h4>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100 action-card" (click)="navegarParaLista()">
+        <div class="card-body text-center">
+          <div class="icon-bg mx-auto bg-primary-subtle rounded-circle mb-3">
+            <i class="bi bi-list-ul text-primary fs-4"></i>
+          </div>
+          <h5>Lista de Pacientes</h5>
+          <p class="text-muted">Visualize, filtre e gerencie todos os pacientes cadastrados.</p>
+          <button class="btn btn-primary mt-2">
+            <i class="bi bi-arrow-right-circle me-2"></i>Acessar Lista
           </button>
         </div>
       </div>
-      
-      <div class="card">
-        <div class="card-body">
-          <div *ngIf="isLoading" class="text-center p-3">
-            <span class="spinner-border text-primary" role="status"></span>
-            <p class="mt-2">Carregando pacientes...</p>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100 action-card" (click)="navegarParaCadastro()">
+        <div class="card-body text-center">
+          <div class="icon-bg mx-auto bg-success-subtle rounded-circle mb-3">
+            <i class="bi bi-person-plus-fill text-success fs-4"></i>
           </div>
-          
-          <div *ngIf="!isLoading && error" class="alert alert-danger">
-            {{ error }}
+          <h5>Cadastrar Paciente</h5>
+          <p class="text-muted">Adicione um novo paciente ao sistema com todos os detalhes necessários.</p>
+          <button class="btn btn-success mt-2">
+            <i class="bi bi-plus-circle me-2"></i>Novo Cadastro
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100 action-card" (click)="navegarParaBusca()">
+        <div class="card-body text-center">
+          <div class="icon-bg mx-auto bg-info-subtle rounded-circle mb-3">
+            <i class="bi bi-search text-info fs-4"></i>
           </div>
-          
-          <div *ngIf="!isLoading && !error" class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Status</th>
-                  <th>Últ. Atualização</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let paciente of pacientes" 
-                    (click)="selecionarPaciente((paciente.id ?? 0).toString())"
-                    class="paciente-row">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <app-paciente-avatar [nome]="paciente.nome_completo" class="me-3"></app-paciente-avatar>
-                      <div>
-                        <p class="mb-0 fw-medium">{{ paciente.nome }}</p>
-                        <small class="text-muted">ID: {{ paciente.id }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <app-status-badge [status]="paciente.status"></app-status-badge>
-                  </td>
-                  <td>{{ paciente.updated_at | date: 'dd/MM/yyyy' }}</td>
-                </tr>
-                
-                <tr *ngIf="!isLoading && pacientes.length === 0">
-                  <td colspan="3" class="text-center py-4">
-                    <p class="mb-0 text-muted">Nenhum paciente encontrado</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <h5>Buscar Paciente</h5>
+          <p class="text-muted">Consulte informações detalhadas de um paciente específico.</p>
+          <button class="btn btn-info mt-2">
+            <i class="bi bi-search me-2"></i>Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card border-0 shadow-sm h-100 action-card" (click)="navegarParaAcompanhamento()">
+        <div class="card-body text-center">
+          <div class="icon-bg mx-auto bg-warning-subtle rounded-circle mb-3">
+            <i class="bi bi-clipboard-pulse text-warning fs-4"></i>
           </div>
+          <h5>Novo Acompanhamento</h5>
+          <p class="text-muted">Registre um novo acompanhamento médico para um paciente.</p>
+          <button class="btn btn-warning mt-2">
+            <i class="bi bi-clipboard-plus me-2"></i>Acompanhar
+          </button>
         </div>
       </div>
     </div>
