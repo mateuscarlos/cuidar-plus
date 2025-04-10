@@ -68,45 +68,14 @@ export class VisualizarUsuarioComponent implements OnInit {
    * Carrega os dados de um usuário pelo ID
    */
   carregarUsuarioPorId(id: string): void {
-    this.isLoading = true;
-    this.error = null;
-    
-    this.usuarioService.obterUsuarioPorId(id)
-      .pipe(
-        tap(usuario => {
-          if (usuario) {
-            console.log('Usuário recebido da API:', JSON.stringify(usuario));
-            this.usuario = usuario;
-            
-            console.log('Setor recebido:', usuario.setor, 'Nome do setor:', usuario.setorNome);
-            console.log('Função recebida:', usuario.funcao, 'Nome da função:', usuario.funcaoNome);
-            
-            // Após carregar o usuário, verificamos se precisamos obter o nome do setor e função
-            if (usuario.setor && !usuario.setorNome) {
-              console.log('Obtendo nome do setor para ID:', usuario.setor);
-              this.obterNomeDoSetor(usuario.setor);
-            }
-            
-            if (usuario.funcao && !usuario.funcaoNome) {
-              console.log('Obtendo nome da função para ID:', usuario.funcao);
-              this.obterNomeDaFuncao(usuario.funcao);
-            }
-          } else {
-            this.error = 'Usuário não encontrado';
-            this.notificacaoService.mostrarAviso('Usuário não encontrado.');
-          }
-        }),
-        catchError(erro => {
-          this.error = 'Erro ao carregar dados do usuário';
-          this.notificacaoService.mostrarErro('Erro ao carregar dados do usuário.');
-          console.error('Erro ao carregar usuário:', erro);
-          return of(null);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe();
+    this.usuarioService.obterUsuarioPorId(id).subscribe({
+      next: (usuario) => {
+        this.usuario = usuario;
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao carregar usuário. Tente novamente.');
+      }
+    });
   }
   
   /**

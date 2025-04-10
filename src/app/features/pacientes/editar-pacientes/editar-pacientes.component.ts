@@ -487,64 +487,19 @@ export class EditarPacientesComponent implements OnInit {
    * Submete o formulário para atualizar dados do paciente
    */
   onSubmit(): void {
-    if (!this.pacienteSelecionado || !this.pacienteSelecionado.id) {
-      this.notificacaoService.mostrarErro('É necessário selecionar um paciente para editar.');
+    if (this.pacienteForm.invalid) {
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-    
-    // Validar o formulário antes de enviar
-    if (!this.validarFormulario()) {
-      return;
-    }
-
-    // Obter valores do formulário
-    let formValues = { ...this.pacienteForm.value };
-
-    // Sanitizar o CPF antes de enviar
-    if (formValues.cpf) {
-      formValues.cpf = formValues.cpf.replace(/\D/g, '');
-    }
-
-    // Formatar datas para o padrão do backend
-    formValues = this.processarDatasFormulario(formValues);
-
-    // Converter os campos cidade e estado para os campos esperados pelo backend
-    if (formValues.endereco) {
-      const endereco = { ...formValues.endereco } as Endereco;
-      if (endereco.cidade) {
-        endereco.localidade = endereco.cidade;
-        delete (endereco as any).cidade;
-      }
-      if (endereco.estado) {
-        endereco.uf = endereco.estado;
-        delete (endereco as any).estado;
-      }
-      formValues.endereco = endereco;
-    }
-
-    // Enviar dados para o serviço
-    this.isLoading = true;
-    
-    this.pacienteService.atualizarPaciente(String(this.pacienteSelecionado.id), formValues).pipe(
-      tap(response => {
+  
+    this.pacienteService.atualizarPaciente(this.pacienteSelecionado?.id!, this.pacienteForm.value).subscribe({
+      next: () => {
         this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
-        this.router.navigate(['/pacientes/visualizar', this.pacienteSelecionado?.id]);
-      }),
-      catchError(error => {
-        console.error('Erro ao atualizar paciente:', error);
-        
-        let mensagemErro = 'Erro ao atualizar paciente.';
-        if (error.error?.message) {
-          mensagemErro = error.error.message;
-        } else if (error.error?.error) {
-          mensagemErro = error.error.error;
-        }
-        
-        this.notificacaoService.mostrarErro(mensagemErro);
-        return of(null);
-      }),
-      finalize(() => this.isLoading = false)
-    ).subscribe();
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+      }
+    });
   }
 
   /**

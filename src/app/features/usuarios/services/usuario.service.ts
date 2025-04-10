@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, of, forkJoin, throwError } from 'rxjs';
 import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Setor } from '../models/setor.model';
@@ -35,48 +35,21 @@ export class UsuarioService {
       .set('pagina', pagina.toString())
       .set('tamanho', tamanhoPagina.toString());
 
-    return this.http.get<{ items: Usuario[], total: number }>(`${this.apiUrl}`, { params });
+    return this.http.get<{ items: Usuario[], total: number }>(`${this.apiUrl}`, { params }).pipe(
+      catchError(error => {
+        console.error('Erro ao listar usuários:', error);
+        return of({ items: [], total: 0 }); // Retorna valores padrão
+      })
+    );
   }
 
   obterUsuarioPorId(id: string): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.apiUrl}/visualizar/${id}`)
-      .pipe(
-        switchMap((usuario: Usuario) => {
-          // Primeiro adaptamos o usuário
-          const usuarioAdaptado = UsuarioAdapter.adapt(usuario);
-          
-          // Preparar as requisições para obter dados de setor e função
-          const requisicoes = [];
-          
-          // Se o usuário tem um setor mas não tem o nome, vamos buscar essa informação
-          if (usuarioAdaptado.setor && !usuarioAdaptado.setorNome) {
-            requisicoes.push(
-              this.obterNomeSetor(usuarioAdaptado.setor).pipe(
-                tap(nome => usuarioAdaptado.setorNome = nome)
-              )
-            );
-          }
-          
-          // Se o usuário tem uma função mas não tem o nome, vamos buscar essa informação
-          if (usuarioAdaptado.funcao && !usuarioAdaptado.funcaoNome) {
-            requisicoes.push(
-              this.obterNomeFuncao(usuarioAdaptado.funcao).pipe(
-                tap(nome => usuarioAdaptado.funcaoNome = nome)
-              )
-            );
-          }
-          
-          // Se não há requisições a fazer, retornamos o usuário como está
-          if (requisicoes.length === 0) {
-            return of(usuarioAdaptado);
-          }
-          
-          // Caso contrário, esperamos todas as requisições terminarem
-          return forkJoin(requisicoes).pipe(
-            map(() => usuarioAdaptado) // Retorna o usuário com os dados adicionados
-          );
-        })
-      );
+    return this.http.get<Usuario>(`${this.apiUrl}/visualizar/${id}`).pipe(
+      catchError(error => {
+        console.error(`Erro ao obter usuário com ID ${id}:`, error);
+        return of({} as Usuario); // Retorna um valor padrão
+      })
+    );
   }
   
   // Métodos auxiliares para obter nomes de setor e função caso não venham no objeto original
@@ -124,15 +97,30 @@ export class UsuarioService {
   }
 
   criarUsuario(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}`, usuario);
+    return this.http.post<Usuario>(`${this.apiUrl}`, usuario).pipe(
+      catchError(error => {
+        console.error('Erro ao criar usuário:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   atualizarUsuario(id: string, usuario: Usuario): Observable<Usuario> {
-    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuario);
+    return this.http.put<Usuario>(`${this.apiUrl}/${id}`, usuario).pipe(
+      catchError(error => {
+        console.error(`Erro ao atualizar usuário com ID ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
 
   excluirUsuario(id: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`);
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+      catchError(error => {
+        console.error(`Erro ao excluir usuário com ID ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
   
   alterarStatus(id: string, status: string): Observable<any> {

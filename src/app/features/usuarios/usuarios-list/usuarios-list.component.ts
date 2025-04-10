@@ -6,7 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
 // Serviços
-import { ApiUsuarioService } from '../services/api-usuario.service';
+import { UsuarioService} from '../services/usuario.service';
 import { UserStatusStyleService } from '../services/user-status-style.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 
@@ -67,7 +67,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private apiUsuarioService: ApiUsuarioService,
+    private usuarioService: UsuarioService,
     private userStatusStyle: UserStatusStyleService,
     private router: Router,
     private notificacaoService: NotificacaoService
@@ -90,7 +90,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
     this.error = null;
     
     // Carregar setores
-    this.apiUsuarioService.listarSetores()
+    this.usuarioService.listarSetores()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (setores) => {
@@ -113,7 +113,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
       });
       
     // Carregar funções (mesmo que não precisemos carregar todos)
-    this.apiUsuarioService.listarFuncoes()
+    this.usuarioService.listarFuncoes()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (funcoes) => {
@@ -135,7 +135,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
    * Carrega a lista de usuários
    */
   carregarUsuarios() {
-    this.apiUsuarioService.listarUsuarios()
+    this.usuarioService.listarUsuarios()
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.isLoading = false)
@@ -143,7 +143,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (usuarios) => {
           // Garantir que todos os IDs sejam tratados como strings para facilitar comparações
-          this.usuarios = usuarios.map(usuario => {
+            this.usuarios = usuarios.items.map((usuario: Usuario): Usuario & { setorNome: string; funcaoNome: string } => {
             // Converter todos os IDs para string para consistência
             if (usuario.setor) usuario.setor = usuario.setor.toString();
             if (usuario.funcao) usuario.funcao = usuario.funcao.toString();
@@ -153,7 +153,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
               setorNome: this.getNomeSetor(usuario.setor),
               funcaoNome: this.getNomeFuncao(usuario.funcao)
             };
-          });
+            });
           
           // Log para debug
           console.log('Usuários carregados:', this.usuarios.length);
@@ -349,5 +349,21 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   getFuncoesPorSetor(setorId: string | number): Funcao[] {
     if (!setorId) return [];
     return this.funcoes.filter(funcao => funcao.setor_id?.toString() === setorId.toString());
+  }
+
+  // Removed duplicate carregarUsuarios method to resolve the error.
+
+  excluirUsuario(id: number): void {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+      this.usuarioService.excluirUsuario(id).subscribe({
+        next: () => {
+          this.notificacaoService.mostrarSucesso('Usuário excluído com sucesso!');
+          this.carregarUsuarios();
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao excluir usuário. Tente novamente.');
+        }
+      });
+    }
   }
 }

@@ -101,43 +101,14 @@ export class VisualizarPacienteComponent implements OnInit {
    * Carrega os dados de um paciente pelo ID
    */
   carregarPacientePorId(id: string): void {
-    this.isLoading = true;
-    this.error = null;
-    
-    this.pacienteService.obterPacientePorId(id)
-      .pipe(
-        tap(paciente => {
-          if (paciente) {
-            // Garantir que o campo nome esteja sempre preenchido
-            if (!paciente.nome && paciente.nome_completo) {
-              paciente.nome = paciente.nome_completo;
-            }
-            
-            this.paciente = paciente;
-            this.modoVisualizacao = true;
-            
-            // Carregar informações adicionais se houver convênio
-            if (paciente.convenio_id) {
-              this.carregarInformacoesConvenio(paciente);
-            }
-          } else {
-            this.error = 'Paciente não encontrado';
-            this.notificacaoService.mostrarAviso('Paciente não encontrado.');
-            this.modoVisualizacao = false;
-          }
-        }),
-        catchError(erro => {
-          this.error = 'Erro ao carregar dados do paciente';
-          this.modoVisualizacao = false;
-          this.notificacaoService.mostrarErro('Erro ao carregar dados do paciente.');
-          console.error('Erro ao carregar paciente:', erro);
-          return of(null);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe();
+    this.pacienteService.obterPacientePorId(id).subscribe({
+      next: (paciente) => {
+        this.paciente = paciente;
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao carregar paciente. Tente novamente.');
+      }
+    });
   }
   
   /**

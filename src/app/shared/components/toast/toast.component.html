@@ -1,14 +1,17 @@
 <div class="toast-container position-fixed top-0 end-0 p-3">
   <div *ngFor="let toast of toasts" 
-       class="toast show mb-2 fade-in" 
+       class="toast show mb-2 fade-in shadow-sm" 
        [ngClass]="getToastClass(toast.type)"
        role="alert" 
        aria-live="assertive" 
        aria-atomic="true">
-    <div class="toast-header" [ngClass]="getToastClass(toast.type)">
-      <i class="bi me-2" [ngClass]="getToastIcon(toast.type)"></i>
+    <div class="toast-header d-flex align-items-center" [ngClass]="getToastClass(toast.type)">
+      <i class="bi me-2 fs-4" [ngClass]="getToastIcon(toast.type)"></i>
       <strong class="me-auto">{{ toast.title }}</strong>
-      <button type="button" class="btn-close" [ngClass]="{'btn-close-white': toast.type === 'success' || toast.type === 'error'}" (click)="removeToast(toast.id)" aria-label="Fechar"></button>
+      <button type="button" class="btn-close" 
+              [ngClass]="{'btn-close-white': toast.type === 'success' || toast.type === 'error'}" 
+              (click)="removeToast(toast.id)" 
+              aria-label="Fechar"></button>
     </div>
     <div class="toast-body">
       {{ toast.message }}

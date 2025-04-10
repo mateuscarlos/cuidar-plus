@@ -359,35 +359,19 @@ export class EditarUsuarioComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    this.formSubmitted = true;
-    
     if (this.usuarioForm.invalid) {
-      this.markFormGroupTouched(this.usuarioForm);
-      this.notificacaoService.mostrarAviso('Preencha todos os campos obrigatórios');
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    if (!this.userId) {
-      this.notificacaoService.mostrarErro('ID do usuário não encontrado');
-      return;
-    }
-
-    // Preparar os dados do usuário
-    const dadosUsuario = this.prepararDadosUsuario();
-    
-    this.isLoading = true;
-    this.apiUsuarioService.atualizarUsuario(this.userId.toString(), dadosUsuario)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: () => {
-          this.notificacaoService.mostrarSucesso('Usuário atualizado com sucesso!');
-          this.usuarioRoutesService.navegarParaLista();
-        },
-        error: (err) => {
-          this.error = 'Erro ao atualizar usuário';
-          this.notificacaoService.mostrarErro('Erro ao atualizar usuário');
-        }
-      });
+  
+    this.apiUsuarioService.atualizarUsuario(this.userId?.toString()!, this.usuarioForm.value).subscribe({
+      next: () => {
+        this.notificacaoService.mostrarSucesso('Usuário atualizado com sucesso!');
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao atualizar usuário. Tente novamente.');
+      }
+    });
   }
 
   excluirUsuario(): void {

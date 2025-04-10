@@ -351,35 +351,19 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.usuarioForm.invalid) {
-      this.markFormGroupTouched(this.usuarioForm);
-      this.notificacaoService.mostrarAviso('Preencha todos os campos obrigatórios');
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    // Preparar os dados do usuário
-    this.tempUsuarioData = this.prepararDadosUsuario();
-
-    if (this.modoEdicao && this.userId) {
-      // Para edição, não solicitar senha, apenas atualizar o usuário
-      this.isLoading = true;
-      this.apiUsuarioService.atualizarUsuario(this.userId.toString(), this.tempUsuarioData)
-        .pipe(finalize(() => this.isLoading = false))
-        .subscribe({
-          next: () => {
-            this.notificacaoService.mostrarSucesso('Usuário atualizado com sucesso');
-            this.usuarioRoutesService.navegarParaLista();
-          },
-          error: (err) => {
-            this.error = 'Erro ao atualizar usuário';
-            this.notificacaoService.mostrarErro('Erro ao atualizar usuário');
-          }
-        });
-    } else {
-      // Para cadastro novo, avançar para o passo de definição de senha
-      this.currentStep = 'passwordForm';
-      // Scroll para o topo da página para melhor visibilidade do novo formulário
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  
+    this.apiUsuarioService.criarUsuario(this.usuarioForm.value).subscribe({
+      next: () => {
+        this.notificacaoService.mostrarSucesso('Usuário cadastrado com sucesso!');
+        this.usuarioForm.reset();
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao cadastrar usuário. Tente novamente.');
+      }
+    });
   }
 
   // Método para marcar todos os campos como touched para mostrar validações

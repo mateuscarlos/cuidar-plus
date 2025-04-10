@@ -301,38 +301,20 @@ export class CadastrarPacienteComponent implements OnInit {
    * Submete o formulário para criar um novo paciente
    */
   onSubmit(): void {
-    // Validar o formulário antes de enviar
-    if (!this.validarFormulario()) {
+    if (this.pacienteForm.invalid) {
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    // Obter valores do formulário
-    let formValues = { ...this.pacienteForm.value };
-
-    // Sanitizar o CPF antes de enviar
-    if (formValues.cpf) {
-      formValues.cpf = formValues.cpf.replace(/\D/g, '');
-    }
-
-    // Processar datas para o formato esperado pelo backend
-    formValues = this.processarDatasFormulario(formValues);
-
-    // Converter os campos cidade e estado para os campos esperados pelo backend
-    if (formValues.endereco) {
-      const endereco = { ...formValues.endereco } as Endereco;
-      if (endereco.cidade) {
-        endereco.localidade = endereco.cidade;
-        delete (endereco as any).cidade;
+  
+    this.pacienteService.criarPaciente(this.pacienteForm.value).subscribe({
+      next: () => {
+        this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
+        this.pacienteForm.reset();
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao cadastrar paciente. Tente novamente.');
       }
-      if (endereco.estado) {
-        endereco.uf = endereco.estado;
-        delete (endereco as any).estado;
-      }
-      formValues.endereco = endereco;
-    }
-
-    // Enviar dados para o serviço
-    this.criarPaciente(formValues);
+    });
   }
 
   /**
