@@ -1,39 +1,54 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { Router, RouterModule } from '@angular/router';
+import { Paciente, StatusPaciente, STATUS_BOOTSTRAP_CLASSES } from '../models/paciente.model';
+import { Plano } from '../models/plano.model';
+import { Endereco } from '../models/endereco.model';
+import { Convenio } from '../models/convenio.model';
 import { PacienteService } from '../services/paciente.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { CustomValidators } from '../../../shared/validators/custom-validators';
-import { finalize } from 'rxjs/operators';
+import { BehaviorSubject, Observable, catchError, finalize, of, tap } from 'rxjs';
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
 import { StatusStyleService } from '../../../core/services/status-style.service';
 
+/**
+ * Componente responsável pelo cadastro de novos pacientes
+ */
 @Component({
   selector: 'app-cadastrar-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './cadastrar-paciente.component.html',
   styleUrls: ['./cadastrar-paciente.component.scss']
 })
 export class CadastrarPacienteComponent implements OnInit {
+  // Formulário e dados
   pacienteForm!: FormGroup;
   estadosCivis = ESTADOS_CIVIS;
   generos = GENEROS;
   acomodacoes = ACOMODACOES;
-  convenios: any[] = [];
-  planos: any[] = [];
-  planosFiltrados: any[] = [];
+  convenios: Convenio[] = [];
+  planosFiltrados: Plano[] = [];
+  
+  // Estados de UI
   isLoading = false;
+  isBuscandoCep = false;
+  isBuscandoPlanos = false;
   
-  // Adicionando os status disponíveis
+  // Valores estáticos
   statusPaciente = Object.values(StatusPaciente);
+  readonly dateFormat = 'YYYY-MM-DD';
+  maxDate!: string;
   
-   
+  // Streams de dados
+  private convenioSelecionadoSubject = new BehaviorSubject<number | null>(null);
+  convenioSelecionado$ = this.convenioSelecionadoSubject.asObservable();
+  
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -42,22 +57,19 @@ export class CadastrarPacienteComponent implements OnInit {
     private cepService: CepService,
     private convenioPlanoService: ConvenioPlanoService, 
     private dateFormatter: DateFormatterService,
-    public statusStyle: StatusStyleService  // Adicionado o serviço
+    public statusStyle: StatusStyleService
   ) {}
 
-  // Formatos para os controles de data
-  readonly dateFormat = 'YYYY-MM-DD';
-  maxDate!: string;
-
   ngOnInit(): void {
-    console.log('Inicializando componente CadastrarPacienteComponent');
     this.maxDate = this.dateFormatter.toHtmlDateFormat(new Date());
     this.initForm();
-    
-    // Carregar convênios ao inicializar o componente
-    this.carregarConvenios();
+    this.listarConvenios();
+    this.setupSubscriptions();
   }
 
+  /**
+   * Inicializa o formulário com todos os campos baseados no modelo Paciente
+   */
   initForm(): void {
     this.pacienteForm = this.fb.group({
       nome_completo: ['', [Validators.required, Validators.minLength(5)]],
@@ -66,7 +78,7 @@ export class CadastrarPacienteComponent implements OnInit {
       genero: [''],
       estado_civil: [''],
       profissao: [''],
-      nacionalidade: [''],
+      nacionalidade: ['Brasileiro(a)', Validators.required],
       telefone: ['', Validators.required],
       telefone_secundario: [''],
       email: ['', Validators.email],
@@ -86,36 +98,40 @@ export class CadastrarPacienteComponent implements OnInit {
       medico_responsavel: [''],
       alergias: [''],
       convenio_id: ['', Validators.required],
-      convenio_nome: [''],
       plano_id: [{value: '', disabled: true}, Validators.required],
-      plano_nome: [{value: '', disabled: true}],
       numero_carteirinha: ['', Validators.required],
       data_validade: ['', [Validators.required, this.futureOrTodayDateValidator()]],
       contato_emergencia: [''],
       telefone_emergencia: [''],
       case_responsavel: ['']
     });
+  }
 
-    // Listener para habilitar/desabilitar campos de plano baseado no convênio
+  /**
+   * Configura as inscrições para os observables
+   */
+  setupSubscriptions(): void {
+    // Observar mudanças no valor de convênio
     this.pacienteForm.get('convenio_id')?.valueChanges.subscribe(convenioId => {
       const planoIdControl = this.pacienteForm.get('plano_id');
-      const planoNomeControl = this.pacienteForm.get('plano_nome');
       
       if (convenioId) {
+        this.convenioSelecionadoSubject.next(convenioId);
         planoIdControl?.enable();
-        planoNomeControl?.enable();
-        this.carregarPlanos(convenioId); // Carregar os planos do convênio selecionado
+        this.carregarPlanos(convenioId);
       } else {
+        this.convenioSelecionadoSubject.next(null);
         planoIdControl?.disable();
-        planoNomeControl?.disable();
         planoIdControl?.setValue('');
-        planoNomeControl?.setValue('');
         this.planosFiltrados = [];
       }
     });
   }
 
-  // Validador personalizado para datas
+  /**
+   * Validador customizado para data de nascimento
+   * @returns Validador que verifica se a data é válida e não está no futuro
+   */
   dateValidator() {
     return (control: any) => {
       const value = control.value;
@@ -129,8 +145,8 @@ export class CadastrarPacienteComponent implements OnInit {
           return { invalidDate: true };
         }
         
-        // Verificar se a data não está no futuro
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
         if (date > today) {
           return { futureDate: true };
         }
@@ -142,7 +158,10 @@ export class CadastrarPacienteComponent implements OnInit {
     };
   }
 
-  // Validador para datas que devem ser futuras ou hoje (como data de validade)
+  /**
+   * Validador customizado para data de validade do convênio
+   * @returns Validador que verifica se a data é válida, hoje ou no futuro
+   */
   futureOrTodayDateValidator() {
     return (control: any) => {
       const value = control.value;
@@ -156,9 +175,8 @@ export class CadastrarPacienteComponent implements OnInit {
           return { invalidDate: true };
         }
         
-        // Verificar se a data não é passada (anterior a hoje)
         const today = new Date();
-        today.setHours(0, 0, 0, 0); // Ignora o horário para comparação apenas de data
+        today.setHours(0, 0, 0, 0);
         
         if (date < today) {
           return { pastDate: true };
@@ -171,57 +189,66 @@ export class CadastrarPacienteComponent implements OnInit {
     };
   }
 
-  carregarConvenios(): void {
-    console.log('Carregando convênios...');
+  /**
+   * Carrega a lista de convênios disponíveis do backend
+   */
+  listarConvenios(): void {
     this.isLoading = true;
+    
     this.convenioPlanoService.listarConvenios().pipe(
-      finalize(() => this.isLoading = false)
-    ).subscribe({
-      next: (convenios) => {
-        console.log(`Convênios recebidos (${convenios.length}):`, convenios);
+      tap(convenios => {
         this.convenios = convenios;
+        
         if (this.convenios.length === 0) {
           this.notificacaoService.mostrarAviso('Não há convênios cadastrados no sistema.');
         }
-      },
-      error: (erro) => {
+      }),
+      catchError(erro => {
         console.error('Erro ao carregar convênios:', erro);
-        this.notificacaoService.mostrarErro('Erro ao carregar convênios: ' + (erro.message || 'Falha na comunicação com o servidor'));
-      }
-    });
+        this.notificacaoService.mostrarErro('Erro ao carregar convênios: ' + 
+          (erro.message || 'Falha na comunicação com o servidor'));
+        return of([]);
+      }),
+      finalize(() => this.isLoading = false)
+    ).subscribe();
   }
 
+  /**
+   * Carrega os planos associados a um convênio específico
+   * @param convenioId ID do convênio selecionado
+   */
   carregarPlanos(convenioId: number): void {
     if (!convenioId) {
       this.planosFiltrados = [];
       return;
     }
     
-    this.isLoading = true;
-    console.log(`Carregando planos para o convênio ID: ${convenioId}`);
+    this.isBuscandoPlanos = true;
     
     this.convenioPlanoService.listarPlanosPorConvenio(convenioId).pipe(
-      finalize(() => this.isLoading = false)
-    ).subscribe({
-      next: (planos) => {
-        console.log(`Planos recebidos (${planos.length}):`, planos);
+      tap(planos => {
         this.planosFiltrados = planos;
         
         if (this.planosFiltrados.length === 0) {
           this.notificacaoService.mostrarAviso('Este convênio não possui planos cadastrados.');
-          
           this.pacienteForm.get('plano_id')?.disable();
           this.pacienteForm.get('plano_id')?.setValue(null);
         }
-      },
-      error: (erro) => {
+      }),
+      catchError(erro => {
         console.error('Erro ao carregar planos:', erro);
-        this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + (erro.message || 'Falha na comunicação com o servidor'));
+        this.notificacaoService.mostrarErro('Erro ao carregar planos: ' + 
+          (erro.message || 'Falha na comunicação com o servidor'));
         this.planosFiltrados = [];
-      }
-    });
+        return of([]);
+      }),
+      finalize(() => this.isBuscandoPlanos = false)
+    ).subscribe();
   }
 
+  /**
+   * Handler para o evento de mudança de convênio
+   */
   onConvenioChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const convenioId = target?.value ? Number(target.value) : null;
@@ -229,45 +256,53 @@ export class CadastrarPacienteComponent implements OnInit {
     if (convenioId) {
       const convenioSelecionado = this.convenios.find(c => c.id === convenioId);
       if (convenioSelecionado) {
-        console.log(`Convênio selecionado: ${convenioSelecionado.nome} (ID: ${convenioSelecionado.id})`);
+        console.debug(`Convênio selecionado: ${convenioSelecionado.nome} (ID: ${convenioSelecionado.id})`);
       }
     }
   }
 
+  /**
+   * Consulta o CEP informado e preenche os campos de endereço
+   */
   onCepChange(): void {
     const cepControl = this.pacienteForm.get('endereco')?.get('cep');
-    const cep = cepControl?.value;
+    const cep = cepControl?.value?.replace(/\D/g, '');
 
     if (cep && cep.length === 8) {
-      this.cepService.consultarCep(cep).subscribe({
-        next: (endereco) => {
+      this.isBuscandoCep = true;
+      
+      this.cepService.consultarCep(cep).pipe(
+        tap(endereco => {
           if (endereco) {
             this.pacienteForm.patchValue({
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade, // Mapeamento para o campo do formulário
-                estado: endereco.uf         // Mapeamento para o campo do formulário
+                cidade: endereco.localidade,
+                estado: endereco.uf
               }
             });
           } else {
             this.notificacaoService.mostrarAviso('CEP não encontrado.');
           }
-        },
-        error: () => {
+        }),
+        catchError(() => {
           this.notificacaoService.mostrarErro('Erro ao consultar o CEP.');
-        }
-      });
-    } else {
+          return of(null);
+        }),
+        finalize(() => this.isBuscandoCep = false)
+      ).subscribe();
+    } else if (cep) {
       this.notificacaoService.mostrarAviso('CEP inválido. Certifique-se de que possui 8 dígitos.');
     }
   }
 
+  /**
+   * Submete o formulário para criar um novo paciente
+   */
   onSubmit(): void {
-    if (this.pacienteForm.invalid) {
-      console.log(this.pacienteForm);
-      this.pacienteForm.markAllAsTouched();
-      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios.');
+    // Validar o formulário antes de enviar
+    if (!this.validarFormulario()) {
       return;
     }
 
@@ -276,22 +311,22 @@ export class CadastrarPacienteComponent implements OnInit {
 
     // Sanitizar o CPF antes de enviar
     if (formValues.cpf) {
-      formValues.cpf = formValues.cpf.replace(/\D/g, ''); // Remove caracteres não numéricos
+      formValues.cpf = formValues.cpf.replace(/\D/g, '');
     }
 
-    // Processar datas para o formato do backend
+    // Processar datas para o formato esperado pelo backend
     formValues = this.processarDatasFormulario(formValues);
 
-    // Converter os campos cidade e estado para os campos esperados pelo backend (localidade e uf)
+    // Converter os campos cidade e estado para os campos esperados pelo backend
     if (formValues.endereco) {
-      const endereco = { ...formValues.endereco };
+      const endereco = { ...formValues.endereco } as Endereco;
       if (endereco.cidade) {
-        endereco.localidade = endereco.cidade;  // Adicionar campo localidade
-        delete endereco.cidade;                 // Remover campo cidade
+        endereco.localidade = endereco.cidade;
+        delete (endereco as any).cidade;
       }
       if (endereco.estado) {
-        endereco.uf = endereco.estado;          // Adicionar campo uf
-        delete endereco.estado;                 // Remover campo estado
+        endereco.uf = endereco.estado;
+        delete (endereco as any).estado;
       }
       formValues.endereco = endereco;
     }
@@ -299,9 +334,9 @@ export class CadastrarPacienteComponent implements OnInit {
     // Enviar dados para o serviço
     this.criarPaciente(formValues);
   }
-  
+
   /**
-   * Processa todas as datas do formulário para o formato esperado pelo backend
+   * Processa as datas do formulário para o formato do backend
    */
   processarDatasFormulario(formValues: any): any {
     // Cria uma cópia para não modificar o objeto original
@@ -309,159 +344,79 @@ export class CadastrarPacienteComponent implements OnInit {
     
     // Processa data de nascimento
     if (processedValues.data_nascimento) {
-      try {
-        // Verifica se já está no formato yyyy-mm-dd
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_nascimento)) {
-          const dateParts = processedValues.data_nascimento.split('/');
-          if (dateParts.length === 3) {
-            // Converte de DD/MM/YYYY para YYYY-MM-DD
-            const day = dateParts[0].padStart(2, '0');
-            const month = dateParts[1].padStart(2, '0');
-            const year = dateParts[2];
-            processedValues.data_nascimento = `${year}-${month}-${day}`;
-          } else {
-            console.error('Formato de data não reconhecido:', processedValues.data_nascimento);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao processar data de nascimento:', error);
-      }
+      processedValues.data_nascimento = this.dateFormatter.toBackendDateOnlyFormat(processedValues.data_nascimento);
     }
     
     // Processa data de validade do plano
     if (processedValues.data_validade) {
-      try {
-        // Verifica se já está no formato yyyy-mm-dd
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(processedValues.data_validade)) {
-          const dateParts = processedValues.data_validade.split('/');
-          if (dateParts.length === 3) {
-            // Converte de DD/MM/YYYY para YYYY-MM-DD
-            const day = dateParts[0].padStart(2, '0');
-            const month = dateParts[1].padStart(2, '0');
-            const year = dateParts[2];
-            processedValues.data_validade = `${year}-${month}-${day}`;
-          } else {
-            console.error('Formato de data não reconhecido:', processedValues.data_validade);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao processar data de validade:', error);
-      }
+      processedValues.data_validade = this.dateFormatter.toBackendDateOnlyFormat(processedValues.data_validade);
     }
     
     return processedValues;
   }
-  
+
   /**
-   * Realiza a chamada ao serviço para criar um novo paciente
+   * Envia os dados do paciente para criação no backend
    */
   criarPaciente(formValues: any): void {
     this.isLoading = true;
     
+    // Add detailed logs
+    console.log('======= INÍCIO DA REQUISIÇÃO =======');
+    console.log('Payload sendo enviado para criação de paciente:', formValues);
+    
     this.pacienteService.criarPaciente(formValues).pipe(
-      finalize(() => this.isLoading = false)
-    ).subscribe({
-      next: (response) => {
+      tap(response => {
+        console.log('Resposta de sucesso:', response);
         this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
         this.router.navigate(['/pacientes/visualizar', response.id]);
-      },
-      error: (error) => {
-        console.error('Erro ao cadastrar paciente:', error);
-        this.notificacaoService.mostrarErro('Erro ao cadastrar paciente: ' + (error.message || 'Por favor, tente novamente.'));
-      }
-    });
+      }),
+      catchError(error => {
+        console.error('Erro completo ao cadastrar paciente:', error);
+        console.log('Status do erro:', error.status);
+        console.log('Detalhes do erro:', error.error);
+        console.log('URL da requisição:', error.url);
+        console.log('Método utilizado:', error.method || 'Não disponível');
+        
+        // Verificar mensagens de erro específicas do backend
+        let mensagemErro = 'Erro ao cadastrar paciente. Por favor, tente novamente.';
+        
+        if (error.error?.message) {
+          mensagemErro = error.error.message;
+        } else if (error.error?.error) {
+          mensagemErro = error.error.error;
+        }
+        
+        this.notificacaoService.mostrarErro(mensagemErro);
+        return of(null);
+      }),
+      finalize(() => {
+        console.log('======= FIM DA REQUISIÇÃO =======');
+        this.isLoading = false;
+      })
+    ).subscribe();
   }
-  
+
   /**
-   * Formata uma data para exibição no formato brasileiro
+   * Valida o formulário com mensagens específicas para cada tipo de erro
    */
-  formatarDataParaExibicao(data: string | Date | null | undefined): string {
-    return this.dateFormatter.toDisplayDateOnly(data);
-  }
-  
-  /**
-   * Formata uma data para uso em inputs HTML do tipo date
-   */
-  formatarDataParaInput(data: string | Date | null | undefined): string {
-    return this.dateFormatter.toHtmlDateFormat(data);
-  }
-  
-  // Método auxiliar para validar o formulário com mensagens específicas
   validarFormulario(): boolean {
     if (this.pacienteForm.invalid) {
       this.markFormGroupTouched(this.pacienteForm);
       
       // Verificações específicas com mensagens personalizadas
-      const campos = [
-        { nome: 'nome_completo', mensagem: 'Nome completo é obrigatório' },
-        { nome: 'cpf', mensagem: 'CPF é obrigatório e deve ser válido' },
-        { nome: 'data_nascimento', mensagem: 'Data de nascimento é obrigatória e deve ser válida' },
-        { nome: 'telefone', mensagem: 'Telefone é obrigatório' },
-        { nome: 'cid_primario', mensagem: 'CID primário é obrigatório' },
-        { nome: 'acomodacao', mensagem: 'Acomodação é obrigatória' }
-      ];
-      
-      for (const campo of campos) {
-        const control = this.pacienteForm.get(campo.nome);
-        if (control?.invalid && control.touched) {
-          this.notificacaoService.mostrarAviso(campo.mensagem);
-          return false;
-        }
-      }
-      
-      // Verificação específica para campos de data
-      const nascimentoControl = this.pacienteForm.get('data_nascimento');
-      if (nascimentoControl?.hasError('futureDate')) {
-        this.notificacaoService.mostrarAviso('Data de nascimento não pode ser no futuro');
+      if (this.pacienteForm.get('data_nascimento')?.hasError('futureDate')) {
+        this.notificacaoService.mostrarAviso('Data de nascimento não pode ser no futuro.');
         return false;
       }
       
-      const validadeControl = this.pacienteForm.get('data_validade');
-      if (validadeControl?.hasError('pastDate')) {
-        this.notificacaoService.mostrarAviso('Data de validade não pode ser no passado');
+      if (this.pacienteForm.get('data_validade')?.hasError('pastDate')) {
+        this.notificacaoService.mostrarAviso('Data de validade não pode ser no passado.');
         return false;
       }
-      
-      // Verificar campos de endereço
-      const enderecoCampos = [
-        { nome: 'cep', mensagem: 'CEP é obrigatório' },
-        { nome: 'logradouro', mensagem: 'Logradouro é obrigatório' },
-        { nome: 'numero', mensagem: 'Número é obrigatório' },
-        { nome: 'bairro', mensagem: 'Bairro é obrigatório' },
-        { nome: 'cidade', mensagem: 'Cidade é obrigatória' },
-        { nome: 'estado', mensagem: 'Estado é obrigatório' }
-      ];
-      
-      for (const campo of enderecoCampos) {
-        const control = this.pacienteForm.get('endereco')?.get(campo.nome);
-        if (control?.invalid && control.touched) {
-          this.notificacaoService.mostrarAviso(campo.mensagem);
-          return false;
-        }
-      }
-      
-      // Verificação específica para convênio
-      const convenioId = this.pacienteForm.get('convenio_id')?.value;
-      if (!convenioId) {
-        this.notificacaoService.mostrarAviso('Por favor, selecione um convênio.');
-        return false;
-      }
-      
-      // Verificação para plano apenas se o campo estiver habilitado
-      const planoControl = this.pacienteForm.get('plano_id');
-      if (planoControl?.enabled && !planoControl.value) {
-        this.notificacaoService.mostrarAviso('Por favor, selecione um plano.');
-        return false;
-      }
-      
-      // Verificar carteirinha e validade
-      if (!this.pacienteForm.get('numero_carteirinha')?.value) {
-        this.notificacaoService.mostrarAviso('Por favor, informe o número da carteirinha.');
-        return false;
-      }
-      
-      if (!this.pacienteForm.get('data_validade')?.value) {
-        this.notificacaoService.mostrarAviso('Por favor, informe a data de validade.');
+
+      if (this.pacienteForm.get('cpf')?.hasError('cpfInvalido')) {
+        this.notificacaoService.mostrarAviso('O CPF informado não é válido.');
         return false;
       }
       
@@ -472,6 +427,9 @@ export class CadastrarPacienteComponent implements OnInit {
     return true;
   }
 
+  /**
+   * Marca todos os campos do formulário como touched para exibir validações
+   */
   markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
@@ -482,37 +440,42 @@ export class CadastrarPacienteComponent implements OnInit {
     });
   }
 
+  /**
+   * Verifica se um campo do formulário é inválido
+   */
   isFieldValid(field: string): boolean {
     const control = this.pacienteForm.get(field);
-    return control ? control.invalid && (control.dirty || control.touched) : false;
+    return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  /**
+   * Verifica se um campo de endereço é inválido
+   */
   isEnderecoFieldValid(field: string): boolean {
     const control = this.pacienteForm.get('endereco')?.get(field);
-    return control ? control.invalid && (control.dirty || control.touched) : false;
+    return !!control && control.invalid && (control.dirty || control.touched);
   }
 
+  /**
+   * Limpa o formulário e restaura valores padrão
+   */
   limparFormulario(): void {
-    this.pacienteForm.reset();
+    this.pacienteForm.reset({
+      status: StatusPaciente.ATIVO,
+      nacionalidade: 'Brasileiro(a)'
+    });
     
-    // Redefinir valores padrão
-    this.pacienteForm.get('status')?.setValue(StatusPaciente.ATIVO);
-    
-    // Desabilitar campos de plano
+    // Desabilitar campo de plano
     this.pacienteForm.get('plano_id')?.disable();
-    this.pacienteForm.get('plano_nome')?.disable();
     
     // Limpar listas
     this.planosFiltrados = [];
   }
   
-  // Método para obter as classes de estilo para cada status
+  /**
+   * Recupera classes CSS para estilização do status
+   */
   getStatusClasses(status: string): string {
     return this.statusStyle.getAllClasses(status);
-  }
-  
-  // Método para obter o ícone para cada status
-  getStatusIcon(status: string): string {
-    return this.statusStyle.getIcon(status);
   }
 }

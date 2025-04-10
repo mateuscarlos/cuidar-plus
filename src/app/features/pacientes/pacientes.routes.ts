@@ -1,45 +1,53 @@
 import { Routes } from '@angular/router';
 import { PacientesComponent } from './pacientes.component';
+import { PacientesListComponent } from './pacientes-list/pacientes-list.component';
 import { CadastrarPacienteComponent } from './cadastrar-paciente/cadastrar-paciente.component';
 import { EditarPacientesComponent } from './editar-pacientes/editar-pacientes.component';
-import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
 import { VisualizarPacienteComponent } from './visualizar-paciente/visualizar-paciente.component';
+import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
 
-
+/**
+ * Rotas para o módulo de Pacientes
+ */
 export const PACIENTES_ROUTES: Routes = [
-  { 
-    path: 'pacientes', 
+  {
+    path: '',
     component: PacientesComponent,
-    title: 'Pacientes - Cuidar+'
+    title: 'Pacientes - Página Inicial'
   },
-  { 
-    path: 'cadastrar', 
+  {
+    path: 'lista',
+    component: PacientesListComponent,
+    title: 'Lista de Pacientes'
+  },
+  {
+    path: 'cadastrar',
     component: CadastrarPacienteComponent,
-    title: 'Cadastrar Paciente - Cuidar+'
+    title: 'Cadastrar Novo Paciente'
   },
-  { 
-    path: 'editar', 
+  {
+    path: 'editar',
     component: EditarPacientesComponent,
-    title: 'Editar Paciente - Cuidar+'
+    title: 'Selecionar Paciente para Edição'
   },
-  { 
-    path: 'acompanhamento', 
-    component: CriarAcompanhamentoPacienteComponent,
-    title: 'Acompanhamento de Paciente - Cuidar+'
+  {
+    path: 'editar/:id',
+    component: EditarPacientesComponent,
+    title: 'Editar Paciente'
   },
-  { 
-    path: 'visualizar', 
+  {
+    path: 'visualizar',
     component: VisualizarPacienteComponent,
-    title: 'Visualizar Paciente - Cuidar+'
+    title: 'Visualizar Paciente'
   },
   {
     path: 'visualizar/:id',
     component: VisualizarPacienteComponent,
-    title: 'Visualizar Paciente - Cuidar+'
+    title: 'Detalhes do Paciente'
   },
-  { path: 'pacientes/editar/:id', 
-    component: EditarPacientesComponent, 
-    title: 'Editar Paciente - Cuidar+'
+  {
+    path: 'acompanhamento',
+    component: CriarAcompanhamentoPacienteComponent,
+    title: 'Acompanhamento de Paciente'
   }
-
 ];

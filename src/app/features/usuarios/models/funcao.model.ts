@@ -8,14 +8,13 @@ export interface Funcao {
   nome: string;
   conselho_profissional?: string;
   especializacao_recomendada?: string;
-  tipo_contratacao: TipoContratacao;
-  tipo_contratacao_extenso?: string; // Pode vir do backend, se quiser enviar já traduzido
+  
 }
 
 export interface Funcao_Com_Registro {
   id: number;
   nome: string;
-  conselho?: ConselhoProfissional;
+  
 }
 
 /**

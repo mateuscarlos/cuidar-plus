@@ -9,13 +9,15 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { UsuarioService } from '../services/usuario.service';
 import { SetoresFuncoesService } from '../services/setor-funcoes.service';
 import { CepService } from '../../../core/services/cep.service';
-import { User, Endereco } from '../models/user.model';
+import { Usuario, Endereco, UserStatus, TipoContratacao } from '../models/user.model'; // Adicionando a importação do UserStatus e TipoContratacao
 import { Funcao } from '../models/funcao.model';
 import { Setor } from '../models/setor.model';
-// Corrigindo o caminho de importação do componente de senha
+import { UserStatusStyleService } from '../services/user-status-style.service'; // Importando o serviço de estilo
+
 import { PasswordFormComponent } from '../password/password-form.component';
-// Adicione essas importações
+
 import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
+import { SETOR_CONSELHO_MAP, FUNCAO_SETOR_MAP, ConselhoProfissional, FuncoesComRegistro, SetorProfissional } from '../models/conselhos-profissionais.model';
 
 @Component({
   selector: 'app-cadastrar-usuario',
@@ -39,6 +41,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   userId?: number;
   funcaoSubscription?: Subscription;
   
+  // Adicionar a propriedade userStatusOptions
+  userStatusOptions = Object.values(UserStatus);
+  
   // Controle do fluxo de steps
   currentStep: 'userForm' | 'passwordForm' = 'userForm';
   tempUsuarioData: any = null;
@@ -56,8 +61,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     { value: 'restrito', viewValue: 'Restrito' }
   ];
 
-  labelConselhoProfissional = 'Conselho Profissional';
-  mostrarConselhoProfissional = false;
+  labelConselhoProfissional = ''; // Label dinâmica para o campo de conselho
+  mostrarConselhoProfissional = false; // Controle de exibição do campo de conselho
+  mostrarEspecialidade = false; // Controle de exibição do campo de especialidade
 
   constructor(
     private fb: FormBuilder,
@@ -68,7 +74,8 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private snackBar: MatSnackBar,
     private datePipe: DatePipe,
-    private conselhoService: ConselhosProfissionaisService
+    private conselhoService: ConselhosProfissionaisService,
+    private userStatusStyle: UserStatusStyleService // Adicionando o serviço ao construtor
   ) { }
 
   ngOnInit(): void {
@@ -109,12 +116,13 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         numero: ['', [Validators.required]],
         bairro: ['', [Validators.required]],
         cidade: ['', [Validators.required]],
-        estado: ['', [Validators.required]]
+        estado: ['', [Validators.required]],
+        complemento: ['']
       }),
       dataAdmissao: [''],
       tipoContratacao: ['contratada', [Validators.required]],
       tipoAcesso: ['padrao', [Validators.required]],
-      status: ['ativo']
+      status: [UserStatus.ATIVO] // Agora usando o enum UserStatus
     });
   }
 
@@ -135,9 +143,16 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   // Atualizando o método carregarFuncoes com a lógica para mostrar o campo de conselho profissional
 
+/**
+ * Carrega as funções para um setor especificado
+ *
+ * @param {number} setorId - ID do setor
+ */
   carregarFuncoes(setorId: number): void {
     this.isLoading = true;
-    // Verificar se já existe uma subscription para evitar duplicações
+    console.log('Carregando funções para o setor:', setorId);
+
+    // Unsubscribe from previous funcao valueChanges subscription if it exists
     if (this.funcaoSubscription) {
       this.funcaoSubscription.unsubscribe();
     }
@@ -145,66 +160,60 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     this.setoresFuncoesService.getFuncoesPorSetor(setorId)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
+/**
+ * Updates the available functions for a selected sector and manages form field visibility 
+ * and validation based on the selected function.
+ *
+ * @param {Funcao[]} funcoes - The list of functions available for the selected sector.
+ *
+ * This method sets the available functions, resets form fields and visibility flags,
+ * and subscribes to changes in the 'funcao' form field. Based on the selected function,
+ * it maps to the corresponding sector and professional council, updating form visibility 
+ * and validation for professional registration and specialty fields accordingly.
+ */
+
         next: (funcoes) => {
-          this.funcoes = funcoes.map(f => ({
-            ...f,
-            tipo_contratacao: f.tipo_contratacao as any
-          }));
-          
-          // Limpar as seleções e campos anteriores se não estiver em modo de edição
-          if (!this.modoEdicao) {
-            this.usuarioForm.get('funcao')?.setValue('');
-            this.usuarioForm.get('registroCategoria')?.setValue('');
-            this.usuarioForm.get('especialidade')?.setValue('');
-            
-            // Inicialmente ocultar o campo de conselho profissional
-            this.mostrarConselhoProfissional = false;
-            this.usuarioForm.get('registroCategoria')?.clearValidators();
-            this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
-          }
-          
-          // Configurar listener para mudanças na função selecionada
-          this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe(funcaoId => {
+          this.funcoes = funcoes;
+
+          console.log(this.funcoes, 'carrega funções por setor', setorId);
+
+          // Reset form fields and visibility flags
+          this.usuarioForm.get('funcao')?.setValue('');
+          this.usuarioForm.get('registroCategoria')?.setValue('');
+          this.usuarioForm.get('especialidade')?.setValue('');
+          this.mostrarConselhoProfissional = false;
+          this.mostrarEspecialidade = false;
+
+          // Subscribe to funcao valueChanges
+          this.funcaoSubscription = this.usuarioForm.get('funcao')?.valueChanges.subscribe((funcaoId: number) => {
+            console.log('Função selecionada:', funcaoId);
             if (funcaoId) {
-              // Usar o serviço para verificar se a função requer registro
-              const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(+funcaoId, this.funcoes);
-              
-              if (conselhoInfo) {
-                // Função requer registro em conselho profissional
+              const setor = FUNCAO_SETOR_MAP[funcaoId as FuncoesComRegistro]; // Mapear função para setor
+              const conselho = SETOR_CONSELHO_MAP[setor as SetorProfissional]; // Mapear setor para conselho
+              console.log(FUNCAO_SETOR_MAP, SETOR_CONSELHO_MAP);
+              console.log('Setor encontrado:', setor);
+              console.log('Conselho encontrado:', setor, conselho);
+              if (conselho) {
                 this.mostrarConselhoProfissional = true;
-                this.labelConselhoProfissional = conselhoInfo.label;
-                
-                // Tornar o campo obrigatório
+                this.labelConselhoProfissional = `Número do ${conselho}`; // Define o nome do conselho como label
+                this.mostrarEspecialidade = true;
+
+                // Tornar o campo "Registro de Conselho" obrigatório
                 this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
               } else {
-                // Função não requer registro
                 this.mostrarConselhoProfissional = false;
+                this.mostrarEspecialidade = false;
                 this.usuarioForm.get('registroCategoria')?.clearValidators();
-                this.usuarioForm.get('registroCategoria')?.setValue('');
-                this.usuarioForm.get('especialidade')?.setValue('');
               }
-              
+
               this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             } else {
-              // Sem função selecionada
               this.mostrarConselhoProfissional = false;
+              this.mostrarEspecialidade = false;
               this.usuarioForm.get('registroCategoria')?.clearValidators();
               this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
             }
           });
-          
-          // Verificar para modo de edição
-          if (this.modoEdicao && this.usuarioForm.get('funcao')?.value) {
-            const funcaoId = +this.usuarioForm.get('funcao')?.value;
-            const conselhoInfo = this.conselhoService.verificarConselhoFuncaoDinamico(funcaoId, this.funcoes);
-            
-            if (conselhoInfo) {
-              this.mostrarConselhoProfissional = true;
-              this.labelConselhoProfissional = conselhoInfo.label;
-              this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
-              this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
-            }
-          }
         },
         error: (err) => {
           this.error = 'Erro ao carregar funções';
@@ -223,14 +232,14 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (endereco) => {
             console.log('Resposta da API ViaCEP:', endereco);
-            if (endereco && !endereco.erro) {
+            if (endereco && !(endereco as any).erro) {
               // Mapear os dados da API para o formulário
               this.usuarioForm.patchValue({
                 endereco: {
                   rua: endereco.logradouro || '',
                   bairro: endereco.bairro || '',
                   cidade: endereco.localidade || '',
-                  estado: endereco.uf || ''
+                  estado: endereco.uf || '',
                 }
               });
               
@@ -260,10 +269,32 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     this.usuarioService.obterPorId(id.toString())
       .pipe(
         switchMap(usuario => {
-          // Preenchimento normal do formulário...
+          // Preenchimento do formulário com os dados do usuário
           this.usuarioForm.patchValue({
-            // Dados normais do usuário...
+            nome: usuario.nome,
+            email: usuario.email,
+            cpf: usuario.cpf || '', // Handling both property names
+            telefone: usuario.telefone || '',
+            setor: usuario.setor,
+            funcao: usuario.funcao,
+            registroCategoria: usuario.registroCategoria || '',
+            especialidade: usuario.especialidade || '',
+            endereco: {
+              cep: usuario.cep || '',
+              rua: usuario.endereco?.logradouro || '',
+              numero: usuario.endereco?.numero || '',
+              complemento: usuario.endereco?.complemento || '',
+              bairro: usuario.endereco?.bairro || '',
+              cidade: usuario.endereco?.localidade || '',
+              estado: usuario.endereco?.uf || usuario.endereco?.estado || ''
+            },
+            dataAdmissao: usuario.dataAdmissao ? this.datePipe.transform(usuario.dataAdmissao, 'yyyy-MM-dd') : '',
+            tipoContratacao: usuario.tipoContratacao || 'contratada',
+            tipoAcesso: usuario.tipoAcesso || 'padrao',
+            status: usuario.status || 'ativo'
           });
+
+          console.log('Dados do usuário carregados:', usuario);
           
           // Se o usuário tem um setor, carregamos as funções e depois voltamos para o fluxo principal
           if (usuario.setor) {
@@ -285,7 +316,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
         finalize(() => this.isLoading = false)
       )
       .subscribe({
-        next: (usuario: any) => {
+        next: (usuario) => {
           // Agora que temos as funções carregadas, podemos configurar o campo de conselho profissional
           if (usuario.funcao) {
             const funcaoId = +usuario.funcao;
@@ -367,6 +398,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.showNotification('Usuário cadastrado com sucesso', 'success');
+          console.log(this.usuarioForm.value, 'Dados do usuário enviados para o servidor');
           this.router.navigate(['/usuarios']);
         },
         error: (err) => {
@@ -379,7 +411,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       });
   }
 
-  private prepararDadosUsuario(): any {
+  private prepararDadosUsuario(): Usuario {
     const formValues = this.usuarioForm.value;
     
     // Converter a data de string para objeto Date
@@ -393,7 +425,11 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     const enderecoSemCep = { ...formValues.endereco };
     delete enderecoSemCep.cep; // Remover o CEP do objeto endereco
 
-    return {
+    // Obter o status diretamente do formulário para garantir que estamos enviando exatamente o que foi selecionado
+    const status = formValues.status;
+    console.log('Status selecionado para envio:', status);
+
+    const dadosUsuario = {
       id: this.userId?.toString(),
       nome: formValues.nome,
       email: formValues.email,
@@ -408,9 +444,12 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       dataAdmissao: dataAdmissao,
       tipoContratacao: formValues.tipoContratacao,
       tipoAcesso: formValues.tipoAcesso,
-      status: formValues.status,
-      ativo: formValues.status === 'ativo'
+      status: status, // Usando o valor exato selecionado no formulário
+      ativo: status === UserStatus.ATIVO // Derivar o campo ativo do status
     };
+    
+    console.log('Dados do usuário preparados:', dadosUsuario);
+    return dadosUsuario;
   }
 
   showNotification(message: string, type: 'success' | 'error' | 'warning'): void {
@@ -418,7 +457,10 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       duration: 5000,
       panelClass: [`notification-${type}`]
     });
+    
   }
+
+    
   cancelar(): void {
     this.router.navigate(['/usuarios']);
   }
@@ -426,6 +468,37 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.funcaoSubscription) {
       this.funcaoSubscription.unsubscribe();
+    }
+  }
+
+  // Adicionar estes métodos ao componente
+  getStatusClass(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'bg-success';
+      case UserStatus.INATIVO: return 'bg-danger';
+      case UserStatus.FERIAS: return 'bg-info';
+      case UserStatus.LICENCA_MEDICA: 
+      case UserStatus.LICENCA_MATERNIDADE:
+      case UserStatus.LICENCA_PATERNIDADE: return 'bg-warning';
+      default: return 'bg-secondary';
+    }
+  }
+  
+  getStatusIcon(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'bi bi-check-circle';
+      case UserStatus.INATIVO: return 'bi bi-x-circle';
+      case UserStatus.FERIAS: return 'bi bi-umbrella';
+      case UserStatus.LICENCA_MEDICA: return 'bi bi-hospital';
+      default: return 'bi bi-info-circle';
+    }
+  }
+  
+  getStatusTextClass(status: string): string {
+    switch(status) {
+      case UserStatus.ATIVO: return 'text-success';
+      case UserStatus.INATIVO: return 'text-danger';
+      default: return 'text-secondary';
     }
   }
 }

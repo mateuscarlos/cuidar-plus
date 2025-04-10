@@ -1,296 +1,567 @@
 <div class="container-fluid py-4">
-  <div class="card">
-    <div class="card-header bg-primary text-white">
-      <h5 class="mb-0">Cadastro de Paciente</h5>
+  <!-- Loading spinner (exibido durante operações assíncronas) -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+       style="z-index: 1050;" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
     </div>
-    <div class="card-body">
+  </div>
+
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="mb-1">Cadastro de Paciente</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
+          <li class="breadcrumb-item active">Novo Cadastro</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Formulário de cadastro -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-primary text-white py-3">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-person-plus me-2"></i>Novo Paciente
+      </h5>
+    </div>
+    <div class="card-body p-4">
       <form [formGroup]="pacienteForm" (ngSubmit)="onSubmit()">
         
-        <!-- Dados pessoais -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Dados Pessoais</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="nome_completo" class="form-label">Nome Completo *</label>
-            <input type="text" class="form-control" id="nome_completo" formControlName="nome_completo" 
-                   [ngClass]="{'is-invalid': isFieldValid('nome_completo')}">
-            <div *ngIf="isFieldValid('nome_completo')" class="invalid-feedback">
-              Nome completo é obrigatório e deve ter pelo menos 5 caracteres.
+        <!-- 1. INFORMAÇÕES PESSOAIS -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-person-badge me-2 text-primary"></i>
+              <span>Informações Pessoais</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-5">
+                <label for="nome_completo" class="form-label field-required">Nome Completo</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nome_completo" 
+                  formControlName="nome_completo" 
+                  placeholder="Nome completo do paciente"
+                  [ngClass]="{'is-invalid': isFieldValid('nome_completo')}"
+                >
+                <div class="invalid-feedback">
+                  Nome completo é obrigatório e deve ter pelo menos 5 caracteres.
+                </div>
+              </div>
+              
+              <div class="col-md-2">
+                <label for="status" class="form-label field-required">Status</label>
+                <div class="input-group">
+                  <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
+                    <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
+                  </span>
+                  <select 
+                    class="form-select" 
+                    id="status" 
+                    formControlName="status"
+                    [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)"
+                  >
+                    <option *ngFor="let status of statusPaciente" [value]="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="col-md-2">
+                <label for="cpf" class="form-label field-required">CPF</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="cpf" 
+                  formControlName="cpf" 
+                  placeholder="000.000.000-00"
+                  [ngClass]="{'is-invalid': isFieldValid('cpf')}"
+                >
+                <div class="invalid-feedback">
+                  CPF válido é obrigatório (11 dígitos).
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="data_nascimento" class="form-label field-required">Data de Nascimento</label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="data_nascimento" 
+                  formControlName="data_nascimento"
+                  [max]="maxDate"
+                  [ngClass]="{'is-invalid': isFieldValid('data_nascimento')}"
+                >
+                <div class="invalid-feedback">
+                  Data de nascimento é obrigatória e não pode ser no futuro.
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="genero" class="form-label">Gênero</label>
+                <select class="form-select" id="genero" formControlName="genero">
+                  <option value="" selected>Selecione...</option>
+                  <option *ngFor="let genero of generos" [value]="genero">{{ genero }}</option>
+                </select>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="estado_civil" class="form-label">Estado Civil</label>
+                <select class="form-select" id="estado_civil" formControlName="estado_civil">
+                  <option value="" selected>Selecione...</option>
+                  <option *ngFor="let estadoCivil of estadosCivis" [value]="estadoCivil">{{ estadoCivil }}</option>
+                </select>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="nacionalidade" class="form-label field-required">Nacionalidade</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="nacionalidade" 
+                  formControlName="nacionalidade"
+                  placeholder="Ex: Brasileiro(a)"
+                  [ngClass]="{'is-invalid': isFieldValid('nacionalidade')}"
+                >
+                <div class="invalid-feedback">
+                  Nacionalidade é obrigatória.
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="profissao" class="form-label">Profissão</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="profissao" 
+                  formControlName="profissao"
+                  placeholder="Ocupação atual"
+                >
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-2 mb-3">
-            <label for="status" class="form-label">Status *</label>
-            <div class="input-group">
-              <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
-                <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
-              </span>
-              <select class="form-select" id="status" formControlName="status"
-                      [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)">
-                <option *ngFor="let status of statusPaciente" [value]="status">
-                  {{ status }}
-                </option>
-              </select>
+        </div>
+        
+        <!-- 2. CONTATO -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-telephone me-2 text-primary"></i>
+              <span>Informações de Contato</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="telefone" class="form-label field-required">Telefone Principal</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="telefone" 
+                    formControlName="telefone"
+                    placeholder="(00) 00000-0000"
+                    [ngClass]="{'is-invalid': isFieldValid('telefone')}"
+                  >
+                </div>
+                <div class="invalid-feedback">
+                  Telefone principal é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="telefone_secundario" class="form-label">Telefone Secundário</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="telefone_secundario" 
+                    formControlName="telefone_secundario"
+                    placeholder="(00) 00000-0000"
+                  >
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="email" class="form-label">E-mail</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input 
+                    type="email" 
+                    class="form-control" 
+                    id="email" 
+                    formControlName="email"
+                    placeholder="email@exemplo.com"
+                    [ngClass]="{'is-invalid': isFieldValid('email')}"
+                  >
+                </div>
+                <div class="invalid-feedback">
+                  Formato de e-mail inválido.
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-2 mb-3">
-            <label for="cpf" class="form-label">CPF *</label>
-            <input type="text" class="form-control" id="cpf" formControlName="cpf" 
-                  [ngClass]="{'is-invalid': isFieldValid('cpf')}">
-            <div class="invalid-feedback">CPF válido é obrigatório (11 dígitos).</div>
-          </div>
-          
-          <div class="col-md-2 mb-3">
-            <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
-            <input type="date" class="form-control" id="data_nascimento" formControlName="data_nascimento"
-                  [ngClass]="{'is-invalid': isFieldValid('data_nascimento')}">
-            <div class="invalid-feedback">Data de nascimento é obrigatória.</div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="genero" class="form-label">Gênero</label>
-            <select class="form-select" id="genero" formControlName="genero">
-              <option value="" selected>Selecione...</option>
-              <option *ngFor="let genero of generos" [value]="genero">{{ genero }}</option>
-            </select>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="estado_civil" class="form-label">Estado Civil</label>
-            <select class="form-select" id="estado_civil" formControlName="estado_civil">
-              <option value="" selected>Selecione...</option>
-              <option *ngFor="let estadoCivil of estadosCivis" [value]="estadoCivil">{{ estadoCivil }}</option>
-            </select>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="profissao" class="form-label">Profissão</label>
-            <input type="text" class="form-control" id="profissao" formControlName="profissao">
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="nacionalidade" class="form-label">Nacionalidade</label>
-            <input type="text" class="form-control" id="nacionalidade" formControlName="nacionalidade">
-          </div>
         </div>
         
-        <!-- Contato -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Informações de Contato</h6>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="telefone" class="form-label">Telefone Principal *</label>
-            <input type="tel" class="form-control" id="telefone" formControlName="telefone"
-                  [ngClass]="{'is-invalid': isFieldValid('telefone')}">
-            <div class="invalid-feedback">Telefone principal é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="telefone_secundario" class="form-label">Telefone Secundário</label>
-            <input type="tel" class="form-control" id="telefone_secundario" formControlName="telefone_secundario">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="email" class="form-label">E-mail</label>
-            <input type="email" class="form-control" id="email" formControlName="email"
-                  [ngClass]="{'is-invalid': isFieldValid('email')}">
-            <div class="invalid-feedback">E-mail inválido.</div>
-          </div>
-        </div>
-        
-        <!-- Endereço -->
-        <div class="row mb-4" formGroupName="endereco">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Endereço</h6>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="cep" class="form-label">CEP *</label>
-            <input type="text" class="form-control" id="cep" formControlName="cep"
-                  (blur)="onCepChange()" [ngClass]="{'is-invalid': isEnderecoFieldValid('cep')}">
-            <div class="invalid-feedback">CEP é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="logradouro" class="form-label">Logradouro *</label>
-            <input type="text" class="form-control" id="logradouro" formControlName="logradouro"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('logradouro')}">
-            <div class="invalid-feedback">Logradouro é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="numero" class="form-label">Número *</label>
-            <input type="text" class="form-control" id="numero" formControlName="numero"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('numero')}">
-            <div class="invalid-feedback">Número é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="complemento" class="form-label">Complemento</label>
-            <input type="text" class="form-control" id="complemento" formControlName="complemento">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="bairro" class="form-label">Bairro *</label>
-            <input type="text" class="form-control" id="bairro" formControlName="bairro"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('bairro')}">
-            <div class="invalid-feedback">Bairro é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="cidade" class="form-label">Cidade *</label>
-            <input type="text" class="form-control" id="cidade" formControlName="cidade"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('cidade')}">
-            <div class="invalid-feedback">Cidade é obrigatória.</div>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="estado" class="form-label">Estado *</label>
-            <input type="text" class="form-control" id="estado" formControlName="estado"
-                  [ngClass]="{'is-invalid': isEnderecoFieldValid('estado')}">
-            <div class="invalid-feedback">Estado é obrigatório.</div>
-          </div>
-        </div>
-        
-        <!-- Informações médicas -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Informações Médicas</h6>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="cid_primario" class="form-label">CID Primário *</label>
-            <input type="text" class="form-control" id="cid_primario" formControlName="cid_primario"
-                  [ngClass]="{'is-invalid': isFieldValid('cid_primario')}">
-            <div class="invalid-feedback">CID primário é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="cid_secundario" class="form-label">CID Secundário</label>
-            <input type="text" class="form-control" id="cid_secundario" formControlName="cid_secundario">
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="acomodacao" class="form-label">Acomodação *</label>
-            <select class="form-select" id="acomodacao" formControlName="acomodacao"
-                   [ngClass]="{'is-invalid': isFieldValid('acomodacao')}">
-              <option value="" selected>Selecione...</option>
-              <option *ngFor="let acomodacao of acomodacoes" [value]="acomodacao">{{ acomodacao }}</option>
-            </select>
-            <div class="invalid-feedback">Acomodação é obrigatória.</div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="medico_responsavel" class="form-label">Médico Responsável</label>
-            <input type="text" class="form-control" id="medico_responsavel" formControlName="medico_responsavel">
-          </div>
-          
-          <div class="col-12 mb-3">
-            <label for="alergias" class="form-label">Alergias</label>
-            <textarea class="form-control" id="alergias" rows="3" formControlName="alergias"></textarea>
-          </div>
-        </div>
-        
-        <!-- Convênio e plano -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Convênio e Plano</h6>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="form-group">
-              <label for="convenio_id" class="form-label">Convênio *</label>
-              <select id="convenio_id" formControlName="convenio_id" class="form-select" 
-                     (change)="onConvenioChange($event)"
-                     [ngClass]="{'is-invalid': isFieldValid('convenio_id')}">
-                <option [ngValue]="">Selecione um convênio</option>
-                <option *ngFor="let convenio of convenios" [ngValue]="convenio.id">
-                  {{ convenio.nome }}
-                </option>
-              </select>
-              <div class="invalid-feedback">Convênio é obrigatório.</div>
+        <!-- 3. ENDEREÇO -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="endereco">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-house me-2 text-primary"></i>
+              <span>Endereço</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="cep" class="form-label field-required">CEP</label>
+                <div class="input-group">
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="cep" 
+                    formControlName="cep"
+                    placeholder="00000-000"
+                    (blur)="onCepChange()"
+                    [ngClass]="{'is-invalid': isEnderecoFieldValid('cep')}"
+                  >
+                  <button class="btn btn-outline-secondary" type="button" (click)="onCepChange()">
+                    <i *ngIf="!isBuscandoCep" class="bi bi-search"></i>
+                    <span *ngIf="isBuscandoCep" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <div class="invalid-feedback">
+                  CEP é obrigatório e deve ser válido.
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <label for="logradouro" class="form-label field-required">Logradouro</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="logradouro" 
+                  formControlName="logradouro"
+                  placeholder="Rua, Avenida, etc."
+                  [ngClass]="{'is-invalid': isEnderecoFieldValid('logradouro')}"
+                >
+                <div class="invalid-feedback">
+                  Logradouro é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="numero" class="form-label field-required">Número</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="numero" 
+                  formControlName="numero"
+                  placeholder="Ex: 123"
+                  [ngClass]="{'is-invalid': isEnderecoFieldValid('numero')}"
+                >
+                <div class="invalid-feedback">
+                  Número é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-5">
+                <label for="complemento" class="form-label">Complemento</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="complemento" 
+                  formControlName="complemento"
+                  placeholder="Apto, Bloco, etc."
+                >
+              </div>
+              
+              <div class="col-md-7">
+                <label for="bairro" class="form-label field-required">Bairro</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="bairro" 
+                  formControlName="bairro"
+                  placeholder="Nome do bairro"
+                  [ngClass]="{'is-invalid': isEnderecoFieldValid('bairro')}"
+                >
+                <div class="invalid-feedback">
+                  Bairro é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-7">
+                <label for="cidade" class="form-label field-required">Cidade</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="cidade" 
+                  formControlName="cidade"
+                  placeholder="Nome da cidade"
+                  [ngClass]="{'is-invalid': isEnderecoFieldValid('cidade')}"
+                >
+                <div class="invalid-feedback">
+                  Cidade é obrigatória.
+                </div>
+              </div>
+              
+              <div class="col-md-5">
+                <label for="estado" class="form-label field-required">Estado</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="estado" 
+                  formControlName="estado"
+                  placeholder="UF"
+                  [ngClass]="{'is-invalid': isEnderecoFieldValid('estado')}"
+                >
+                <div class="invalid-feedback">
+                  Estado é obrigatório.
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="form-group">
-              <label for="plano_id" class="form-label">
-                Plano *
-                <span *ngIf="isLoading" class="ms-2">
-                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                  <span class="visually-hidden">Carregando...</span>
-                </span>
-              </label>
-              <select id="plano_id" formControlName="plano_id" class="form-select" 
-                     [disabled]="!planosFiltrados.length || isLoading"
-                     [ngClass]="{'is-invalid': isFieldValid('plano_id')}">
-                <option [ngValue]="">Selecione um plano</option>
-                <option *ngFor="let plano of planosFiltrados" [ngValue]="plano.id">
-                  {{ plano.nome }} {{ plano.codigo ? '- ' + plano.codigo : '' }}
-                  {{ plano.tipo_acomodacao ? '(' + plano.tipo_acomodacao + ')' : '' }}
-                </option>
-              </select>
-              <div class="invalid-feedback">Plano é obrigatório.</div>
-              <small *ngIf="pacienteForm.get('convenio_id')?.value && planosFiltrados.length === 0 && !isLoading" 
-                    class="text-danger">
-                Não há planos disponíveis para este convênio.
-              </small>
+        </div>
+        
+        <!-- 4. INFORMAÇÕES MÉDICAS -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-clipboard2-pulse me-2 text-primary"></i>
+              <span>Informações Médicas</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="cid_primario" class="form-label field-required">CID Primário</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="cid_primario" 
+                  formControlName="cid_primario"
+                  placeholder="Ex: J45"
+                  [ngClass]="{'is-invalid': isFieldValid('cid_primario')}"
+                >
+                <div class="invalid-feedback">
+                  CID primário é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="cid_secundario" class="form-label">CID Secundário</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="cid_secundario" 
+                  formControlName="cid_secundario"
+                  placeholder="Ex: I10"
+                >
+              </div>
+              
+              <div class="col-md-3">
+                <label for="acomodacao" class="form-label field-required">Acomodação</label>
+                <select 
+                  class="form-select" 
+                  id="acomodacao" 
+                  formControlName="acomodacao"
+                  [ngClass]="{'is-invalid': isFieldValid('acomodacao')}"
+                >
+                  <option value="" selected>Selecione...</option>
+                  <option *ngFor="let acomodacao of acomodacoes" [value]="acomodacao">{{ acomodacao }}</option>
+                </select>
+                <div class="invalid-feedback">
+                  Acomodação é obrigatória.
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="medico_responsavel" class="form-label">Médico Responsável</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="medico_responsavel" 
+                  formControlName="medico_responsavel"
+                  placeholder="Nome do médico"
+                >
+              </div>
+              
+              <div class="col-12">
+                <label for="alergias" class="form-label">Alergias</label>
+                <textarea 
+                  class="form-control" 
+                  id="alergias" 
+                  rows="2" 
+                  formControlName="alergias"
+                  placeholder="Descreva alergias conhecidas do paciente"
+                ></textarea>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="numero_carteirinha" class="form-label">Número da Carteirinha *</label>
-            <input type="text" class="form-control" id="numero_carteirinha" formControlName="numero_carteirinha"
-                  [ngClass]="{'is-invalid': isFieldValid('numero_carteirinha')}">
-            <div class="invalid-feedback">Número da carteirinha é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <label for="data_validade" class="form-label">Data de Validade *</label>
-            <input type="date" class="form-control" id="data_validade" formControlName="data_validade"
-                  [ngClass]="{'is-invalid': isFieldValid('data_validade')}">
-            <div class="invalid-feedback">Data de validade é obrigatória.</div>
+        </div>
+        
+        <!-- 5. CONVÊNIO E PLANO -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-wallet2 me-2 text-primary"></i>
+              <span>Convênio e Plano</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="convenio_id" class="form-label field-required">Convênio</label>
+                <select 
+                  id="convenio_id" 
+                  formControlName="convenio_id" 
+                  class="form-select" 
+                  (change)="onConvenioChange($event)"
+                  [ngClass]="{'is-invalid': isFieldValid('convenio_id')}"
+                >
+                  <option [ngValue]="">Selecione um convênio</option>
+                  <option *ngFor="let convenio of convenios" [ngValue]="convenio.id">
+                    {{ convenio.nome }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  Convênio é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="plano_id" class="form-label field-required">
+                  Plano
+                  <span *ngIf="isBuscandoPlanos" class="ms-2">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span class="visually-hidden">Carregando...</span>
+                  </span>
+                </label>
+                <select 
+                  id="plano_id" 
+                  formControlName="plano_id" 
+                  class="form-select" 
+                  [disabled]="!planosFiltrados.length || isLoading"
+                  [ngClass]="{'is-invalid': isFieldValid('plano_id')}"
+                >
+                  <option [ngValue]="">Selecione um plano</option>
+                  <option *ngFor="let plano of planosFiltrados" [ngValue]="plano.id">
+                    {{ plano.nome }} {{ plano.codigo ? '- ' + plano.codigo : '' }}
+                    {{ plano.tipo_acomodacao ? '(' + plano.tipo_acomodacao + ')' : '' }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  Plano é obrigatório.
+                </div>
+                <small *ngIf="pacienteForm.get('convenio_id')?.value && planosFiltrados.length === 0 && !isLoading" 
+                      class="text-danger">
+                  Não há planos disponíveis para este convênio.
+                </small>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="numero_carteirinha" class="form-label field-required">Número da Carteirinha</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="numero_carteirinha" 
+                  formControlName="numero_carteirinha"
+                  placeholder="Nº da carteirinha"
+                  [ngClass]="{'is-invalid': isFieldValid('numero_carteirinha')}"
+                >
+                <div class="invalid-feedback">
+                  Número da carteirinha é obrigatório.
+                </div>
+              </div>
+              
+              <div class="col-md-2">
+                <label for="data_validade" class="form-label field-required">Validade</label>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="data_validade" 
+                  formControlName="data_validade"
+                  [ngClass]="{'is-invalid': isFieldValid('data_validade')}"
+                >
+                <div class="invalid-feedback">
+                  Data de validade é obrigatória e deve ser hoje ou futura.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
-        <!-- Contato de Emergência -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Contato de Emergência</h6>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="contato_emergencia" class="form-label">Nome do Contato</label>
-            <input type="text" class="form-control" id="contato_emergencia" formControlName="contato_emergencia">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="telefone_emergencia" class="form-label">Telefone de Emergência</label>
-            <input type="tel" class="form-control" id="telefone_emergencia" formControlName="telefone_emergencia">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="case_responsavel" class="form-label">Case Responsável</label>
-            <input type="text" class="form-control" id="case_responsavel" formControlName="case_responsavel">
+        <!-- 6. CONTATO DE EMERGÊNCIA -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-exclamation-triangle me-2 text-primary"></i>
+              <span>Contato de Emergência</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="contato_emergencia" class="form-label">Nome do Contato</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="contato_emergencia" 
+                  formControlName="contato_emergencia"
+                  placeholder="Nome da pessoa para contato"
+                >
+              </div>
+              
+              <div class="col-md-4">
+                <label for="telefone_emergencia" class="form-label">Telefone de Emergência</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    id="telefone_emergencia" 
+                    formControlName="telefone_emergencia"
+                    placeholder="(00) 00000-0000"
+                  >
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <label for="case_responsavel" class="form-label">Case Responsável</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="case_responsavel" 
+                  formControlName="case_responsavel"
+                  placeholder="Profissional responsável pelo caso"
+                >
+              </div>
+            </div>
           </div>
         </div>
         
-        <!-- Botões -->
-        <div class="d-flex justify-content-between mt-4">
-          <button type="button" class="btn btn-secondary" (click)="limparFormulario()">
-            <i class="bi bi-eraser me-2"></i>Limpar
+        <!-- Botões de ação -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <button type="button" class="btn btn-outline-secondary d-flex align-items-center" (click)="limparFormulario()">
+            <i class="bi bi-eraser me-2"></i>Limpar Formulário
           </button>
+          
           <div>
             <button type="button" class="btn btn-outline-primary me-2" routerLink="/pacientes">
               <i class="bi bi-arrow-left me-2"></i>Voltar
             </button>
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-person-plus-fill me-2"></i>Cadastrar Paciente
+            <button type="submit" class="btn btn-primary d-flex align-items-center" [disabled]="isLoading">
+              <i class="bi bi-person-plus-fill me-2"></i>
+              <span *ngIf="!isLoading">Cadastrar Paciente</span>
+              <span *ngIf="isLoading">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Cadastrando...
+              </span>
             </button>
           </div>
         </div>
@@ -299,7 +570,7 @@
   </div>
   
   <!-- Indicador de campos obrigatórios -->
-  <div class="mt-3 text-muted">
-    <small>Campos marcados com * são obrigatórios.</small>
+  <div class="mt-3 small text-muted">
+    <p class="mb-0"><i class="bi bi-info-circle me-1"></i>Os campos com <span class="required">*</span> são obrigatórios</p>
   </div>
 </div>

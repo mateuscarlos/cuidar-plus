@@ -137,6 +137,16 @@
                 Número é obrigatório
               </div>
             </div>
+
+            <div class="col-md-6">
+                <label for="complemento" class="form-label">Complemento</label>
+                <input 
+                  type="text" 
+                  id="complemento" 
+                  class="form-control" 
+                  formControlName="complemento" 
+                  placeholder="Ex: Apto 101, Bloco B">
+              </div>
             
             <div class="col-md-4">
               <label for="bairro" class="form-label">Bairro*</label>
@@ -214,8 +224,8 @@
                 {{ labelConselhoProfissional }} é obrigatório
               </div>
             </div>
-            
-            <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
+
+            <div class="col-md-6" *ngIf="mostrarEspecialidade">
               <label for="especialidade" class="form-label">Especialidade</label>
               <input 
                 type="text" 
@@ -236,9 +246,11 @@
           <div class="row g-3">
             <div class="col-md-4">
               <label for="tipoContratacao" class="form-label">Tipo de Contratação*</label>
-              <select class="form-select" id="tipoContratacao" formControlName="tipoContratacao"
-                      [ngClass]="{'is-invalid': usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched}">
-                <option *ngFor="let tipo of tiposContratacao" [value]="tipo.value">{{ tipo.viewValue }}</option>
+              <select class="form-select" id="tipoContratacao" formControlName="tipoContratacao">
+                <option value="" disabled selected>Selecione o tipo de contratação</option>
+                <option value="Contratada">Contratada</option>
+                <option value="Terceirizada">Terceirizada</option>
+                <option value="Pessoa Jurídica">Pessoa Jurídica</option>
               </select>
               <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched">
                 Tipo de contratação é obrigatório
@@ -264,14 +276,41 @@
               </div>
             </div>
             
-            <div class="col-md-4">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-select" id="status" formControlName="status">
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-                <option value="ferias">Férias</option>
-                <option value="licenca">Licença</option>
-              </select>
+            
+          </div>
+        </div>
+
+        <!-- Adicione este código na seção apropriada do seu formulário -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="status" class="form-label">Status do Usuário</label>
+            <select 
+              id="status" 
+              formControlName="status"
+              class="form-select"
+              [class.is-invalid]="usuarioForm.get('status')?.invalid && usuarioForm.get('status')?.touched">
+              <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption">
+                {{ statusOption }}
+              </option>
+            </select>
+            <div class="invalid-feedback" *ngIf="usuarioForm.get('status')?.errors?.['required'] && usuarioForm.get('status')?.touched">
+              Status é obrigatório.
+            </div>
+          </div>
+        </div>
+
+        <!-- Opcionalmente, você pode mostrar uma prévia de como o status ficará -->
+        <div class="row mb-3" *ngIf="usuarioForm.get('status')?.value">
+          <div class="col-md-6">
+            <label class="form-label">Visualização do Status:</label>
+            <div class="d-flex align-items-center mt-2">
+              <span class="badge me-2" [ngClass]="getStatusClass(usuarioForm.get('status')?.value)">
+                {{ usuarioForm.get('status')?.value }}
+              </span>
+              <i [class]="getStatusIcon(usuarioForm.get('status')?.value) + ' me-2 ' + getStatusTextClass(usuarioForm.get('status')?.value)"></i>
+              <span [ngClass]="getStatusTextClass(usuarioForm.get('status')?.value)">
+                Esta é a aparência do status na lista de usuários
+              </span>
             </div>
           </div>
         </div>

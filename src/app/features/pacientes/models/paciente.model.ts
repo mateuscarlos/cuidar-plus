@@ -1,55 +1,42 @@
 import { Endereco } from './endereco.model';
-
 export interface Paciente {
   id?: number;
   nome_completo: string;
-  data_nascimento?: string;
+  nome?: string;
   cpf: string;
-  genero?: string;
-  estado_civil?: string;
-  profissao?: string;
-  nacionalidade?: string;
-  
+  data_nascimento: string;
+  genero: string;
+  estado_civil: string;
+  nacionalidade: string;
+  profissao: string;
+  email?: string;
   telefone: string;
   telefone_secundario?: string;
-  email?: string;
-  contato_emergencia?: string;
   telefone_emergencia?: string;
-  
-  status: string;
-  cid_primario: string;
-  cid_secundario?: string;
-  acomodacao: string;
-  medico_responsavel?: string;
-  alergias?: string;
-  case_responsavel?: string;
-  
-  convenio_id?: string;
-  plano_id?: string;
+  endereco: Endereco;
+  convenio_id?: number;
+  plano_id?: number;
   numero_carteirinha?: string;
   data_validade?: string;
-  
-  endereco?: {
-    cep?: string;
-    logradouro?: string;
-    numero?: string;
-    complemento?: string;
-    bairro?: string;
-    cidade?: string;
-    estado?: string;
-  };
-
+  acomodacao?: string;
+  status: string;
+  cid_primario?: string;
+  cid_secundario?: string;
+  alergias?: string;
+  medico_responsavel?: string;
+  case_responsavel?: string;
+  contato_emergencia?: string;
   created_at?: string;
   updated_at?: string;
-  
-  // Campo para facilitar a exibição na lista
-  nome?: string;  
-  dataNascimento?: string;
-  convenioId?: string;
-  planoId?: string;
-  numeroCarteirinha?: string;
-  rua?: string;
 }
+  export interface ResultadoBusca {
+    nome?: string;
+    cpf?: string;
+    telefone?: string;
+    status?: string;
+    id?: number;
+  }
+
 
 export enum StatusPaciente {
   ATIVO = 'Ativo',
