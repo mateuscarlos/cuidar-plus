@@ -1,113 +1,67 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
-import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component';
+import { finalize, catchError, tap, of } from 'rxjs';
+
+import { Usuario, UsuarioAdapter } from '../models/user.model';
+import { UsuarioService } from '../services/usuario.service';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { ConselhoProfissional, FUNCOES_DETALHES, FuncoesComRegistro, 
+         SETOR_CONSELHO_MAP, SetorProfissional } from '../models/conselhos-profissionais.model';
+
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { UsuarioAvatarComponent } from '../../../shared/components/usuario-avatar/usuario-avatar.component';
-import { Usuario } from '../models/user.model';
-import { Permissao } from '../models/permissao.model';
-import { Atividade } from '../models/atividade.model';
-import { ResultadoBusca } from '../models/busca-usuario.model';
-import { UsuarioService } from '../services/usuario.service';
-import { ApiUsuarioService } from '../services/api-usuario.service';
-import { PermissaoService } from '../services/permissao.service';
-import { AtividadeService } from '../services/atividade.service';
-import { NotificacaoService } from '../../../shared/services/notificacao.service';
-import { finalize, catchError, tap, of, Subject, takeUntil } from 'rxjs';
+import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
+import { DateFormatPipe } from '../../../shared/pipes/date-format.pipe';
 
-/**
- * Componente responsável pela visualização detalhada de usuários
- */
 @Component({
   selector: 'app-visualizar-usuario',
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
-    UsuarioBuscaComponent,
     InfoCardComponent,
     StatusBadgeComponent,
     UsuarioAvatarComponent,
-    FormattedDateComponent
+    FormattedDateComponent,
+    DateFormatPipe
   ],
+  providers: [DateFormatPipe],
   templateUrl: './visualizar-usuario.component.html',
   styleUrls: ['./visualizar-usuario.component.scss']
 })
-export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
+export class VisualizarUsuarioComponent implements OnInit {
   // Dados principais
   usuario: Usuario | null = null;
-  permissoes: Permissao[] = [];
-  atividades: Atividade[] = [];
   
   // Estados da UI
-  isLoading: boolean = false;
+  isLoading = true;
   error: string | null = null;
-  modoVisualizacao: boolean = false;
-  resultadosBusca: Usuario[] = [];
-  possuiPermissaoEditar: boolean = true; // Por padrão, todos podem editar já que não há perfis de acesso
-  temMaisAtividades: boolean = false;
-  paginaAtual: number = 1;
-  tamanhoPagina: number = 10;
-  
-  // Para gerenciar subscriptions
-  private destroy$ = new Subject<void>();
   
   constructor(
     private usuarioService: UsuarioService,
-    private apiUsuarioService: ApiUsuarioService,
-    private permissaoService: PermissaoService,
-    private atividadeService: AtividadeService,
-    private notificacaoService: NotificacaoService,
     private router: Router,
-    private route: ActivatedRoute
-  ) {}
+    private route: ActivatedRoute,
+    private notificacaoService: NotificacaoService
+  ) { }
 
   ngOnInit(): void {
-    // Resetamos o estado inicial
-    this.resetComponent();
-    
-    // Verificar os parâmetros de rota
-    this.route.params.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(params => {
+    this.route.params.subscribe(params => {
       if (params['id']) {
         this.carregarUsuarioPorId(params['id']);
       } else {
-        // Verificar parâmetros de consulta
-        this.route.queryParams.pipe(
-          takeUntil(this.destroy$)
-        ).subscribe(queryParams => {
+        // Verificar se há um ID nos query params
+        this.route.queryParams.subscribe(queryParams => {
           if (queryParams['usuarioId']) {
             this.carregarUsuarioPorId(queryParams['usuarioId']);
           } else {
-            // Se não há parâmetros, mostramos a tela de busca
+            this.error = 'ID do usuário não fornecido';
             this.isLoading = false;
-            this.modoVisualizacao = false;
           }
         });
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-  
-  /**
-   * Reseta o componente para o estado inicial
-   */
-  resetComponent(): void {
-    this.usuario = null;
-    this.permissoes = [];
-    this.atividades = [];
-    this.error = null;
-    this.resultadosBusca = [];
-    this.modoVisualizacao = false;
-    this.paginaAtual = 1;
-    this.temMaisAtividades = false;
   }
   
   /**
@@ -117,26 +71,33 @@ export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = null;
     
-    // Usando o serviço ApiUsuarioService que usa o modelo de user.model.ts
-    this.apiUsuarioService.obterUsuarioPorId(id)
+    this.usuarioService.obterUsuarioPorId(id)
       .pipe(
         tap(usuario => {
           if (usuario) {
+            console.log('Usuário recebido da API:', JSON.stringify(usuario));
             this.usuario = usuario;
-            this.modoVisualizacao = true;
             
-            // Carregar permissões e atividades
-            this.carregarPermissoes(id);
-            this.carregarAtividades(id);
+            console.log('Setor recebido:', usuario.setor, 'Nome do setor:', usuario.setorNome);
+            console.log('Função recebida:', usuario.funcao, 'Nome da função:', usuario.funcaoNome);
+            
+            // Após carregar o usuário, verificamos se precisamos obter o nome do setor e função
+            if (usuario.setor && !usuario.setorNome) {
+              console.log('Obtendo nome do setor para ID:', usuario.setor);
+              this.obterNomeDoSetor(usuario.setor);
+            }
+            
+            if (usuario.funcao && !usuario.funcaoNome) {
+              console.log('Obtendo nome da função para ID:', usuario.funcao);
+              this.obterNomeDaFuncao(usuario.funcao);
+            }
           } else {
             this.error = 'Usuário não encontrado';
             this.notificacaoService.mostrarAviso('Usuário não encontrado.');
-            this.modoVisualizacao = false;
           }
         }),
         catchError(erro => {
           this.error = 'Erro ao carregar dados do usuário';
-          this.modoVisualizacao = false;
           this.notificacaoService.mostrarErro('Erro ao carregar dados do usuário.');
           console.error('Erro ao carregar usuário:', erro);
           return of(null);
@@ -149,98 +110,143 @@ export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Carrega as permissões do usuário
+   * Obtém o nome do setor usando o serviço
    */
-  carregarPermissoes(usuarioId: string): void {
-    this.permissaoService.listarPermissoesPorUsuario(usuarioId).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (permissoes) => {
-        this.permissoes = permissoes;
-      },
-      error: (err) => {
-        console.error('Erro ao carregar permissões:', err);
-        this.notificacaoService.mostrarErro('Erro ao carregar permissões do usuário.');
-      }
-    });
-  }
-  
-  /**
-   * Carrega o histórico de atividades do usuário
-   */
-  carregarAtividades(usuarioId: string): void {
-    this.atividadeService.listarAtividadesPorUsuario(usuarioId, this.paginaAtual, this.tamanhoPagina).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (resultado) => {
-        this.atividades = resultado.items;
-        this.temMaisAtividades = resultado.total > (this.paginaAtual * this.tamanhoPagina);
-      },
-      error: (err) => {
-        console.error('Erro ao carregar atividades:', err);
-        this.notificacaoService.mostrarErro('Erro ao carregar histórico de atividades.');
-      }
-    });
-  }
-  
-  /**
-   * Carrega mais atividades (paginação)
-   */
-  carregarMaisAtividades(): void {
-    if (!this.usuario || !this.temMaisAtividades) return;
-    
-    this.paginaAtual++;
-    
-    this.atividadeService.listarAtividadesPorUsuario(String(this.usuario.id), this.paginaAtual, this.tamanhoPagina).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (resultado) => {
-        this.atividades = [...this.atividades, ...resultado.items];
-        this.temMaisAtividades = resultado.total > (this.paginaAtual * this.tamanhoPagina);
-      },
-      error: (err) => {
-        console.error('Erro ao carregar mais atividades:', err);
-        this.notificacaoService.mostrarErro('Erro ao carregar mais atividades.');
-        this.paginaAtual--; // Reverter o incremento da página em caso de erro
-      }
-    });
-  }
-  
-  /**
-   * Processa o resultado da busca de usuários
-   */
-  buscarUsuario(resultado: ResultadoBusca): void {
-    this.isLoading = true;
-    this.error = null;
-    this.modoVisualizacao = false;
-    
-    this.usuarioService.buscarUsuarios(resultado)
-      .pipe(finalize(() => this.isLoading = false))
-      .subscribe({
-        next: (usuarios) => {
-          this.resultadosBusca = usuarios;
-          
-          if (usuarios.length === 0) {
-            this.error = 'Nenhum usuário encontrado com os critérios informados.';
-          } else if (usuarios.length === 1) {
-            // Selecionar automaticamente se houver apenas um resultado
-            this.selecionarUsuario(usuarios[0]);
+  private obterNomeDoSetor(setorId: string | number): void {
+    // Verifica primeiro se é um setor mapeado nos conselhos
+    const setorNumerico = Number(setorId);
+    if (!isNaN(setorNumerico)) {
+      // Verifica se o setor está no mapeamento
+      for (const key in SetorProfissional) {
+        if (Number(SetorProfissional[key]) === setorNumerico) {
+          if (this.usuario) {
+            this.usuario.setorNome = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return;
           }
-        },
-        error: (err) => {
-          this.error = 'Erro ao buscar usuários';
-          this.resultadosBusca = [];
-          this.notificacaoService.mostrarErro('Erro ao buscar usuários.');
-          console.error('Erro na busca:', err);
         }
-      });
+      }
+    }
+    
+    // Se não encontrou nos mapeamentos, busca no serviço
+    this.usuarioService.obterNomeSetor(setorId).subscribe(nome => {
+      if (this.usuario) {
+        this.usuario.setorNome = nome;
+      }
+    });
   }
   
   /**
-   * Seleciona um usuário da lista de resultados
+   * Obtém o nome da função usando o serviço ou o mapeamento
    */
-  selecionarUsuario(usuario: Usuario): void {
-    this.carregarUsuarioPorId(String(usuario.id));
+  private obterNomeDaFuncao(funcaoId: string | number): void {
+    // Verifica primeiro se é uma função mapeada nos conselhos
+    const funcaoNumerica = Number(funcaoId);
+    if (!isNaN(funcaoNumerica)) {
+      // Verifica se a função está no mapeamento de detalhes
+      const detalhe = this.obterDetalhesFuncao();
+      if (detalhe && detalhe.nome) {
+        if (this.usuario) {
+          this.usuario.funcaoNome = detalhe.nome;
+          return;
+        }
+      }
+    }
+    
+    // Se não encontrou nos mapeamentos, busca no serviço
+    this.usuarioService.obterNomeFuncao(funcaoId).subscribe(nome => {
+      if (this.usuario) {
+        this.usuario.funcaoNome = nome;
+      }
+    });
+  }
+  
+  /**
+   * Determina o nome do conselho com base na função e setor
+   */
+  obterNomeConselho(): string {
+    if (!this.usuario) return 'Registro Profissional';
+    
+    // Verificamos primeiro pelos detalhes da função
+    const detalhesFuncao = this.obterDetalhesFuncao();
+    if (detalhesFuncao && detalhesFuncao.conselho) {
+      return detalhesFuncao.conselho;
+    }
+    
+    // Se não encontramos pelos detalhes, usamos o método padrão
+    return UsuarioAdapter.obterNomeConselho(
+      this.usuario.funcao,
+      this.usuario.setor
+    );
+  }
+  
+  /**
+   * Formata um endereço para exibição
+   */
+  formatarEndereco(endereco: any): string {
+    if (!endereco) {
+      return 'Não informado';
+    }
+
+    const logradouro = endereco.logradouro || endereco.rua || 'Logradouro não informado';
+    
+    let enderecoCompleto = `${logradouro}, ${endereco.numero || 'S/N'}`;
+
+    if (endereco.complemento) {
+      enderecoCompleto += ` - ${endereco.complemento}`;
+    }
+    
+    // Cidade e Estado podem estar em campos diferentes dependendo da fonte
+    const cidade = endereco.cidade || endereco.localidade || 'Cidade não informada';
+    const estado = endereco.estado || endereco.uf || 'UF não informado';
+    const bairro = endereco.bairro || 'Bairro não informado';
+    
+    const cep = this.formatarCep(endereco.cep || '');
+
+    enderecoCompleto += ` - ${bairro}, ${cidade}/${estado} - ${cep}`;
+
+    return enderecoCompleto;
+  }
+  
+  /**
+   * Formata um CEP para exibição
+   */
+  formatarCep(cep: string): string {
+    if (!cep) return 'Não informado';
+    
+    // Remove caracteres não numéricos
+    const numeros = cep.replace(/\D/g, '');
+    
+    // Aplica a máscara de CEP: 00000-000
+    if (numeros.length === 8) {
+      return `${numeros.substring(0, 5)}-${numeros.substring(5)}`;
+    }
+    
+    return cep;
+  }
+  
+  /**
+   * Formata uma data para exibição
+   */
+  formatarData(data: string | undefined): string {
+    if (!data) {
+      return 'Não informado';
+    }
+    
+    try {
+      // Remove informações de timezone se presentes
+      const cleanDate = data.toString().split('T')[0];
+      const dataObj = new Date(cleanDate);
+      
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        return 'Data inválida';
+      }
+      
+      // Formata para o padrão brasileiro
+      return dataObj.toLocaleDateString('pt-BR');
+    } catch (e) {
+      return 'Data inválida';
+    }
   }
   
   /**
@@ -255,17 +261,6 @@ export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Navega de volta para a tela de busca
-   */
-  voltarParaBusca(): void {
-    this.modoVisualizacao = false;
-    this.usuario = null;
-    this.resultadosBusca = [];
-    this.permissoes = [];
-    this.atividades = [];
-  }
-
-  /**
    * Navega de volta para a lista de usuários
    */
   voltarParaLista(): void {
@@ -273,54 +268,20 @@ export class VisualizarUsuarioComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Retorna a classe de estilo para o badge de atividade baseado no tipo
+   * Verifica se a função do usuário requer registro em conselho profissional
    */
-  getBadgeClassForAtividade(tipo: string): string {
-    switch (tipo?.toLowerCase()) {
-      case 'login':
-        return 'bg-success';
-      case 'logout':
-        return 'bg-secondary';
-      case 'erro':
-      case 'falha':
-        return 'bg-danger';
-      case 'alteração':
-      case 'alteracao':
-        return 'bg-warning';
-      case 'acesso':
-        return 'bg-info';
-      default:
-        return 'bg-secondary';
-    }
+  funcaoRequerRegistro(): boolean {
+    if (!this.usuario || !this.usuario.funcao) return false;
+    
+    const funcaoId = Number(this.usuario.funcao);
+    return !isNaN(funcaoId) && funcaoId in FUNCOES_DETALHES;
   }
   
   /**
-   * Método adaptador para lidar com o evento resultadoBusca do componente app-busca-usuario
-   * @param resultado O resultado emitido pelo componente de busca
+   * Obtém os detalhes da função do usuário, se disponíveis
    */
-  buscarUsuarioPorResultado(resultado: any): void {
-    if (resultado) {
-      this.buscarUsuario(resultado);
-    }
-  }
-
-  /**
-   * Retorna o tipo de acesso do usuário formatado para exibição
-   */
-  getTipoAcessoFormatado(): string {
-    const tipoAcesso = this.usuario?.tipoAcesso || this.usuario?.tipo_acesso;
-    
-    switch (tipoAcesso?.toLowerCase()) {
-      case 'admin':
-        return 'Administrador';
-      case 'gestor':
-        return 'Gestor';
-      case 'padrao':
-        return 'Padrão';
-      case 'restrito':
-        return 'Restrito';
-      default:
-        return tipoAcesso || 'Não definido';
-    }
+  obterDetalhesFuncao() {
+    if (!this.usuario || !this.usuario.funcao) return null;
+    return UsuarioAdapter.obterDetalhesFuncao(this.usuario.funcao);
   }
 }

@@ -277,11 +277,10 @@ export class EditarUsuarioComponent implements OnInit, OnDestroy {
   carregarUsuario(id: number): void {
     this.isLoading = true;
     this.modoEdicaoInicial = true;
-    
+
     this.apiUsuarioService.obterUsuarioPorId(id.toString())
       .pipe(finalize(() => {
         this.isLoading = false;
-        this.modoEdicaoInicial = false;
       }))
       .subscribe({
         next: (usuario) => {
@@ -294,56 +293,13 @@ export class EditarUsuarioComponent implements OnInit, OnDestroy {
               case 'p': tipoContratacaoFormatado = 'pj'; break;
             }
           }
-          
-          // Se o usuário tem um setor, carregamos as funções primeiro
-          if (usuario.setor) {
-            const setorId = +usuario.setor;
-            
-            // Primeiro definimos o setor
-            this.usuarioForm.get('setor')?.setValue(setorId);
-            
-            // Depois carregamos as funções com base no setor
-            this.apiUsuarioService.listarFuncoesPorSetor(setorId)
-              .subscribe({
-                next: (funcoes) => {
-                  this.funcoes = funcoes;
-                  
-                  // Agora que temos as funções, podemos definir a função no formulário
-                  if (usuario.funcao) {
-                    this.usuarioForm.get('funcao')?.setValue(usuario.funcao);
-                    
-                    // Verificar se a função requer conselho profissional
-                    const funcaoId = +usuario.funcao;
-                    const funcaoSelecionada = this.funcoes.find(f => f.id === funcaoId);
-                    
-                    if (funcaoSelecionada?.conselho_profissional) {
-                      this.mostrarConselhoProfissional = true;
-                      this.labelConselhoProfissional = `Número do ${funcaoSelecionada.conselho_profissional}`;
-                      this.mostrarEspecialidade = true;
-                      
-                      this.usuarioForm.get('registroCategoria')?.setValidators([Validators.required]);
-                      this.usuarioForm.get('registroCategoria')?.updateValueAndValidity();
-                    }
-                  }
-                  
-                  // Configurar observador após definir os valores iniciais
-                  this.configuraObservadorFuncao();
-                },
-                error: (err) => {
-                  console.error('Erro ao carregar funções para o setor:', err);
-                  this.notificacaoService.mostrarErro('Erro ao carregar funções para o setor');
-                }
-              });
-          }
 
-          // Preencher o formulário com todos os outros dados
+          // Preencher os campos do formulário
           this.usuarioForm.patchValue({
             nome: usuario.nome || '',
             email: usuario.email || '',
             cpf: usuario.cpf || '',
             telefone: usuario.telefone || '',
-            registroCategoria: usuario.registroCategoria || usuario.registro_categoria || '',
-            especialidade: usuario.especialidade || '',
             endereco: {
               cep: usuario.cep || '',
               rua: usuario.endereco?.logradouro || usuario.endereco?.rua || '',
@@ -359,10 +315,45 @@ export class EditarUsuarioComponent implements OnInit, OnDestroy {
             tipoAcesso: usuario.tipoAcesso || usuario.tipo_acesso || 'padrao',
             status: usuario.status || UserStatus.ATIVO
           });
+
+          // Configurar setor e função
+          if (usuario.setor) {
+            this.usuarioForm.get('setor')?.setValue(+usuario.setor);
+
+            this.apiUsuarioService.listarFuncoesPorSetor(+usuario.setor)
+              .subscribe({
+                next: (funcoes) => {
+                  this.funcoes = funcoes;
+
+                  if (usuario.funcao) {
+                    const funcaoId = +usuario.funcao;
+                    this.usuarioForm.get('funcao')?.setValue(funcaoId);
+
+                    // Verificar requisitos do conselho profissional
+                    this.verificarRequisitosConselhoProfissional(funcaoId);
+
+                    // Aplicar os valores de registroCategoria e especialidade
+                    this.usuarioForm.patchValue({
+                      registroCategoria: usuario.registro_categoria || '',
+                      especialidade: usuario.especialidade || ''
+                    });
+                  }
+
+                  this.configuraObservadorFuncao();
+                  this.modoEdicaoInicial = false;
+                },
+                error: () => {
+                  this.notificacaoService.mostrarErro('Erro ao carregar funções para o setor');
+                  this.modoEdicaoInicial = false;
+                }
+              });
+          } else {
+            this.modoEdicaoInicial = false;
+          }
         },
-        error: (err) => {
-          this.error = 'Erro ao carregar dados do usuário';
+        error: () => {
           this.notificacaoService.mostrarErro('Erro ao carregar dados do usuário');
+          this.modoEdicaoInicial = false;
         }
       });
   }

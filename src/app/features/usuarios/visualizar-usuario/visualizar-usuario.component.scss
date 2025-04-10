@@ -1,22 +1,28 @@
-// Variáveis de estilo para manter consistência com a aplicação
-:host {
-  --card-radius: 0.5rem;
-  --text-muted: #6c757d;
-  --text-dark: #212529;
-  --light-bg: #f8f9fa;
+// Variáveis de cores e espaçamentos 
+:root {
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --card-radius: 8px;
   --primary-color: #0d6efd;
   --primary-hover: #0b5ed7;
+  --info-color: #17a2b8;
+  --info-hover: #138496;
+  --light-bg: #f8f9fa;
+  --text-dark: #212529;
+  --text-muted: #6c757d;
+  --border-light: #dee2e6;
 }
 
-// Estilos gerais para cartões
+// Estilo para cards
 .card {
   border-radius: var(--card-radius);
-  transition: transform 0.2s, box-shadow 0.2s;
-  overflow: hidden;
-  
-  &:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  }
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1rem;
+  border: none;
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
@@ -68,45 +74,13 @@
     margin-right: 0.5rem;
   }
   
-  &:hover:not(:disabled) {
+  &:hover {
     transform: translateY(-1px);
   }
   
-  &:active:not(:disabled) {
+  &:active {
     transform: translateY(0);
   }
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  
-  &:hover:not(:disabled) {
-    background-color: var(--primary-hover);
-    border-color: var(--primary-hover);
-  }
-}
-
-// Estilo para tabela de resultados
-.table-responsive {
-  border-radius: var(--card-radius);
-  
-  .table {
-    margin-bottom: 0;
-  }
-  
-  th {
-    font-weight: 600;
-    color: var(--text-dark);
-  }
-}
-
-.table tr:hover {
-  background-color: rgba(13, 110, 253, 0.05);
-}
-
-.cursor-pointer {
-  cursor: pointer;
 }
 
 // Melhorias para texto
@@ -118,45 +92,6 @@
   font-weight: 500;
 }
 
-// Estilos específicos para badges e indicadores
-.badge {
-  padding: 0.5em 0.75em;
-  font-weight: 500;
-}
-
-.badge.bg-success {
-  background-color: #198754 !important;
-}
-
-.badge.bg-danger {
-  background-color: #dc3545 !important;
-}
-
-.badge.bg-warning {
-  background-color: #ffc107 !important;
-  color: #212529 !important;
-}
-
-.badge.bg-info {
-  background-color: #0dcaf0 !important;
-  color: #212529 !important;
-}
-
-.badge.bg-secondary {
-  background-color: #6c757d !important;
-}
-
-// Estilizações específicas para o layout
-app-info-card {
-  display: block;
-  height: 100%;
-}
-
-.table-sm th,
-.table-sm td {
-  padding: 0.5rem;
-}
-
 // Responsividade para dispositivos móveis
 @media (max-width: 768px) {
   .d-flex.justify-content-between {
@@ -166,22 +101,31 @@ app-info-card {
   
   .d-flex.justify-content-between > div {
     width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .d-flex.justify-content-between > div .btn {
+    flex: 1;
   }
   
   h4 {
     font-size: 1.4rem;
   }
   
-  .list-group-item {
-    flex-direction: column;
-    align-items: flex-start !important;
-    
-    strong {
-      margin-top: 0.25rem;
-    }
+  .avatar-circle {
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
   }
-  
-  .table-responsive {
-    overflow-x: auto;
-  }
+}
+
+// Estilizações específicas para o layout de dados do usuário
+app-info-card {
+  display: block;
+  height: 100%;
+}
+
+.list-group-item .text-muted {
+  max-width: 40%;
 }

@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Setor } from '../models/setor.model';
 import { Funcao } from '../models/funcao.model';
-import { Usuario } from '../models/user.model';
+import { Usuario, UsuarioAdapter } from '../models/user.model';
 import { ResultadoBusca } from '../models/busca-usuario.model';
+import { FUNCOES_DETALHES, FuncoesComRegistro } from '../models/conselhos-profissionais.model';
 
 export interface Endereco {
   logradouro?: string;
@@ -37,7 +39,78 @@ export class UsuarioService {
   }
 
   obterUsuarioPorId(id: string): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.apiUrl}/${id}`);
+    return this.http.get<Usuario>(`${this.apiUrl}/visualizar/${id}`)
+      .pipe(
+        switchMap((usuario: Usuario) => {
+          // Primeiro adaptamos o usuário
+          const usuarioAdaptado = UsuarioAdapter.adapt(usuario);
+          
+          // Preparar as requisições para obter dados de setor e função
+          const requisicoes = [];
+          
+          // Se o usuário tem um setor mas não tem o nome, vamos buscar essa informação
+          if (usuarioAdaptado.setor && !usuarioAdaptado.setorNome) {
+            requisicoes.push(
+              this.obterNomeSetor(usuarioAdaptado.setor).pipe(
+                tap(nome => usuarioAdaptado.setorNome = nome)
+              )
+            );
+          }
+          
+          // Se o usuário tem uma função mas não tem o nome, vamos buscar essa informação
+          if (usuarioAdaptado.funcao && !usuarioAdaptado.funcaoNome) {
+            requisicoes.push(
+              this.obterNomeFuncao(usuarioAdaptado.funcao).pipe(
+                tap(nome => usuarioAdaptado.funcaoNome = nome)
+              )
+            );
+          }
+          
+          // Se não há requisições a fazer, retornamos o usuário como está
+          if (requisicoes.length === 0) {
+            return of(usuarioAdaptado);
+          }
+          
+          // Caso contrário, esperamos todas as requisições terminarem
+          return forkJoin(requisicoes).pipe(
+            map(() => usuarioAdaptado) // Retorna o usuário com os dados adicionados
+          );
+        })
+      );
+  }
+  
+  // Métodos auxiliares para obter nomes de setor e função caso não venham no objeto original
+  obterNomeSetor(idSetor: string | number | undefined | null): Observable<string> {
+    if (!idSetor) return of('Não informado');
+    
+    return this.listarSetores().pipe(
+      map(setores => {
+        const setorEncontrado = setores.find(setor => setor.id === idSetor);
+        return setorEncontrado?.nome || 'Nome não disponível';
+      }),
+      catchError(erro => {
+        console.error(`Erro ao obter nome do setor ${idSetor}:`, erro);
+        return of('Nome não disponível');
+      })
+    );
+  }
+  
+  obterNomeFuncao(idFuncao: string | number | undefined | null): Observable<string> {
+    if (!idFuncao) return of('Não informado');
+    
+    // Verifica primeiro se é uma função mapeada
+    const funcaoNumerica = Number(idFuncao);
+    if (!isNaN(funcaoNumerica) && funcaoNumerica in FUNCOES_DETALHES) {
+      return of(FUNCOES_DETALHES[funcaoNumerica as FuncoesComRegistro].nome);
+    }
+    
+    return this.http.get<Funcao>(`${this.baseApiUrl}/funcoes/${idFuncao}`).pipe(
+      map(funcao => funcao?.nome || 'Nome não disponível'),
+      catchError(erro => {
+        console.error(`Erro ao obter nome da função ${idFuncao}:`, erro);
+        return of('Nome não disponível');
+      })
+    );
   }
 
   buscarUsuarios(params: ResultadoBusca): Observable<Usuario[]> {

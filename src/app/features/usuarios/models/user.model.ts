@@ -55,8 +55,6 @@ export enum UserStatus {
   AFASTADO_OUTROS = 'Afastado por Outros Motivos',
 }
 
-
-
 export enum TipoContratacao {
   C = 'Contratação Direta',
   T = 'Terceirizado',
@@ -79,4 +77,122 @@ export interface Endereco {
   estado?: string;
   uf?: string;
   cep?: string;
+}
+
+import { ConselhoProfissional, SetorProfissional, SETOR_CONSELHO_MAP, FuncoesComRegistro, FUNCAO_SETOR_MAP, FUNCOES_DETALHES } from './conselhos-profissionais.model';
+
+export class UsuarioAdapter {
+  static adapt(usuario: Usuario): Usuario {
+    if (!usuario) return usuario;
+    
+    // Verificamos se há detalhes da função
+    const detalhesFuncao = this.obterDetalhesFuncao(usuario.funcao);
+    
+    return {
+      ...usuario,
+      tipo_contratacao: this.formatarTipoContratacao(usuario.tipo_contratacao),
+      tipo_acesso: this.formatarTipoAcesso(usuario.tipo_acesso),
+      status: this.formatarStatus(usuario.status || (usuario.ativo ? 'ATIVO' : 'INATIVO')),
+      // Se temos detalhes da função, usamos o nome dela
+      funcaoNome: usuario.funcaoNome || (detalhesFuncao ? detalhesFuncao.nome : undefined)
+    };
+  }
+  
+  static formatarTipoContratacao(tipo?: string): string {
+    if (!tipo) return 'Não informado';
+    
+    switch(tipo.toLowerCase()) {
+      case 'c': return 'Contratada';
+      case 't': return 'Terceirizado';
+      case 'p': return 'Pessoa Jurídica';
+      default: return tipo;
+    }
+  }
+  
+  static formatarTipoAcesso(tipo?: string): string {
+    if (!tipo) return 'Não informado';
+    
+    switch(tipo.toLowerCase()) {
+      case 'admin': return 'Administrador';
+      case 'gestor': return 'Gestor';
+      case 'padrao': return 'Padrão';
+      case 'restrito': return 'Restrito';
+      default: return tipo;
+    }
+  }
+  
+  static formatarStatus(status?: string): string {
+    if (!status) return 'Não informado';
+    
+    switch(status.toUpperCase()) {
+      case 'ATIVO': return 'Ativo';
+      case 'INATIVO': return 'Inativo';
+      case 'FERIAS': return 'Férias';
+      case 'LICENCA_MEDICA': return 'Licença Médica';
+      case 'LICENCA_MATERNIDADE': return 'Licença Maternidade';
+      case 'LICENCA_PATERNIDADE': return 'Licença Paternidade';
+      case 'AFASTADO_ACIDENTE_DE_TRABALHO': return 'Afastado por Acidente de Trabalho';
+      case 'AFASTAMENTO_NAO_REMUNERADO': return 'Afastamento Não Remunerado';
+      case 'SUSPENSAO_CONTRTATUAL': return 'Suspensão Contratual';
+      case 'APOSENTADO': return 'Aposentado';
+      case 'AFASTADO_OUTROS': return 'Afastado por Outros Motivos';
+      // Adicione outros casos conforme necessário
+      default: return status;
+    }
+  }
+  
+  // Método para determinar o nome do conselho com base na função e/ou setor
+  static obterNomeConselho(funcaoId?: string | number, setorId?: string | number): string {
+    // Se temos uma função com ID numérico, verificamos se está no mapeamento
+    if (funcaoId && !isNaN(Number(funcaoId))) {
+      const funcaoNumerica = Number(funcaoId);
+      
+      // Verifica se a função está no mapeamento de funções
+      if (funcaoNumerica in FUNCAO_SETOR_MAP) {
+        const setorAssociado = FUNCAO_SETOR_MAP[funcaoNumerica as FuncoesComRegistro];
+        return SETOR_CONSELHO_MAP[setorAssociado] || 'Registro Profissional';
+      }
+    }
+    
+    // Se temos um setor com ID numérico, verificamos se está no mapeamento
+    if (setorId && !isNaN(Number(setorId))) {
+      const setorNumerico = Number(setorId);
+      
+      if (setorNumerico in SETOR_CONSELHO_MAP) {
+        return SETOR_CONSELHO_MAP[setorNumerico as SetorProfissional] || 'Registro Profissional';
+      }
+    }
+    
+    // Fallback para análise de texto da função (para compatibilidade)
+    if (typeof funcaoId === 'string') {
+      const funcaoLower = funcaoId.toLowerCase();
+      
+      if (funcaoLower.includes('enferm')) return ConselhoProfissional.COREN;
+      if (funcaoLower.includes('medic') || funcaoLower.includes('médic')) return ConselhoProfissional.CRM;
+      if (funcaoLower.includes('nutricion')) return ConselhoProfissional.CRN;
+      if (funcaoLower.includes('fisioter')) return ConselhoProfissional.CREFITO;
+      if (funcaoLower.includes('fonoaudi')) return ConselhoProfissional.CREFONO;
+      if (funcaoLower.includes('psicolog')) return ConselhoProfissional.CRP;
+      if (funcaoLower.includes('farmac')) return ConselhoProfissional.CRF;
+    }
+    
+    return 'Registro Profissional';
+  }
+  
+  // Método para obter detalhes completos da função
+  static obterDetalhesFuncao(funcaoId?: string | number): {
+    nome: string;
+    setorId: SetorProfissional;
+    conselho: ConselhoProfissional;
+  } | null {
+    if (funcaoId && !isNaN(Number(funcaoId))) {
+      const funcaoNumerica = Number(funcaoId) as FuncoesComRegistro;
+      
+      if (funcaoNumerica in FUNCOES_DETALHES) {
+        return FUNCOES_DETALHES[funcaoNumerica];
+      }
+    }
+    
+    return null;
+  }
 }

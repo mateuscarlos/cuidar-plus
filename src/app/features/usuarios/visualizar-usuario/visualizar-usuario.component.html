@@ -20,97 +20,24 @@
       </nav>
     </div>
   </div>
-
-  <!-- Modo de busca - exibido quando não estiver no modo de visualização -->
-  <div *ngIf="!modoVisualizacao && !isLoading">
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-primary text-white py-3">
-        <h5 class="card-title mb-0">
-          <i class="bi bi-search me-2"></i>Buscar Usuário
-        </h5>
-      </div>
-      <div class="card-body p-4">
-        <!-- Componente de busca -->
-        <app-usuario-busca 
-          (resultadoBusca)="buscarUsuarioPorResultado($event)" 
-          aria-label="Busca de usuários">
-        </app-usuario-busca>
-
-        <!-- Resultados da busca - exibidos apenas quando houver resultados -->
-        <div class="card border-0 shadow-sm mt-4" *ngIf="resultadosBusca.length > 0">
-          <div class="card-body">
-            <h6 class="card-title mb-3">Resultados da Busca</h6>
-            
-            <div class="table-responsive">
-              <table class="table table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Tipo de Acesso</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let usuario of resultadosBusca" class="cursor-pointer" (click)="selecionarUsuario(usuario)">
-                    <td>
-                      <div class="d-flex align-items-center">
-                        <app-usuario-avatar [nome]="usuario.nome" class="me-2" size="sm"></app-usuario-avatar>
-                        <div>
-                          <p class="mb-0 fw-medium">{{ usuario.nome }}</p>
-                          <small class="text-muted">ID: {{ usuario.id }}</small>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{{ usuario.email }}</td>
-                    <td>
-                      <span class="badge bg-secondary">{{ usuario.tipoAcesso || usuario.tipo_acesso || 'Não definido' }}</span>
-                    </td>
-                    <td>
-                      <app-status-badge [status]="usuario.status || ''"></app-status-badge>
-                    </td>
-                    <td>
-                      <button class="btn btn-sm btn-primary" (click)="selecionarUsuario(usuario); $event.stopPropagation();" aria-label="Visualizar usuário">
-                        <i class="bi bi-eye me-1"></i>Visualizar
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Mensagem caso não encontre resultados -->
-            <div class="alert alert-info" *ngIf="resultadosBusca.length === 0">
-              <i class="bi bi-info-circle me-2"></i>
-              Nenhum usuário encontrado com os critérios de busca informados.
-            </div>
-          </div>
-        </div>
-
-        <!-- Alerta de erro -->
-        <div class="alert alert-danger" *ngIf="error">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>
-          {{ error }}
-        </div>
-      </div>
-    </div>
-  </div>
   
-  <!-- Modo de visualização - exibido quando o usuário for selecionado -->
-  <div *ngIf="modoVisualizacao && usuario && !isLoading">
+  <!-- Alerta de erro -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Modo de visualização - exibido quando o usuário for carregado -->
+  <div *ngIf="usuario && !isLoading">
     <!-- Botões de navegação (topo) -->
-    <div class="d-flex justify-content-between flex-wrap gap-2 mb-4">
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-outline-secondary d-flex align-items-center" (click)="voltarParaBusca()" aria-label="Voltar para a busca">
-          <i class="bi bi-arrow-left me-2"></i>Voltar para Busca
-        </button>
-        <button class="btn btn-outline-secondary d-flex align-items-center" (click)="voltarParaLista()" aria-label="Voltar para a lista">
-          <i class="bi bi-list me-2"></i>Lista de Usuários
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
         </button>
       </div>
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-primary d-flex align-items-center" (click)="irParaEdicao()" aria-label="Editar usuário">
+      <div>
+        <button class="btn btn-primary" (click)="irParaEdicao()">
           <i class="bi bi-pencil me-2"></i>Editar Usuário
         </button>
       </div>
@@ -127,20 +54,18 @@
               <h4 class="mb-0">{{ usuario.nome }}</h4>
               <p class="text-muted mb-0">
                 <app-status-badge [status]="usuario.status || ''" class="me-2"></app-status-badge>
-                <span class="badge bg-secondary">{{ getTipoAcessoFormatado() }}</span>
+                ID: {{ usuario.id }} | CPF: {{ usuario.cpf || usuario.document || 'Não informado' }}
               </p>
             </div>
           </div>
           
           <!-- Informações de cadastro -->
-          <div class="text-md-end mt-2 mt-md-0">
+          <div class="text-md-end">
             <p class="mb-0 text-muted small">
-              <strong>Data de Cadastro:</strong> 
-              <app-formatted-date [date]="usuario.created_at" format="displayDateOnly"></app-formatted-date>
+              <strong>Data de Cadastro:</strong> {{ formatarData(usuario.created_at) }}
             </p>
             <p class="mb-0 text-muted small">
-              <strong>Última Atualização:</strong>
-              <app-formatted-date [date]="usuario.updated_at" format="displayDateOnly"></app-formatted-date>
+              <strong>Última Atualização:</strong> {{ formatarData(usuario.updated_at) }}
             </p>
           </div>
         </div>
@@ -149,192 +74,87 @@
     
     <!-- Abas de informações -->
     <div class="row">
-      <!-- Informações Pessoais -->
-      <div class="col-md-6 mb-4">
-        <app-info-card title="Informações Pessoais" icon="person-vcard-fill">
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="text-muted">Nome Completo:</span>
-              <strong>{{ usuario.nome }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="text-muted">Email:</span>
-              <strong>{{ usuario.email }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.cpf || usuario.document">
-              <span class="text-muted">CPF:</span>
-              <strong>{{ usuario.cpf || usuario.document }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.telefone">
-              <span class="text-muted">Telefone:</span>
-              <strong>{{ usuario.telefone }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="text-muted">Status:</span>
-              <app-status-badge [status]="usuario.status || ''"></app-status-badge>
-            </li>
-            <!-- <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="text-muted">Último Login:</span>
-              <strong>
-                <app-formatted-date [date]="usuario.ultimoLogin" format="display" [defaultText]="'Nunca'"></app-formatted-date>
-              </strong>
-            </li> -->
-          </ul>
-        </app-info-card>
-      </div>
-      
       <!-- Informações Profissionais -->
       <div class="col-md-6 mb-4">
         <app-info-card title="Informações Profissionais" icon="briefcase-fill">
           <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="text-muted">Tipo de Acesso:</span>
-              <strong>{{ getTipoAcessoFormatado() }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.registroCategoria || usuario.registro_categoria">
-              <span class="text-muted">Registro Profissional:</span>
-              <strong>{{ usuario.registroCategoria || usuario.registro_categoria }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.especialidade">
-              <span class="text-muted">Especialidade:</span>
-              <strong>{{ usuario.especialidade }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.setorNome">
-              <span class="text-muted">Setor:</span>
-              <strong>{{ usuario.setorNome }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.funcaoNome">
-              <span class="text-muted">Função:</span>
-              <strong>{{ usuario.funcaoNome }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.dataAdmissao || usuario.data_admissao">
+            <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Data de Admissão:</span>
               <strong>
-                <app-formatted-date [date]="usuario.dataAdmissao || usuario.data_admissao" format="displayDateOnly"></app-formatted-date>
+                <app-formatted-date [date]="usuario?.dataAdmissao || usuario?.data_admissao" format="displayDateOnly"></app-formatted-date>
               </strong>
             </li>
-          </ul>
-        </app-info-card>
-      </div>
-
-      <!-- Endereço -->
-      <div class="col-md-6 mb-4" *ngIf="usuario.endereco || usuario.cep">
-        <app-info-card title="Endereço" icon="geo-alt-fill">
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.cep || usuario.endereco?.cep">
-              <span class="text-muted">CEP:</span>
-              <strong>{{ usuario.cep || usuario.endereco?.cep }}</strong>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Setor:</span>
+              <strong>{{ usuario.setorNome || 'Carregando...' }}</strong>
             </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.logradouro || usuario.endereco?.rua">
-              <span class="text-muted">Logradouro:</span>
-              <strong>{{ usuario.endereco?.logradouro || usuario.endereco?.rua }}</strong>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Função:</span>
+              <strong>{{ usuario.funcaoNome || 'Carregando...' }}</strong>
             </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.numero">
-              <span class="text-muted">Número:</span>
-              <strong>{{ usuario.endereco?.numero }}</strong>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Especialidade:</span>
+              <strong>{{ usuario.especialidade || 'Não informado' }}</strong>
             </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.complemento">
-              <span class="text-muted">Complemento:</span>
-              <strong>{{ usuario.endereco?.complemento }}</strong>
+            <!-- Registro de categoria com nome de conselho dinâmico -->
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">{{ obterNomeConselho() }}:</span>
+              <strong>{{ usuario.registro_categoria || usuario.registroCategoria || 'Não informado' }}</strong>
             </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.bairro">
-              <span class="text-muted">Bairro:</span>
-              <strong>{{ usuario.endereco?.bairro }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.localidade || usuario.endereco?.cidade">
-              <span class="text-muted">Cidade:</span>
-              <strong>{{ usuario.endereco?.localidade || usuario.endereco?.cidade }}</strong>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center" *ngIf="usuario.endereco?.uf || usuario.endereco?.estado">
-              <span class="text-muted">Estado:</span>
-              <strong>{{ usuario.endereco?.uf || usuario.endereco?.estado }}</strong>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Tipo de Contratação:</span>
+              <strong>{{ usuario.tipo_contratacao || usuario.tipoContratacao || 'Não informado' }}</strong>
             </li>
           </ul>
         </app-info-card>
       </div>
       
-      <!-- Permissões -->
-      <div class="col-md-6 mb-4" *ngIf="permissoes && permissoes.length > 0">
-        <app-info-card title="Permissões" icon="shield-lock-fill">
-          <div class="table-responsive">
-            <table class="table table-sm mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th scope="col">Módulo</th>
-                  <th scope="col" class="text-center">Visualizar</th>
-                  <th scope="col" class="text-center">Criar</th>
-                  <th scope="col" class="text-center">Editar</th>
-                  <th scope="col" class="text-center">Excluir</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let permissao of permissoes">
-                  <td>{{ permissao.modulo }}</td>
-                  <td class="text-center">
-                    <i class="bi" [ngClass]="permissao.visualizar ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'"></i>
-                  </td>
-                  <td class="text-center">
-                    <i class="bi" [ngClass]="permissao.criar ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'"></i>
-                  </td>
-                  <td class="text-center">
-                    <i class="bi" [ngClass]="permissao.editar ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'"></i>
-                  </td>
-                  <td class="text-center">
-                    <i class="bi" [ngClass]="permissao.excluir ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'"></i>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="alert alert-info mt-3" *ngIf="!permissoes || permissoes.length === 0">
-            <i class="bi bi-info-circle me-2"></i>
-            Este usuário não possui permissões específicas definidas.
-          </div>
+      <!-- Informações de Contato -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Contato" icon="telephone-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Email:</span>
+              <strong>{{ usuario.email }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone:</span>
+              <strong>{{ usuario.telefone || 'Não informado' }}</strong>
+            </li>
+          </ul>
         </app-info-card>
       </div>
-
-      <!-- Histórico de Atividades -->
-      <div class="col-12 mb-4">
-        <app-info-card title="Histórico de Atividades" icon="clock-history">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th scope="col">Data/Hora</th>
-                  <th scope="col">Tipo</th>
-                  <th scope="col">Descrição</th>
-                  <th scope="col">IP</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let atividade of atividades">
-                  <td>
-                    <app-formatted-date [date]="atividade.data_hora" format="display"></app-formatted-date>
-                  </td>
-                  <td>
-                    <span class="badge" [ngClass]="getBadgeClassForAtividade(atividade.tipo)">
-                      {{ atividade.tipo }}
-                    </span>
-                  </td>
-                  <td>{{ atividade.descricao }}</td>
-                  <td>{{ atividade.ip }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div class="alert alert-info mt-3" *ngIf="!atividades || atividades.length === 0">
-            <i class="bi bi-info-circle me-2"></i>
-            Não há registros de atividades para este usuário.
-          </div>
-          
-          <div class="d-flex justify-content-end mt-3" *ngIf="atividades && atividades.length > 0">
-            <button class="btn btn-sm btn-outline-primary" (click)="carregarMaisAtividades()" [disabled]="!temMaisAtividades">
-              <i class="bi bi-arrow-down me-1"></i>Carregar Mais
-            </button>
-          </div>
+      
+      <!-- Endereço -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Endereço" icon="house-fill">
+          <p class="mb-0">{{ formatarEndereco(usuario.endereco) }}</p>
         </app-info-card>
+      </div>
+      
+      <!-- Informações de Acesso -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Acesso" icon="shield-lock-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Tipo de Acesso:</span>
+              <strong>{{ usuario.tipo_acesso || usuario.tipoAcesso || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Permissões:</span>
+              <strong>{{ usuario.permissions && usuario.permissions.length ? usuario.permissions.join(', ') : 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+    </div>
+    
+    <!-- Botões de navegação (rodapé) -->
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
+        </button>
       </div>
     </div>
   </div>

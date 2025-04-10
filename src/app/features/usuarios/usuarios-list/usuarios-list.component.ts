@@ -313,12 +313,14 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   /**
    * Métodos para navegação
    */
-  navegarParaVisualizacao(id: string) {
-    this.router.navigate([`/usuarios/${id}`]);
+  navegarParaVisualizacao(usuario: Usuario): void {
+    this.router.navigate(['/usuarios/visualizar'], {
+      queryParams: { usuarioId: usuario.id }
+    });
   }
 
   navegarParaCadastro(): void {
-    this.router.navigate(['/usuarios/cadastro']);
+    this.router.navigate(['/usuarios/criar']);
   }
   
   /**

@@ -13,11 +13,11 @@ import { Funcao } from '../models/funcao.model';
 export class ApiUsuarioService {
   private readonly http = inject(HttpClient);
   private readonly baseApiUrl = environment.apiUrl;
-  private readonly apiUrl = `${this.baseApiUrl}/usuarios`;
+  private readonly apiUrl = `${this.baseApiUrl}/usuarios`; // Ajustado para refletir a rota do backend
 
   // Métodos de usuários
   listarUsuarios(): Observable<Usuario[]> {
-    return this.http.get<Usuario[]>(this.apiUrl);
+    return this.http.get<Usuario[]>(`${this.apiUrl}`);
   }
 
   obterUsuarioPorId(id: string | number): Observable<Usuario> {
@@ -25,9 +25,8 @@ export class ApiUsuarioService {
   }
 
   criarUsuario(usuario: Usuario): Observable<Usuario> {
-    // Normalização do tipo de contratação para o backend
     const usuarioNormalizado = this.normalizarTipoContratacao(usuario);
-    return this.http.post<Usuario>(this.apiUrl, usuarioNormalizado);
+    return this.http.post<Usuario>(`${this.apiUrl}/criar`, usuarioNormalizado);
   }
 
   atualizarUsuario(id: string | number, usuario: Usuario): Observable<Usuario> {
@@ -42,7 +41,7 @@ export class ApiUsuarioService {
   alterarStatusUsuario(id: string | number, ativo: boolean): Observable<Usuario> {
     return this.http.patch<Usuario>(`${this.apiUrl}/${id}/status`, { ativo });
   }
-  
+
   // Métodos de setores
   listarSetores(): Observable<Setor[]> {
     return this.http.get<Setor[]>(`${this.baseApiUrl}/setores`);
@@ -67,7 +66,7 @@ export class ApiUsuarioService {
   obterSetoresDicionario(): Observable<Record<string, string>> {
     return this.http.get<Record<string, string>>(`${this.baseApiUrl}/setores/dicionario`);
   }
-  
+
   // Métodos de funções
   listarFuncoes(): Observable<Funcao[]> {
     return this.http.get<Funcao[]>(`${this.baseApiUrl}/funcoes`);
@@ -82,7 +81,7 @@ export class ApiUsuarioService {
   }
 
   criarFuncao(funcao: Funcao): Observable<Funcao> {
-    return this.http.post<Funcao>(`${this.baseApiUrl}/create-funcoes`, funcao);
+    return this.http.post<Funcao>(`${this.baseApiUrl}/funcoes`, funcao);
   }
 
   atualizarFuncao(id: number, funcao: Funcao): Observable<Funcao> {
@@ -92,11 +91,11 @@ export class ApiUsuarioService {
   excluirFuncao(id: number): Observable<any> {
     return this.http.delete<any>(`${this.baseApiUrl}/funcoes/${id}`);
   }
-  
+
   obterFuncoesDicionario(): Observable<Record<string, string>> {
     return this.http.get<Record<string, string>>(`${this.baseApiUrl}/funcoes/dicionario`);
   }
-  
+
   // Métodos de utilidade
   private normalizarTipoContratacao(usuario: Usuario): Usuario {
     const clone = { ...usuario };
@@ -108,11 +107,11 @@ export class ApiUsuarioService {
       'Pessoa Jurídica': 'p',
       'pj': 'p'
     };
-    
+
     if (clone.tipoContratacao && tipoContratacaoMap[clone.tipoContratacao]) {
       clone.tipoContratacao = tipoContratacaoMap[clone.tipoContratacao];
     }
-    
+
     return clone;
   }
 }
