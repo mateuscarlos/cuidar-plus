@@ -57,11 +57,11 @@ export class PacientesComponent {
   }
   
   navegarParaCadastro(): void {
-    this.router.navigate(['/pacientes/cadastrar']);
+    this.router.navigate(['/pacientes/criar']);
   }
   
   navegarParaBusca(): void {
-    this.router.navigate(['/pacientes/visualizar']);
+    this.router.navigate(['/pacientes/busca-avancada']);
   }
   
   navegarParaAcompanhamento(): void {

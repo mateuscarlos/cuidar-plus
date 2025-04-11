@@ -68,7 +68,9 @@ export class VisualizarPacienteComponent implements OnInit {
     
     // Verificar os parâmetros de rota
     this.route.params.subscribe(params => {
+      console.log('Params recebidos:', params);
       if (params['id']) {
+        console.log('Carregando paciente com ID:', params['id']);
         this.carregarPacientePorId(params['id']);
       } else {
         // Verificar parâmetros de consulta (se não houver parâmetros de rota)
@@ -101,12 +103,21 @@ export class VisualizarPacienteComponent implements OnInit {
    * Carrega os dados de um paciente pelo ID
    */
   carregarPacientePorId(id: string): void {
+    this.isLoading = true;
     this.pacienteService.obterPacientePorId(id).subscribe({
       next: (paciente) => {
         this.paciente = paciente;
+        this.modoVisualizacao = true;
+        if (paciente) {
+          this.carregarInformacoesConvenio(paciente);
+        }
+        this.isLoading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Erro ao carregar dados do paciente:', err);
         this.notificacaoService.mostrarErro('Erro ao carregar paciente. Tente novamente.');
+        this.isLoading = false;
+        this.error = 'Não foi possível carregar os dados do paciente';
       }
     });
   }

@@ -202,3 +202,85 @@
     </div>
   </div>
 </div>
+
+<!-- Resultados da busca -->
+<div class="card shadow-sm mb-4" *ngIf="resultadosBusca.length > 0 || isLoading">
+  <div class="card-header bg-light">
+    <h5 class="card-title mb-0">
+      <i class="bi bi-list-ul me-2"></i>Resultados da Busca
+    </h5>
+  </div>
+  
+  <div class="card-body">
+    <!-- Loading spinner -->
+    <div class="text-center my-4" *ngIf="isLoading">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+      <p class="mt-2 text-muted">Buscando pacientes...</p>
+    </div>
+    
+    <!-- Tabela de resultados -->
+    <div class="table-responsive" *ngIf="resultadosBusca.length > 0 && !isLoading">
+      <table *ngIf="resultadosBusca.length > 0" class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Data Nascimento</th>
+            <th>Convênio</th>
+            <th>Status</th>
+            <th>Ações</th> <!-- Coluna para ações -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let paciente of resultadosBusca" [class.table-active]="paciente.status === 'ATIVO'" class="cursor-pointer" (click)="selecionarPaciente(paciente)">
+            <td>{{ paciente.nome }}</td>
+            <td>{{ paciente.cpf | cpfMask }}</td>
+            <td>{{ paciente.data_nascimento | date:'dd/MM/yyyy' }}</td>
+            <td>{{ paciente.convenio_id !== undefined ? getConvenioNomeById(paciente.convenio_id) : 'N/A' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-success': paciente.status === 'ATIVO',
+                'bg-warning': paciente.status === 'INATIVO',
+                'bg-danger': paciente.status === 'ARQUIVADO'
+              }">{{ paciente.status }}</span>
+            </td>
+            <td>
+              <!-- Botão Visualizar -->
+              <button class="btn btn-sm btn-info" (click)="visualizarPaciente(paciente); $event.stopPropagation()">
+                <i class="bi bi-eye"></i> Visualizar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <!-- Paginação -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPacientes > pageSize">
+        <div class="text-muted">
+          Mostrando {{ calculatePaginationStart(currentPage, pageSize) }} a {{ calculatePaginationEnd(currentPage, pageSize, totalPacientes) }} de {{ totalPacientes }} registros
+        </div>
+        <nav aria-label="Navegação de página">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <button class="page-link" (click)="paginaAnterior()" [disabled]="currentPage === 1">Anterior</button>
+            </li>
+            <li class="page-item">
+              <span class="page-link">{{ currentPage }} de {{ totalPages }}</span>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <button class="page-link" (click)="proximaPagina()" [disabled]="currentPage === totalPages">Próxima</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- Mensagem de nenhum resultado -->
+    <div class="alert alert-info" *ngIf="resultadosBusca.length === 0 && !isLoading && buscaAtiva">
+      <i class="bi bi-info-circle me-2"></i>
+      Nenhum paciente encontrado com os critérios de busca informados.
+    </div>
+  </div>
+</div>

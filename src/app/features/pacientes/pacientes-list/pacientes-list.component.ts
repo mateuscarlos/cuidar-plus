@@ -53,12 +53,16 @@ export class PacientesListComponent implements OnInit {
    * Carrega a lista de pacientes do serviço
    */
   carregarPacientes(): void {
+    this.isLoading = true;
     this.pacienteService.listarTodosPacientes().subscribe({
       next: (pacientes) => {
         this.pacientes = pacientes;
+        this.aplicarFiltros(); // Adicionar esta linha para processar e exibir os pacientes
+        this.isLoading = false;
       },
       error: () => {
         this.notificacaoService.mostrarErro('Erro ao carregar pacientes. Tente novamente.');
+        this.isLoading = false;
       }
     });
   }
@@ -202,7 +206,7 @@ export class PacientesListComponent implements OnInit {
    * Navegar para tela de cadastro de paciente
    */
   cadastrarNovoPaciente(): void {
-    this.router.navigate(['/pacientes/cadastrar']);
+    this.router.navigate(['/pacientes/criar']);
   }
   
   /**
@@ -210,7 +214,7 @@ export class PacientesListComponent implements OnInit {
    */
   editarPaciente(pacienteId: number | string, event: Event): void {
     event.stopPropagation(); // Evita que o evento propague para o clique da linha
-    this.router.navigate(['/pacientes/editar', pacienteId]);
+    this.router.navigate(['/pacientes/editar/', pacienteId]);
   }
   
   /**

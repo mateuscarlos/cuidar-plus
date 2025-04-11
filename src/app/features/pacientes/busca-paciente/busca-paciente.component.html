@@ -74,7 +74,7 @@
     <h6 class="card-title mb-3">Resultados da Busca</h6>
     
     <!-- Indicador de carregamento -->
-    <div class="text-center my-4" *ngIf="carregando">
+    <div class="text-center my-4" *ngIf="carregando && !(pacientes.length === 0)">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Carregando...</span>
       </div>

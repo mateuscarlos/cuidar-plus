@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 // Modelos
 import { Paciente, ResultadoBusca, StatusPaciente } from '../models/paciente.model';
@@ -10,9 +11,11 @@ import { Convenio } from '../models/convenio.model';
 
 // Serviços
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
+import { PacienteService } from '../services/paciente.service';
 
 // Pipes
 import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
 
 @Component({
   selector: 'app-paciente-busca-avancada',
@@ -30,9 +33,11 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
   @Output() filtrosChange = new EventEmitter<ResultadoBusca>();
   @Output() limparFiltros = new EventEmitter<void>();
   @Output() filtrarEvent = new EventEmitter<ResultadoBusca>();
+  @Output() pacienteSelecionado = new EventEmitter<Paciente>();
   
   buscaForm: FormGroup;
   buscaAtiva: boolean = false;
+  resultadosBusca: Paciente[] = [];
   
   // Lista de convênios para o dropdown
   convenios: Convenio[] = [];
@@ -44,19 +49,19 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
   // Controle de mudanças e limpeza
   private searchTerms = new Subject<string>();
   private destroy$ = new Subject<void>();
-
-  getConvenioNomeById(id: string | number): string {
-    if (!id) return 'Não definido';
-    
-    const convenioId = typeof id === 'string' ? parseInt(id) : id;
-    const convenio = this.convenios.find(c => c.id === convenioId);
-    
-    return convenio ? convenio.nome : 'Convênio não encontrado';
-  }
   
+  // Paginação
+  totalPacientes: number = 0;
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalPages: number = 0;
+
   constructor(
     private fb: FormBuilder,
-    private convenioPlanoService: ConvenioPlanoService
+    private convenioPlanoService: ConvenioPlanoService,
+    private pacienteService: PacienteService,
+    private notificacaoService: NotificacaoService,
+    private router: Router // Adicione o router aqui
   ) {
     this.buscaForm = this.fb.group({
       nome: [''],
@@ -68,14 +73,22 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
     });
   }
   
+  calculatePaginationStart(currentPage: number, pageSize: number): number {
+    return (currentPage - 1) * pageSize + 1;
+  }
+
+  calculatePaginationEnd(currentPage: number, pageSize: number, totalPacientes: number): number {
+    return Math.min(currentPage * pageSize, totalPacientes);
+  }
+
   ngOnInit() {
-    // Configurar o debounce para busca
+    // Configurar o debounce para busca com um tempo maior
     this.searchTerms.pipe(
-      debounceTime(800),
+      debounceTime(800),  // Aumentado para 800ms conforme recomendação
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(() => {
-      this.aplicarFiltros();
+      this.realizarBusca();
     });
     
     // Observar mudanças nos campos de texto
@@ -101,19 +114,19 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
     this.buscaForm.get('convenio')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.aplicarFiltros();
+        this.realizarBusca();
       });
     
     this.buscaForm.get('dataNascimento')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.aplicarFiltros();
+        this.realizarBusca();
       });
     
     this.buscaForm.get('status')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.aplicarFiltros();
+        this.realizarBusca();
       });
     
     // Carregar a lista de convênios ao inicializar
@@ -143,6 +156,7 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
         },
         error: (erro) => {
           console.error('Erro ao carregar convênios:', erro);
+          this.notificacaoService.mostrarErro('Erro ao carregar convênios. Tente novamente.');
         }
       });
   }
@@ -169,14 +183,19 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
     });
     
     this.buscaAtiva = false;
+    this.resultadosBusca = [];
     this.limparFiltros.emit();
   }
   
   /**
-   * Aplica os filtros e emite o evento
+   * Realiza a busca de pacientes com os filtros aplicados
    */
-  aplicarFiltros() {
+  realizarBusca() {
     this.buscaAtiva = this.temFiltrosAtivos();
+    if (!this.buscaAtiva) {
+      this.resultadosBusca = [];
+      return;
+    }
     
     // Coletar todos os valores do formulário
     const filtros: ResultadoBusca = {
@@ -193,11 +212,62 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
       filtros.id = Number(id);
     }
     
-    // Log para debug
-    console.log('Emitindo filtros de pacientes:', filtros);
+    this.isLoading = true;
     
-    // Emitir o evento com os filtros
-    this.filtrosChange.emit(filtros);
+    // Log para debug
+    console.log('Buscando pacientes com filtros:', filtros);
+    
+    // Realizar a busca no serviço
+    this.pacienteService.buscarPacientes(filtros)
+      .pipe(
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe({
+        next: (pacientes) => {
+          this.resultadosBusca = pacientes;
+          this.totalPacientes = pacientes.length;
+          this.totalPages = Math.ceil(this.totalPacientes / this.pageSize);
+          
+          // Aplicar paginação
+          this.aplicarPaginacao();
+          
+          // Emitir o evento com os filtros
+          this.filtrosChange.emit(filtros);
+        },
+        error: (erro) => {
+          console.error('Erro ao buscar pacientes:', erro);
+          this.notificacaoService.mostrarErro('Erro ao buscar pacientes. Tente novamente.');
+          this.resultadosBusca = [];
+        }
+      });
+  }
+  
+  /**
+   * Aplica a paginação aos resultados
+   */
+  aplicarPaginacao() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    this.resultadosBusca = this.resultadosBusca.slice(startIndex, startIndex + this.pageSize);
+  }
+  
+  /**
+   * Navega para a próxima página
+   */
+  proximaPagina() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.aplicarPaginacao();
+    }
+  }
+  
+  /**
+   * Navega para a página anterior
+   */
+  paginaAnterior() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.aplicarPaginacao();
+    }
   }
   
   /**
@@ -212,6 +282,14 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
    */
   limparFiltro(campo: string) {
     this.buscaForm.get(campo)?.setValue('');
+    this.realizarBusca();
+  }
+  
+  /**
+   * Seleciona um paciente dos resultados
+   */
+  selecionarPaciente(paciente: Paciente) {
+    this.pacienteSelecionado.emit(paciente);
   }
   
   /**
@@ -229,5 +307,29 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
       return `${convenio.nome} (Inativo)`;
     }
     return convenio.nome;
+  }
+  
+  /**
+   * Obtém o nome do convênio pelo ID
+   */
+  getConvenioNomeById(id: string | number): string {
+    if (!id) return 'Não definido';
+    
+    const convenioId = typeof id === 'string' ? parseInt(id) : id;
+    const convenio = this.convenios.find(c => c.id === convenioId);
+    
+    return convenio ? convenio.nome : 'Convênio não encontrado';
+  }
+  
+  /**
+   * Navega para a visualização detalhada do paciente selecionado
+   */
+  visualizarPaciente(paciente: Paciente) {
+    if (paciente && paciente.id) {
+      console.log('Navegando para visualizar paciente:', paciente.id);
+      this.router.navigate(['/pacientes/visualizar', paciente.id]);
+    } else {
+      this.notificacaoService.mostrarErro('Não foi possível visualizar este paciente. ID inválido.');
+    }
   }
 }
