@@ -61,3 +61,18 @@ html {
 ::ng-deep .cdk-global-overlay-wrapper {
   z-index: 1060 !important;
 }
+
+.sucesso-snackbar {
+  background-color: #4caf50; // Verde
+  color: #fff;
+}
+
+.erro-snackbar {
+  background-color: #f44336; // Vermelho
+  color: #fff;
+}
+
+.aviso-snackbar {
+  background-color: #ff9800; // Laranja
+  color: #fff;
+}

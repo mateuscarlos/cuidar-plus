@@ -8,6 +8,7 @@ import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-pac
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { PacienteBuscaAvancadaComponent } from './paciente-busca-avancada/paciente-busca-avancada.component';
+import { BuscaPacienteComponent } from './busca-paciente/busca-paciente.component';
 
 /**
  * Rotas para o módulo de Pacientes
@@ -54,8 +55,8 @@ export const PACIENTES_ROUTES: Routes = [
     title: 'Acompanhamento de Paciente'
   },
   {
-    path: 'busca-avancada',
+    path: 'busca',
     component: PacienteBuscaAvancadaComponent,
-    title: 'Busca Avançada de Pacientes'
+    title: 'Busca de Pacientes - Cuidar+'
   }
 ];

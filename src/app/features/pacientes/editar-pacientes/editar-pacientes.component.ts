@@ -18,6 +18,8 @@ import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { BehaviorSubject, catchError, finalize, of, tap } from 'rxjs';
 
+declare var bootstrap: any;
+
 /**
  * Componente responsável pela edição de pacientes existentes
  */
@@ -114,8 +116,8 @@ export class EditarPacientesComponent implements OnInit {
         numero: ['', Validators.required],
         complemento: [''],
         bairro: ['', Validators.required],
-        cidade: ['', Validators.required],
-        estado: ['', Validators.required]
+        localidade: ['', Validators.required],
+        uf: ['', Validators.required]
       }),
       status: [StatusPaciente.ATIVO, Validators.required],
       cid_primario: ['', Validators.required],
@@ -312,8 +314,8 @@ export class EditarPacientesComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade,
-                estado: endereco.uf
+                localidade: endereco.localidade, // Use localidade ao invés de cidade
+                uf: endereco.uf // Use uf ao invés de estado
               }
             });
           } else {
@@ -382,6 +384,8 @@ export class EditarPacientesComponent implements OnInit {
     // Processar endereço com segurança
     let endereco = this.processarEndereco(paciente.endereco);
 
+    console.log('Endereço processado:', endereco); // Para debug
+    
     // Preencher todos os campos do formulário
     this.pacienteForm.patchValue({
       nome_completo: paciente.nome_completo,
@@ -452,10 +456,11 @@ export class EditarPacientesComponent implements OnInit {
       numero: this.getEnderecoField(endereco, 'numero'),
       complemento: this.getEnderecoField(endereco, 'complemento'),
       bairro: this.getEnderecoField(endereco, 'bairro'),
+      localidade: this.getEnderecoField(endereco, 'localidade', 'cidade'),
+      uf: this.getEnderecoField(endereco, 'uf', 'estado'),
+      // Também manter cidade e estado para compatibilidade
       cidade: this.getEnderecoField(endereco, 'localidade', 'cidade'),
-      estado: this.getEnderecoField(endereco, 'uf', 'estado'),
-      localidade: '', // Campos adicionais para compatibilidade com o modelo
-      uf: ''
+      estado: this.getEnderecoField(endereco, 'uf', 'estado')
     };
   }
 
@@ -611,5 +616,89 @@ export class EditarPacientesComponent implements OnInit {
     this.pacienteSelecionado = null;
     this.modoEdicao = false;
     this.initForm(); // Reiniciar o formulário com valores padrão
+  }
+
+  /**
+   * Método para abrir o modal de confirmação
+   */
+  abrirModalConfirmacao(): void {
+    console.log('abrirModalConfirmacao chamado');
+    if (this.pacienteForm.invalid) {
+      console.log('Formulário inválido');
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
+  
+    const modalElement = document.getElementById('confirmacaoModal');
+    if (modalElement) {
+      console.log('Exibindo modal de confirmação');
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error('Modal de confirmação não encontrado no DOM.');
+    }
+  }
+  
+  /**
+   * Método para confirmar a edição do paciente
+   */
+  confirmarEdicao(): void {
+    this.removerBackdrop(); // Remover qualquer backdrop residual
+    this.isLoading = true;
+  
+    const confirmacaoModalElement = document.getElementById('confirmacaoModal');
+    if (confirmacaoModalElement) {
+      const confirmacaoModal = bootstrap.Modal.getInstance(confirmacaoModalElement);
+      confirmacaoModal?.hide();
+    }
+  
+    // Obter os dados do formulário e processar as datas
+    const formValues = this.processarDatasFormulario(this.pacienteForm.getRawValue());
+    
+    this.pacienteService.atualizarPaciente(this.pacienteSelecionado?.id!, formValues).subscribe({
+      next: () => {
+        // Aguardar 500ms para mostrar o modal de sucesso
+        setTimeout(() => {
+          this.removerBackdrop(); // Garantir que não há backdrops antes de abrir o próximo modal
+          const modalElement = document.getElementById('sucessoModal');
+          if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error('Modal de sucesso não encontrado no DOM.');
+          }
+        }, 500);
+      },
+      error: (erro) => {
+        console.error('Erro ao atualizar paciente:', erro);
+        this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  /**
+   * Método para redirecionar para a lista de pacientes após a edição
+   */
+  redirecionarParaPacientes(): void {
+    const modalElement = document.getElementById('sucessoModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+  
+    this.removerBackdrop(); // Garantir que o backdrop seja removido
+    this.router.navigate(['/pacientes']);
+  }
+  
+  /**
+   * Remove qualquer backdrop residual do modal
+   */
+  private removerBackdrop(): void {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
   }
 }

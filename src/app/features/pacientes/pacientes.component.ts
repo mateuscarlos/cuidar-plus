@@ -61,7 +61,7 @@ export class PacientesComponent {
   }
   
   navegarParaBusca(): void {
-    this.router.navigate(['/pacientes/busca-avancada']);
+    this.router.navigate(['/pacientes/busca']);
   }
   
   navegarParaAcompanhamento(): void {

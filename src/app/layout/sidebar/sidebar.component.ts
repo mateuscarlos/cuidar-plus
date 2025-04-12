@@ -56,19 +56,14 @@ export class SidebarComponent implements OnInit {
         },
         {
           title: 'Cadastrar Paciente',
-          route: '/pacientes/cadastrar',
+          route: '/pacientes/criar',
           icon: 'bi-person-plus'
         },
         {
           title: 'Buscar Paciente',
-          route: '/pacientes/visualizar',
+          route: '/pacientes/busca',
           icon: 'bi-search'
         },
-        {
-          title: 'Novo Acompanhamento',
-          route: '/pacientes/acompanhamento',
-          icon: 'bi-clipboard-pulse'
-        }
       ]
     },
     { 
@@ -108,7 +103,7 @@ export class SidebarComponent implements OnInit {
             },
             {
               title: 'Cadastrar Usuário',
-              route: '/usuarios/cadastrar',
+              route: '/usuarios/criar',
               icon: 'bi-person-plus'
             }
           ]

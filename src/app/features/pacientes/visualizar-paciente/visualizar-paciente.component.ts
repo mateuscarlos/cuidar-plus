@@ -220,16 +220,14 @@ export class VisualizarPacienteComponent implements OnInit {
    * Navega de volta para a tela de busca
    */
   voltarParaBusca(): void {
-    this.modoVisualizacao = false;
-    this.paciente = null;
-    this.resultadosBusca = [];
-  }
+    this.router.navigate(['/pacientes/busca']);
+}
 
   /**
    * Navega de volta para a lista de pacientes
    */
   voltarParaLista(): void {
-    this.router.navigate(['/pacientes']);
+    this.router.navigate(['/pacientes/lista']);
   }
   
   /**
