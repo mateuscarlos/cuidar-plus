@@ -1,0 +1,63 @@
+.cursor-pointer {
+  cursor: pointer;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+// Destacar filtros aplicados com cor primária
+.is-invalid {
+  border-color: #0d6efd !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+}
+
+// Animações para melhorar UX
+.badge {
+  transition: all 0.2s ease;
+  
+  i.cursor-pointer {
+    font-size: 0.85em;
+    
+    &:hover {
+      color: #fff;
+      opacity: 0.8;
+    }
+  }
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+// Melhorar aparência do select com muitos itens
+select.form-select {
+  max-height: 38px;
+  overflow-y: auto;
+}
+
+// Melhorar estilo das tabelas
+.table {
+  th {
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  tbody tr {
+    transition: background-color 0.15s ease-in-out;
+    
+    &:hover {
+      background-color: rgba(13, 110, 253, 0.05);
+    }
+  }
+}
+
+// Efeitos de transição para carregamento
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}

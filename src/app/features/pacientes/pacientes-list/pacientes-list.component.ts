@@ -54,34 +54,17 @@ export class PacientesListComponent implements OnInit {
    */
   carregarPacientes(): void {
     this.isLoading = true;
-    this.error = null;
-    
-    this.pacienteService.listarTodosPacientes()
-      .pipe(
-        map(pacientes => {
-          // Garantir que nome está disponível para os componentes que o usam
-          return pacientes.map(p => ({
-            ...p,
-            nome: p.nome || p.nome_completo 
-          }));
-        }),
-        tap(pacientes => {
-          this.pacientes = pacientes;
-          this.totalPacientes = pacientes.length;
-          this.totalPages = Math.ceil(this.totalPacientes / this.pageSize);
-          this.aplicarFiltros();
-        }),
-        catchError(err => {
-          console.error('Erro ao carregar pacientes:', err);
-          this.error = 'Erro ao carregar pacientes. Por favor, tente novamente mais tarde.';
-          this.notificacaoService.mostrarErro(this.error);
-          return of([]);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe();
+    this.pacienteService.listarTodosPacientes().subscribe({
+      next: (pacientes) => {
+        this.pacientes = pacientes;
+        this.aplicarFiltros(); // Adicionar esta linha para processar e exibir os pacientes
+        this.isLoading = false;
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao carregar pacientes. Tente novamente.');
+        this.isLoading = false;
+      }
+    });
   }
 
   /**
@@ -223,7 +206,7 @@ export class PacientesListComponent implements OnInit {
    * Navegar para tela de cadastro de paciente
    */
   cadastrarNovoPaciente(): void {
-    this.router.navigate(['/pacientes/cadastrar']);
+    this.router.navigate(['/pacientes/criar']);
   }
   
   /**
@@ -231,7 +214,7 @@ export class PacientesListComponent implements OnInit {
    */
   editarPaciente(pacienteId: number | string, event: Event): void {
     event.stopPropagation(); // Evita que o evento propague para o clique da linha
-    this.router.navigate(['/pacientes/editar', pacienteId]);
+    this.router.navigate(['/pacientes/editar/', pacienteId]);
   }
   
   /**
@@ -241,4 +224,21 @@ export class PacientesListComponent implements OnInit {
     if (!data) return 'N/A';
   return this.dateFormatter.formatarDataParaFormulario(data, 'data_nascimento');
 }
+
+  /**
+   * Excluir paciente
+   */
+  excluirPaciente(id: number): void {
+    if (confirm('Tem certeza que deseja excluir este paciente?')) {
+      this.pacienteService.excluirPaciente(id).subscribe({
+        next: () => {
+          this.notificacaoService.mostrarSucesso('Paciente excluído com sucesso!');
+          this.carregarPacientes();
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao excluir paciente. Tente novamente.');
+        }
+      });
+    }
+  }
 }

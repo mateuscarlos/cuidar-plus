@@ -95,9 +95,10 @@
             <label for="cep" class="form-label">CEP*</label>
             <input 
               type="text" 
-              id="cep" 
-              formControlName="cep" 
+             formControlName="cep" 
               maxlength="8" 
+              placeholder="00000000" 
+              (input)="filtrarCep($event)" 
               (blur)="consultarCep()" 
               class="form-control"
               [ngClass]="{'is-invalid': usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched}">

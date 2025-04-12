@@ -103,7 +103,7 @@
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Tipo de Contratação:</span>
-              <strong>{{ usuario.tipo_contratacao || usuario.tipoContratacao || 'Não informado' }}</strong>
+              <strong>{{ formatarTipoContratacao(usuario.tipo_contratacao || usuario.tipoContratacao) }}</strong>
             </li>
             
           </ul>
@@ -139,7 +139,7 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Tipo de Acesso:</span>
-              <strong>{{ usuario.tipo_acesso || usuario.tipoAcesso || 'Não informado' }}</strong>
+              <strong>{{ formatarTipoAcesso(usuario.tipo_acesso || usuario.tipoAcesso) }}</strong>
             </li>
             <li class="list-group-item d-flex justify-content-between">
               <span class="text-muted">Permissões:</span>

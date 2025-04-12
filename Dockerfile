@@ -1,31 +1,27 @@
-# Estágio de build
-FROM node:20-alpine AS build
+# Etapa 1: build do Angular
+FROM node:20 AS build-stage
 
 WORKDIR /app
 
-# Copiar package.json e package-lock.json para instalar dependências
 COPY package*.json ./
+RUN npm install
 
-# Instalar dependências
-RUN npm
-
-# Copiar o resto do código fonte
 COPY . .
+RUN npm run build --prod
 
-# Construir a aplicação
-RUN npm run build -- --configuration production
+# Etapa 2: imagem final com Nginx
+FROM nginx:stable-alpine AS production-stage
 
-# Estágio de produção
-FROM nginx:alpine
+# Remove a configuração padrão do Nginx
+RUN rm -rf /etc/nginx/conf.d/default.conf
 
-# Copiar a configuração do Nginx
+# Copia sua config customizada do nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copiar os arquivos compilados do estágio de build
-COPY --from=build /app/dist/cuidar-plus/browser /usr/share/nginx/html
+# Copia os arquivos buildados do Angular
+# Corrigindo o caminho para incluir o nome do projeto
+COPY --from=build-stage /app/dist/cuidar-plus/browser /usr/share/nginx/html/
 
-# Expor a porta 80
-EXPOSE 80
+EXPOSE 8080
 
-# Iniciar Nginx
 CMD ["nginx", "-g", "daemon off;"]

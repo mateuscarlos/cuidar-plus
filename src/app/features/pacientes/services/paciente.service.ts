@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map, retry, tap } from 'rxjs/operators';
 import { Paciente, ResultadoBusca, StatusPaciente } from '../models/paciente.model';
 import { environment } from '../../../../environments/environment';
@@ -21,7 +21,10 @@ export class PacienteService {
     return this.http.get<Paciente[]>(this.apiUrl).pipe(
       retry(1),
       map(pacientes => this.normalizarPacientes(pacientes)),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error('Erro ao listar pacientes:', error);
+        return of([]); // Retorna uma lista vazia
+      })
     );
   }
 
@@ -34,7 +37,10 @@ export class PacienteService {
     return this.http.get<Paciente>(url).pipe(
       retry(1),
       map(paciente => this.normalizarPaciente(paciente)),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error(`Erro ao obter paciente com ID ${id}:`, error);
+        return of(null); // Retorna null em caso de erro
+      })
     );
   }
 
@@ -42,10 +48,8 @@ export class PacienteService {
    * Realiza a busca de pacientes com base nos critérios fornecidos
    */
   buscarPacientes(criterios: ResultadoBusca): Observable<Paciente[]> {
-    // Corresponde a: @pacientes_routes.route('/pacientes/buscar', methods=['GET'])
     let params = new HttpParams();
-    
-    // Adaptar para o formato esperado pelo backend (tipo e valor)
+
     if (criterios.nome) {
       params = params.append('tipo', 'nome');
       params = params.append('valor', criterios.nome);
@@ -60,7 +64,10 @@ export class PacienteService {
     return this.http.get<Paciente[]>(`${this.apiUrl}/buscar`, { params }).pipe(
       retry(1),
       map(pacientes => this.normalizarPacientes(pacientes)),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error('Erro ao buscar pacientes:', error);
+        return of([]); // Retorna uma lista vazia
+      })
     );
   }
 
@@ -68,25 +75,26 @@ export class PacienteService {
    * Cria um novo paciente
    */
   criarPaciente(paciente: Paciente): Observable<Paciente> {
-    // Corresponde a: @pacientes_routes.route('/pacientes/criar', methods=['POST'])
-    console.log('PacienteService - Payload:', paciente);
-    
-    return this.http.post<Paciente>(`${this.apiUrl}/criar`, paciente)
-      .pipe(
-        tap(response => console.log('Paciente criado:', response)),
-        catchError(this.handleError)
-      );
+    return this.http.post<Paciente>(`${this.apiUrl}/criar`, paciente).pipe(
+      tap(response => console.log('Paciente criado:', response)),
+      catchError(error => {
+        console.error('Erro ao criar paciente:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
    * Atualiza dados de um paciente existente
    */
   atualizarPaciente(id: string | number, paciente: Paciente): Observable<Paciente> {
-    // Corresponde a: @pacientes_routes.route('/pacientes/atualizar/<int:id>', methods=['PUT'])
     const url = `${this.apiUrl}/atualizar/${id}`;
     return this.http.put<Paciente>(url, paciente).pipe(
       map(paciente => this.normalizarPaciente(paciente)),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error(`Erro ao atualizar paciente com ID ${id}:`, error);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -98,7 +106,10 @@ export class PacienteService {
     const url = `${this.apiUrl}/delete/${id}`;
     return this.http.delete(url).pipe(
       retry(1),
-      catchError(this.handleError)
+      catchError(error => {
+        console.error(`Erro ao excluir paciente com ID ${id}:`, error);
+        return throwError(() => error);
+      })
     );
   }
 

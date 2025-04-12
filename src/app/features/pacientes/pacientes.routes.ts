@@ -5,6 +5,10 @@ import { CadastrarPacienteComponent } from './cadastrar-paciente/cadastrar-pacie
 import { EditarPacientesComponent } from './editar-pacientes/editar-pacientes.component';
 import { VisualizarPacienteComponent } from './visualizar-paciente/visualizar-paciente.component';
 import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
+import { PacienteBuscaAvancadaComponent } from './paciente-busca-avancada/paciente-busca-avancada.component';
+import { BuscaPacienteComponent } from './busca-paciente/busca-paciente.component';
 
 /**
  * Rotas para o módulo de Pacientes
@@ -21,7 +25,7 @@ export const PACIENTES_ROUTES: Routes = [
     title: 'Lista de Pacientes'
   },
   {
-    path: 'cadastrar',
+    path: 'criar',
     component: CadastrarPacienteComponent,
     title: 'Cadastrar Novo Paciente'
   },
@@ -49,5 +53,10 @@ export const PACIENTES_ROUTES: Routes = [
     path: 'acompanhamento',
     component: CriarAcompanhamentoPacienteComponent,
     title: 'Acompanhamento de Paciente'
+  },
+  {
+    path: 'busca',
+    component: PacienteBuscaAvancadaComponent,
+    title: 'Busca de Pacientes - Cuidar+'
   }
 ];

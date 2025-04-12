@@ -35,6 +35,8 @@ export interface Paciente {
     telefone?: string;
     status?: string;
     id?: number;
+    convenio?: string;
+    dataNascimento?: string;
   }
 
 

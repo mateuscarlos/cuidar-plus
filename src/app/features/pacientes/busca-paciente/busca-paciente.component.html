@@ -1,70 +1,40 @@
-<div class="card border-0 shadow-sm mb-4">
-  <div class="card-body">
-    <h6 class="card-title mb-3">Buscar Paciente</h6>
-    
-    <form [formGroup]="buscaForm">
-      <div class="row g-3">
-        <!-- CPF -->
-        <div class="col-md-4">
-          <label for="cpf" class="form-label">CPF</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-card-text"></i>
-            </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="cpf" 
-              formControlName="cpf" 
-              placeholder="000.000.000-00"
-              maxlength="14"
-            >
+<div class="container-fluid">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+      <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Busca Pacientes></li>
+    </ol>
+  </nav>
+
+  <!-- Card de busca -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h6 class="card-title mb-3">Buscar Paciente</h6>
+      <form [formGroup]="buscaForm">
+        <!-- Campos de busca -->
+        <div class="row g-3">
+          <!-- CPF -->
+          <div class="col-md-4">
+            <label for="cpf" class="form-label">CPF</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="bi bi-card-text"></i>
+              </span>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="cpf" 
+                formControlName="cpf" 
+                placeholder="000.000.000-00"
+              >
+            </div>
           </div>
-          <small class="form-text text-muted">Digite o CPF sem pontuação</small>
+          <!-- Outros campos -->
         </div>
-        
-        <!-- ID/Matrícula -->
-        <div class="col-md-4">
-          <label for="id" class="form-label">Matrícula/ID</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-hash"></i>
-            </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="id" 
-              formControlName="id" 
-              placeholder="Ex: 12345"
-            >
-          </div>
-        </div>
-        
-        <!-- Nome -->
-        <div class="col-md-4">
-          <label for="nome" class="form-label">Nome</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-person"></i>
-            </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="nome" 
-              formControlName="nome" 
-              placeholder="Nome do paciente"
-            >
-          </div>
-          <small class="form-text text-muted">Busca por nome parcial</small>
-        </div>
-      </div>
-      
-      <div class="d-flex justify-content-end mt-3">
-        <button type="button" class="btn btn-outline-secondary" (click)="limparBusca()">
-          <i class="bi bi-eraser me-1"></i> Limpar
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -74,7 +44,7 @@
     <h6 class="card-title mb-3">Resultados da Busca</h6>
     
     <!-- Indicador de carregamento -->
-    <div class="text-center my-4" *ngIf="carregando">
+    <div class="text-center my-4" *ngIf="carregando && !(pacientes.length === 0)">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Carregando...</span>
       </div>

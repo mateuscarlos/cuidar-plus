@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 
 // Novo serviço unificado
-import { ApiUsuarioService } from '../services/api-usuario.service';
+import { UsuarioService } from '../services/usuario.service';
 import { UsuarioRoutesService } from '../services/usuario-routes.service';
 import { UserStatusStyleService } from '../services/user-status-style.service';
 import { ConselhosProfissionaisService } from '../services/conselhos-profissionais.service';
@@ -74,7 +74,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private apiUsuarioService: ApiUsuarioService,
+    private usuarioService: UsuarioService,
     private usuarioRoutesService: UsuarioRoutesService,
     private cepService: CepService,
     private router: Router,
@@ -143,7 +143,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   carregarSetores(): void {
     this.isLoading = true;
-    this.apiUsuarioService.listarSetores()
+    this.usuarioService.listarSetores()
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (setores) => {
@@ -164,7 +164,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       this.funcaoSubscription.unsubscribe();
     }
 
-    this.apiUsuarioService.listarFuncoesPorSetor(setorId)
+    this.usuarioService.listarFuncoesPorSetor(setorId)
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (funcoes) => {
@@ -193,6 +193,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
       });
   }
 
+  
   // Método separado para configurar o observador de mudanças na função
   configuraObservadorFuncao(): void {
     // Cancela a assinatura anterior, se existir
@@ -287,15 +288,25 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Novo método para filtrar caracteres não numéricos do CEP
+  filtrarCep(event: any): void {
+    const input = event.target;
+    // Remove qualquer caractere que não seja número
+    const valor = input.value.replace(/\D/g, '');
+    
+    // Atualiza o valor do campo com apenas os números
+    this.usuarioForm.get('endereco.cep')?.setValue(valor, {emitEvent: false});
+  }
+
   carregarUsuario(id: number): void {
     this.isLoading = true;
-    this.apiUsuarioService.obterUsuarioPorId(id.toString())
+    this.usuarioService.obterUsuarioPorId(id.toString())
       .pipe(
         switchMap(usuario => {
           // Primeiro carregamos o setor, que disparará o carregamento das funções
           if (usuario.setor) {
             const setorId = +usuario.setor;
-            return this.apiUsuarioService.listarFuncoesPorSetor(setorId).pipe(
+            return this.usuarioService.listarFuncoesPorSetor(setorId).pipe(
               map(funcoes => {
                 this.funcoes = funcoes;
                 return usuario; // Retorna o usuário para continuar o fluxo
@@ -351,35 +362,18 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.usuarioForm.invalid) {
+      // Marcar todos os campos como tocados para exibir validações
       this.markFormGroupTouched(this.usuarioForm);
-      this.notificacaoService.mostrarAviso('Preencha todos os campos obrigatórios');
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    // Preparar os dados do usuário
+  
+    // Armazenar dados temporariamente e ir para o componente de senha
     this.tempUsuarioData = this.prepararDadosUsuario();
-
-    if (this.modoEdicao && this.userId) {
-      // Para edição, não solicitar senha, apenas atualizar o usuário
-      this.isLoading = true;
-      this.apiUsuarioService.atualizarUsuario(this.userId.toString(), this.tempUsuarioData)
-        .pipe(finalize(() => this.isLoading = false))
-        .subscribe({
-          next: () => {
-            this.notificacaoService.mostrarSucesso('Usuário atualizado com sucesso');
-            this.usuarioRoutesService.navegarParaLista();
-          },
-          error: (err) => {
-            this.error = 'Erro ao atualizar usuário';
-            this.notificacaoService.mostrarErro('Erro ao atualizar usuário');
-          }
-        });
-    } else {
-      // Para cadastro novo, avançar para o passo de definição de senha
-      this.currentStep = 'passwordForm';
-      // Scroll para o topo da página para melhor visibilidade do novo formulário
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    this.currentStep = 'passwordForm';
+    
+    // Rolar para o topo da página para focar no novo componente
+    window.scrollTo(0, 0);
   }
 
   // Método para marcar todos os campos como touched para mostrar validações
@@ -410,7 +404,7 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     
     // Enviar os dados do usuário com a senha para a API
     this.isLoading = true;
-    this.apiUsuarioService.criarUsuario(this.tempUsuarioData)
+    this.usuarioService.criarUsuario(this.tempUsuarioData)
       .pipe(finalize(() => {
         this.isLoading = false;
         this.tempUsuarioData = null; // Limpar os dados temporários
