@@ -3,11 +3,14 @@ FROM node:20 AS build-stage
 
 WORKDIR /app
 
+# Add a build argument that can be used as a cache buster
+ARG CACHE_BUST=unknown
+
 COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npm run build --prod
+RUN npm run build
 
 # Etapa 2: imagem final com Nginx
 FROM nginx:stable-alpine AS production-stage
@@ -19,7 +22,6 @@ RUN rm -rf /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copia os arquivos buildados do Angular
-# Corrigindo o caminho para incluir o nome do projeto
 COPY --from=build-stage /app/dist/cuidar-plus/browser /usr/share/nginx/html/
 
 EXPOSE 8080
