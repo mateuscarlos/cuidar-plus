@@ -1,39 +1,39 @@
-<nav class="navbar navbar-expand navbar-light bg-white border-bottom">
+<nav class="navbar navbar-expand bg-white w-100 h-100">
   <div class="container-fluid px-3">
-    <!-- Toggle button for sidebar -->
+    <!-- Botão de toggle para o sidebar em dispositivos móveis -->
     <button class="btn btn-link sidebar-toggle d-lg-none p-0" (click)="onToggleSidebar()">
       <i class="bi bi-list fs-4"></i>
     </button>
     
-    <!-- Breadcrumb or page title could go here -->
-    <div class="ms-3 d-none d-lg-block">
-      <!-- Você pode adicionar um breadcrumb aqui no futuro -->
-    </div>
+    <!-- Logo/Título -->
+    <a class="navbar-brand d-flex align-items-center ms-2 ms-lg-0" href="#">
+      <i class="bi bi-heart-pulse text-primary me-2"></i>
+      <span class="fw-bold">Cuidar+</span>
+    </a>
     
-    <!-- Espaçador para empurrar os itens para direita -->
+    <!-- Espaçador -->
     <div class="flex-grow-1"></div>
     
-    <!-- Notification Bell e User dropdown à direita -->
+    <!-- Notificações e Perfil do usuário -->
     <div class="d-flex align-items-center">
-      <!-- Notification Bell -->
+      <!-- Notificações -->
       <div class="position-relative me-3">
         <button class="btn btn-link p-1 text-body">
           <i class="bi bi-bell fs-5"></i>
-          <span *ngIf="hasNotifications" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                *ngIf="hasNotifications">
             <span class="visually-hidden">Notificações não lidas</span>
           </span>
         </button>
       </div>
       
-      <!-- User Dropdown -->
+      <!-- Perfil do usuário -->
       <div class="dropdown">
-        <button class="btn btn-link dropdown-toggle text-decoration-none d-flex align-items-center" 
-                type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-          <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-2" 
-               style="width: 32px; height: 32px;">
-            {{ userName.charAt(0) }}
+        <button class="btn dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="avatar-circle bg-primary rounded-circle text-white me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="bi bi-person-fill"></i>
           </div>
-          <span class="d-none d-md-inline">{{ userName }}</span>
+          <span class="d-none d-md-inline">{{ userName || 'Usuário' }}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
           <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>

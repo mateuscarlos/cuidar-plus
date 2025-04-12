@@ -5,6 +5,48 @@
 @import "./styles/forms.scss";
 @import "./styles/tables.scss";
 
+// Adicione após os imports existentes
+
+// Estilos para o layout principal
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+// Componentes com altura fixa
+.header {
+  --header-height: 60px;
+  height: var(--header-height);
+}
+
+.footer {
+  --footer-height: 60px;
+  height: var(--footer-height);
+}
+
+// Melhorias para rolagem
+.overflow-auto, .overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.overflow-auto::-webkit-scrollbar, 
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb, 
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.overflow-auto::-webkit-scrollbar-track, 
+.overflow-y-auto::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
 /* Reset globals */
 html, body {
   height: 100%;
