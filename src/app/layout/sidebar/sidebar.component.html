@@ -1,19 +1,7 @@
 <nav class="sidebar bg-white h-100 d-flex flex-column">
   <div class="sidebar-wrapper">
     <!-- Conteúdo do Sidebar -->
-    <div class="sidebar-content flex-grow-1 overflow-auto py-2">
-      <!-- Logo -->
-      <div class="sidebar-logo py-4 px-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <a href="#" class="text-decoration-none">
-            <i class="bi bi-heart-pulse text-primary me-2"></i>
-            <span class="text-dark fs-5 fw-bold">Cuidar+</span>
-          </a>
-          <button class="btn btn-link text-dark d-md-none" (click)="onToggleSidebar()">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </div>
+    
 
       <!-- Menu de navegação -->
       <ul class="sidebar-menu list-unstyled px-3">
@@ -107,5 +95,5 @@
     
     <!-- Overlay para dispositivos móveis -->
     <div class="sidebar-overlay" *ngIf="showOverlay" (click)="onToggleSidebar()"></div>
-  </div>
+  
 </nav>
