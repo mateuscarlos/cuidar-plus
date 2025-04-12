@@ -84,4 +84,9 @@ export class ToastService {
   public warning(message: string, title: string = 'Atenção'): void {
     this.show(title, message, 'warning');
   }
+
+  showError(message: string): void {
+    console.error('Toast Error:', message);
+    // Implement toast notification logic here
+  }
 }

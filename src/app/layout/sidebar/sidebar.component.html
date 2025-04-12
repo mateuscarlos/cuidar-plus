@@ -29,12 +29,12 @@
             <i [class]="item.icon + ' me-3 text-primary'" aria-hidden="true"></i>
             <span>{{ item.title }}</span>
             
-            <!-- Indicator de item em construção -->
-            <span class="badge bg-warning text-dark rounded-pill ms-auto" *ngIf="item.inConstruction">Em breve</span>
+            <!-- Indicator de item em construção (usando ícone) -->
+            <i class="bi bi-tools text-warning ms-auto" *ngIf="item.inConstruction" title="Em construção"></i>
             
             <!-- Indicador de dropdown para itens com subitens -->
             <i 
-              *ngIf="item.subItems?.length" 
+              *ngIf="item.subItems?.length && !item.inConstruction" 
               class="bi ms-auto" 
               [ngClass]="item.expanded ? 'bi-chevron-down' : 'bi-chevron-right'"
             ></i>

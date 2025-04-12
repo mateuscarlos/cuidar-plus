@@ -16,7 +16,7 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
     DynamicPipePipe
   ],
   template: `
-    <div class="container-fluid p-4">
+    <div class="container-fluid py-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0">
           <i class="bi bi-search me-2 text-primary"></i>Busca Avançada de Usuários
@@ -33,6 +33,7 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
         [resultados]="usuarios"
         [colunas]="colunasUsuario"
         [totalItems]="totalUsuarios"
+        [currentPage]="paginaAtual"
         [pageSize]="10"
         (search)="buscarUsuarios($event)"
         (clear)="limparBusca()"
@@ -71,20 +72,28 @@ export class UsuarioBuscaPageComponent implements OnInit {
       pipe: 'cpf'
     },
     {
-      name: 'funcao',
-      label: 'Função',
-      type: 'text',
-      placeholder: 'Digite a função',
+      name: 'id',
+      label: 'ID',
+      type: 'number',
+      placeholder: 'ID do usuário',
       width: 2,
-      icon: 'briefcase'
+      icon: 'hash'
     },
     {
       name: 'setor',
       label: 'Setor',
       type: 'text',
       placeholder: 'Digite o setor',
-      width: 2,
+      width: 3,
       icon: 'building'
+    },
+    {
+      name: 'funcao',
+      label: 'Função',
+      type: 'text',
+      placeholder: 'Digite a função',
+      width: 3,
+      icon: 'briefcase'
     },
     {
       name: 'status',
@@ -92,7 +101,10 @@ export class UsuarioBuscaPageComponent implements OnInit {
       type: 'select',
       width: 2,
       icon: 'tag',
-      options: Object.values(UserStatus)
+      options: Object.values(UserStatus).map(status => ({
+        id: status,
+        nome: status
+      }))
     }
   ];
   
@@ -100,7 +112,8 @@ export class UsuarioBuscaPageComponent implements OnInit {
     { header: 'Nome', field: 'nome' },
     { header: 'Email', field: 'email' },
     { header: 'CPF', field: 'cpf', pipe: 'cpf' },
-    { header: 'Função', field: 'funcaoNome' },
+    { header: 'Setor', field: 'setor', formatFn: (value: any) => this.formatarSetor(value) },
+    { header: 'Função', field: 'funcao', formatFn: (value: any) => this.formatarFuncao(value) },
     { header: 'Status', field: 'status', type: 'status' }
   ];
   
@@ -108,6 +121,7 @@ export class UsuarioBuscaPageComponent implements OnInit {
   isLoading = false;
   totalUsuarios = 0;
   paginaAtual = 1;
+  ultimaConsulta: SearchResult | null = null;
 
   constructor(
     private usuarioService: UsuarioService,
@@ -120,6 +134,7 @@ export class UsuarioBuscaPageComponent implements OnInit {
   }
 
   buscarUsuarios(filtros: SearchResult): void {
+    this.ultimaConsulta = filtros; // Guarda a última consulta
     this.isLoading = true;
     
     // Adicionar paginação
@@ -129,15 +144,39 @@ export class UsuarioBuscaPageComponent implements OnInit {
       limit: 10
     };
     
+    console.log('Enviando filtros para API:', filtrosComPaginacao);
+    
     this.usuarioService.buscarUsuarios(filtrosComPaginacao).subscribe({
       next: (response) => {
-        this.usuarios = response;
-        this.totalUsuarios = response.length; // Idealmente seria response.totalItems de uma API paginada
+        console.log('Resposta da API:', response);
+        
+        if (Array.isArray(response)) {
+          // API retornou um array direto
+          this.usuarios = response;
+          this.totalUsuarios = response.length;
+        } else if (response && response.items) {
+          // API retornou formato paginado {items, total, page, etc}
+          this.usuarios = response.items;
+          this.totalUsuarios = response.total;
+          this.paginaAtual = response.page || this.paginaAtual;
+        } else {
+          // Outro formato
+          console.warn('Formato de resposta não esperado:', response);
+          this.usuarios = [];
+          this.totalUsuarios = 0;
+          this.notificacaoService.mostrarErro('Formato de resposta inválido');
+        }
+        
+        console.log('Usuários processados:', this.usuarios);
+        console.log('Total de usuários:', this.totalUsuarios);
+        
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Erro ao buscar usuários', error);
         this.notificacaoService.mostrarErro('Não foi possível realizar a busca de usuários.');
+        this.usuarios = [];
+        this.totalUsuarios = 0;
         this.isLoading = false;
       }
     });
@@ -147,13 +186,18 @@ export class UsuarioBuscaPageComponent implements OnInit {
     this.usuarios = [];
     this.totalUsuarios = 0;
     this.paginaAtual = 1;
+    this.ultimaConsulta = null;
   }
   
   mudarPagina(pagina: number): void {
     this.paginaAtual = pagina;
+    if (this.ultimaConsulta) {
+      this.buscarUsuarios(this.ultimaConsulta);
+    }
   }
 
   handleAction(event: {action: string, item: any}): void {
+    console.log('Ação:', event.action, 'Item:', event.item);
     if (event.action === 'view') {
       this.visualizarUsuario(event.item);
     } else if (event.action === 'edit') {
@@ -179,5 +223,17 @@ export class UsuarioBuscaPageComponent implements OnInit {
   
   navegarParaCadastro(): void {
     this.router.navigate(['/usuarios/cadastrar']);
+  }
+  
+  formatarSetor(valor: any): string {
+    if (!valor) return 'N/A';
+    // Se valor for um ID, aqui você poderia converter para o nome usando um mapeamento
+    return typeof valor === 'string' ? valor : valor.toString();
+  }
+  
+  formatarFuncao(valor: any): string {
+    if (!valor) return 'N/A';
+    // Se valor for um ID, aqui você poderia converter para o nome usando um mapeamento
+    return typeof valor === 'string' ? valor : valor.toString();
   }
 }

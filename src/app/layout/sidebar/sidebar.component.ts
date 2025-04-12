@@ -98,7 +98,7 @@ export class SidebarComponent implements OnInit {
           subItems: [
             {
               title: 'Listar Usuários',
-              route: '/usuarios',
+              route: '/usuarios/lista',
               icon: 'bi-list-ul'
             },
             {

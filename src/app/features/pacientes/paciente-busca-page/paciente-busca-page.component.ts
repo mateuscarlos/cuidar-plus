@@ -17,7 +17,7 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
     DynamicPipePipe
   ],
   template: `
-    <div class="container-fluid p-4">
+    <div class="container-fluid py-4">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0">
           <i class="bi bi-search me-2 text-primary"></i>Busca Avançada de Pacientes
@@ -27,11 +27,6 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
         </button>
       </div>
       
-      <!-- Debug Info -->
-      <div *ngIf="pacientes?.length" class="alert alert-info">
-        {{ pacientes.length }} pacientes encontrados
-      </div>
-      
       <app-advanced-search
         [title]="'Filtros de Busca'"
         [fields]="camposBusca"
@@ -39,6 +34,7 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
         [resultados]="pacientes"
         [colunas]="colunasPaciente"
         [totalItems]="totalPacientes"
+        [currentPage]="paginaAtual"
         [pageSize]="10"
         (search)="buscarPacientes($event)"
         (clear)="limparBusca()"

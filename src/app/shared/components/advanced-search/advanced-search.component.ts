@@ -7,6 +7,7 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { CpfMaskPipe } from '../../pipes/cpf-mask.pipe';
 import { DynamicPipePipe } from '../../pipes/dynamic-pipe.pipe';
 
+// Removed misplaced @Input() declaration
 export interface SearchField {
   name: string;          // Nome interno do campo (usado no formControl)
   label: string;         // Rótulo exibido para o usuário
@@ -94,6 +95,7 @@ export interface SearchResult {
   `
 })
 export class AdvancedSearchComponent implements OnInit, OnDestroy {
+  @Input() paginaAtual: number = 1; // Moved inside the class
   @Input() title: string = 'Busca Avançada';
   @Input() fields: SearchField[] = [];
   @Input() isLoading: boolean = false;

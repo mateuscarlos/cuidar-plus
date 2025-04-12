@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../../core/guards/auth.guard';
-/* import { adminGuard } from '../../core/guards/admin.guard'; */
+import { UsuariosComponent } from './usuarios.component';
+import { UsuariosListComponent } from './usuarios-list/usuarios-list.component';
 import { CadastrarUsuarioComponent } from './cadastrar-usuario/cadastrar-usuario.component';
 import { EditarUsuarioComponent } from './editar-usuario/editar-usuario.component';
-import { UsuariosListComponent } from './usuarios-list/usuarios-list.component';
 import { VisualizarUsuarioComponent } from './visualizar-usuario/visualizar-usuario.component';
 import { LoginComponent } from './login/login.component';
 import { UsuarioBuscaPageComponent } from './usuario-busca-page/usuario-busca-page.component';
@@ -11,17 +11,18 @@ import { UsuarioBuscaPageComponent } from './usuario-busca-page/usuario-busca-pa
 export const USUARIOS_ROUTES: Routes = [
   {
     path: '',
+    component: UsuariosComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'lista',
     component: UsuariosListComponent,
     canActivate: [AuthGuard]
   },
   {
-    path: 'login',
-    component: LoginComponent
-  },
-  {
     path: 'cadastrar',
     component: CadastrarUsuarioComponent,
-    canActivate: [AuthGuard, /* adminGuard */]
+    canActivate: [AuthGuard]
   },
   {
     path: 'editar/:id',
@@ -35,7 +36,7 @@ export const USUARIOS_ROUTES: Routes = [
   },
   {
     path: 'busca',
-    component: UsuarioBuscaPageComponent, // Novo componente de busca
+    component: UsuarioBuscaPageComponent,
     canActivate: [AuthGuard]
   }
 ];

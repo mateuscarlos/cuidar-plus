@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 
@@ -18,6 +18,7 @@ import { Funcao } from '../models/funcao.model';
 
 // Componentes
 import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component';
+import { UsuarioBuscaPageComponent } from '../usuario-busca-page/usuario-busca-page.component';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -28,7 +29,8 @@ import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component'
     NgxMaskDirective, 
     NgxMaskPipe,
     FormsModule,
-    UsuarioBuscaComponent
+    UsuarioBuscaComponent,
+    UsuarioBuscaPageComponent
   ],
   providers: [provideNgxMask()],
   templateUrl: './usuarios-list.component.html',
@@ -55,6 +57,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   usuariosFiltrados: Usuario[] = [];
   isLoading: boolean = false;
   error: string | null = null;
+  totalItems: number = 0;
   
   // Filtros
   searchTerm: string = '';
@@ -79,7 +82,30 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.carregarDados();
+    // Carregar dados auxiliares primeiro (setores, funções)
+    forkJoin({
+      setores: this.usuarioService.listarSetores(),
+      funcoes: this.usuarioService.listarFuncoes()
+    }).subscribe({
+      next: (result) => {
+        // Armazenar setores e funções
+        this.setores = result.setores;
+        this.funcoes = result.funcoes;
+        
+        // Criar mapas para consulta rápida
+        this.setoresMap = new Map(this.setores.map(setor => [setor.id.toString(), setor.nome]));
+        this.funcoesMap = new Map(this.funcoes.map(funcao => [funcao.id.toString(), funcao.nome]));
+        
+        // Agora podemos carregar os usuários
+        this.carregarUsuarios();
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar dados auxiliares:', erro);
+        this.error = 'Não foi possível carregar configurações necessárias.';
+        // Ainda assim, tentar carregar usuários
+        this.carregarUsuarios();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -88,102 +114,36 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Carrega todos os dados necessários para a listagem
-   */
-  carregarDados() {
-    this.isLoading = true;
-    this.error = null;
-    
-    // Carregar setores
-    this.usuarioService.listarSetores()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (setores) => {
-          this.setores = setores;
-          
-          // Armazenar setores em um mapa para acesso rápido
-          setores.forEach(setor => {
-            this.setoresMap.set(setor.id.toString(), setor.nome);
-          });
-          
-          // Carregar usuários após setores
-          this.carregarUsuarios();
-        },
-        error: (error) => {
-          this.error = 'Erro ao carregar setores';
-          this.isLoading = false;
-          this.notificacaoService.mostrarErro('Não foi possível carregar a lista de setores');
-          console.error('Erro ao carregar setores:', error);
-        }
-      });
-      
-    // Carregar funções (mesmo que não precisemos carregar todos)
-    this.usuarioService.listarFuncoes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (funcoes) => {
-          this.funcoes = funcoes;
-          
-          // Armazenar funções em um mapa para acesso rápido
-          funcoes.forEach(funcao => {
-            this.funcoesMap.set(funcao.id.toString(), funcao.nome);
-          });
-        },
-        error: (error) => {
-          console.error('Erro ao carregar funções:', error);
-          // Não exibimos erro porque os nomes das funções serão obtidos na API de usuários
-        }
-      });
-  }
-
-  /**
    * Carrega a lista de usuários
    */
   carregarUsuarios() {
-    this.usuarioService.listarUsuarios()
+    this.isLoading = true;
+    this.error = null;
+    
+    this.usuarioService.listarTodosUsuarios()
       .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.isLoading = false)
+        finalize(() => {
+          this.isLoading = false;
+          setTimeout(() => this.initializeTooltips(), 100);
+        })
       )
       .subscribe({
         next: (usuarios) => {
-          console.log('Resposta da API:', usuarios);
-          
-          // Verificar e adaptar a estrutura de resposta
-          let listaUsuarios: Usuario[];
-          
-          if (Array.isArray(usuarios)) {
-            // Se a API retornar um array diretamente
-            listaUsuarios = usuarios;
-          } else if (usuarios && Array.isArray(usuarios.items)) {
-            // Se a API retornar um objeto com propriedade 'items'
-            listaUsuarios = usuarios.items;
-          } else {
-            console.error('Formato de resposta inesperado:', usuarios);
-            this.notificacaoService.mostrarErro('Erro no formato de dados recebidos');
-            this.error = 'Formato de dados inválido';
-            listaUsuarios = [];
-          }
-          
-          this.usuarios = listaUsuarios.map((usuario: Usuario): Usuario & { setorNome: string; funcaoNome: string } => {
-            // Resto do código de processamento existente
-            if (usuario.setor) usuario.setor = usuario.setor.toString();
-            if (usuario.funcao) usuario.funcao = usuario.funcao.toString();
-            
+          this.usuarios = usuarios.map(user => {
+            // Adicionar propriedades calculadas para exibição
             return {
-              ...usuario,
-              setorNome: this.getNomeSetor(usuario.setor),
-              funcaoNome: this.getNomeFuncao(usuario.funcao)
+              ...user,
+              setorNome: this.getNomeSetor(user.setor),
+              funcaoNome: this.getNomeFuncao(user.funcao)
             };
           });
-          
-          this.aplicarFiltros();
-          setTimeout(() => this.initializeTooltips(), 300);
+          this.usuariosFiltrados = [...this.usuarios];
+          this.totalItems = this.usuarios.length;
+          console.log('Usuários carregados:', this.usuarios);
         },
-        error: (error) => {
-          this.error = 'Erro ao carregar usuários';
-          this.notificacaoService.mostrarErro('Não foi possível carregar a lista de usuários');
-          console.error('Erro ao carregar usuários:', error);
+        error: (erro) => {
+          console.error('Erro ao carregar usuários:', erro);
+          this.error = 'Não foi possível carregar a lista de usuários. Tente novamente mais tarde.';
         }
       });
   }
