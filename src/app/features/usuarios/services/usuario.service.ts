@@ -83,20 +83,7 @@ export class UsuarioService {
     );
   }
 
-  buscarUsuarios(params: ResultadoBusca): Observable<Usuario[]> {
-    let httpParams = new HttpParams();
-    
-    // Adicionar parâmetros de busca
-    Object.keys(params).forEach(key => {
-      if (params[key]) {
-        httpParams = httpParams.set(key, params[key]);
-      }
-    });
-
-    return this.http.get<Usuario[]>(`${this.apiUrl}/buscar`, { params: httpParams });
-  }
-
-  criarUsuario(usuario: Usuario): Observable<Usuario> {
+   criarUsuario(usuario: Usuario): Observable<Usuario> {
     return this.http.post<Usuario>(`${this.apiUrl}/criar`, usuario).pipe(
       catchError(error => {
         console.error('Erro ao criar usuário:', error);
@@ -154,6 +141,29 @@ export class UsuarioService {
 
   listarFuncoesPorSetor(setorId: number): Observable<Funcao[]> {
     return this.http.get<Funcao[]>(`${this.baseApiUrl}/funcoes/${setorId}`);
+  }
+
+  listarTodosUsuarios(): Observable<Usuario[]> {
+    return this.http.get<Usuario[]>(this.apiUrl);
+  }
+  
+  buscarUsuarios(filtros: any): Observable<Usuario[]> {
+    // Construir parâmetros da URL com base nos filtros
+    let queryParams = new URLSearchParams();
+    
+    if (filtros.nome) queryParams.append('nome', filtros.nome);
+    if (filtros.email) queryParams.append('email', filtros.email);
+    if (filtros.cpf) queryParams.append('cpf', filtros.cpf);
+    if (filtros.funcao) queryParams.append('funcao', filtros.funcao);
+    if (filtros.setor) queryParams.append('setor', filtros.setor);
+    if (filtros.status) queryParams.append('status', filtros.status);
+    
+    // Adicionar paginação
+    if (filtros.page) queryParams.append('page', filtros.page);
+    if (filtros.limit) queryParams.append('limit', filtros.limit);
+    
+    const url = `${this.apiUrl}/busca?${queryParams.toString()}`;
+    return this.http.get<Usuario[]>(url);
   }
 
 }

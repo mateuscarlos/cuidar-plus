@@ -3,7 +3,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 2rem 0;
+  text-align: center;
 }
 
 .sortable {
@@ -11,7 +12,7 @@
   user-select: none;
   
   &:hover {
-    background-color: rgba(0,0,0,0.03);
+    background-color: var(--bs-gray-100);
   }
   
   i {
@@ -21,8 +22,8 @@
 }
 
 .avatar {
-  width: 32px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   
   &.avatar-sm {
     width: 28px;
@@ -32,6 +33,10 @@
 
 .cursor-pointer {
   cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+  }
 }
 
 // Estilo para manter consistência com a lista de usuários
@@ -53,4 +58,34 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.card-header {
+  padding: 0.75rem 1.25rem;
+}
+
+.form-control, .form-select {
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+}
+
+.input-group {
+  .input-group-text {
+    background-color: var(--bs-gray-100);
+  }
+}
+
+.table {
+  margin-bottom: 0;
+  
+  th {
+    font-weight: 600;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
 }

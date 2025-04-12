@@ -1,25 +1,80 @@
 <div class="container-fluid py-3">
   <div class="row mb-3">
     <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <h3 class="mb-0">
-          <i class="bi bi-people-fill me-2 text-primary"></i>Usuários
-        </h3>
-        <button class="btn btn-primary" (click)="navegarParaCadastro()">
-          <i class="bi bi-plus-circle me-2"></i>Novo Usuário
-        </button>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Usuários</h4>
+        <div>
+          <a [routerLink]="['/usuarios/busca']" class="btn btn-outline-primary me-2">
+            <i class="bi bi-search me-2"></i>Busca Avançada
+          </a>
+          <a [routerLink]="['/usuarios/cadastrar']" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Novo Usuário
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Componente de busca -->
-  <app-usuario-busca 
-    [setores]="setores" 
-    [statusOptions]="userStatusOptions" 
-    (filtrosChange)="aplicarFiltros($event)" 
-    (limparFiltros)="limparFiltros()"
-    [isLoading]="isLoading">
-  </app-usuario-busca>
+  <!-- Filtros simples -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-funnel me-2 text-primary"></i>Filtros Rápidos
+        </h5>
+        <button *ngIf="searchTerm || statusFiltro" 
+                class="btn btn-sm btn-outline-secondary" 
+                (click)="limparFiltros()">
+          <i class="bi bi-x-circle me-1"></i>Limpar Filtros
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-search text-primary"></i></span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Buscar por Nome, Email, CPF ou ID" 
+              [(ngModel)]="searchTerm"
+              (input)="aplicarFiltros()">
+            <button 
+              *ngIf="searchTerm" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="searchTerm = ''; aplicarFiltros()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-tag text-primary"></i></span>
+            <select class="form-select" [(ngModel)]="statusFiltro" (change)="aplicarFiltros()">
+              <option value="">Todos os status</option>
+              <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption.value">
+                {{ statusOption.label }}
+              </option>
+            </select>
+            <button 
+              *ngIf="statusFiltro" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="statusFiltro = ''; aplicarFiltros()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <a [routerLink]="['/usuarios/busca']" class="btn btn-primary w-100">
+            <i class="bi bi-search-heart me-2"></i>Busca Avançada
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Exibição de erro -->
   <div class="alert alert-danger" *ngIf="error">

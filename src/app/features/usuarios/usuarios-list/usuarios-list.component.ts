@@ -4,6 +4,7 @@ import { RouterModule, Router } from '@angular/router';
 import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 
 // Serviços
 import { UsuarioService} from '../services/usuario.service';
@@ -26,6 +27,7 @@ import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component'
     RouterModule, 
     NgxMaskDirective, 
     NgxMaskPipe,
+    FormsModule,
     UsuarioBuscaComponent
   ],
   providers: [provideNgxMask()],
@@ -48,12 +50,15 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
     { value: UserStatus.AFASTADO_OUTROS, label: 'Afastado por Outros Motivos' }
   ];
   
-
   // Dados da tabela
   usuarios: Usuario[] = [];
   usuariosFiltrados: Usuario[] = [];
   isLoading: boolean = false;
   error: string | null = null;
+  
+  // Filtros
+  searchTerm: string = '';
+  statusFiltro: string = '';
   
   // Mapas para armazenar relações ID -> Nome
   setoresMap: Map<string, string> = new Map<string, string>();
@@ -172,7 +177,7 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
             };
           });
           
-          this.usuariosFiltrados = [...this.usuarios];
+          this.aplicarFiltros();
           setTimeout(() => this.initializeTooltips(), 300);
         },
         error: (error) => {
@@ -196,66 +201,28 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   /**
    * Aplica os filtros de busca aos usuários
    */
-  aplicarFiltros(filtros: any) {
+  aplicarFiltros() {
     if (!this.usuarios.length) return;
-    
-    console.log('Aplicando filtros:', filtros); // Debug
     
     let usuariosFiltrados = [...this.usuarios];
     
-    // Filtrar por nome
-    if (filtros.nome && filtros.nome.trim() !== '') {
-      const termoBusca = filtros.nome.toLowerCase().trim();
+    // Filtrar por texto (nome, email, CPF ou ID)
+    if (this.searchTerm && this.searchTerm.trim() !== '') {
+      const termoBusca = this.searchTerm.toLowerCase().trim();
       usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.nome?.toLowerCase().includes(termoBusca)
+        (usuario.nome?.toLowerCase().includes(termoBusca)) || 
+        (usuario.email?.toLowerCase().includes(termoBusca)) ||
+        (usuario.cpf?.toLowerCase().includes(termoBusca)) ||
+        (usuario.id?.toString().includes(termoBusca))
       );
-      console.log('Após filtro de nome:', usuariosFiltrados.length);
-    }
-    
-    // Filtrar por email
-    if (filtros.email && filtros.email.trim() !== '') {
-      const termoBusca = filtros.email.toLowerCase().trim();
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.email?.toLowerCase().includes(termoBusca)
-      );
-      console.log('Após filtro de email:', usuariosFiltrados.length);
     }
     
     // Filtrar por status
-    if (filtros.status) {
-      const statusValue = filtros.status;
+    if (this.statusFiltro) {
+      const statusValue = this.statusFiltro;
       usuariosFiltrados = usuariosFiltrados.filter(usuario => 
         usuario.status === statusValue
       );
-      console.log('Após filtro de status:', usuariosFiltrados.length);
-    }
-    
-    // Filtrar por setor
-    if (filtros.setor) {
-      const setorId = filtros.setor.toString();
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.setor?.toString() === setorId
-      );
-      console.log('Após filtro de setor:', usuariosFiltrados.length, 'ID Setor:', setorId);
-    }
-    
-    // Filtrar por função (se um setor estiver selecionado)
-    if (filtros.funcao) {
-      const funcaoId = filtros.funcao.toString();
-      
-      console.log('Filtrando por função ID:', funcaoId);
-      console.log('Usuários antes do filtro:', usuariosFiltrados.length);
-      
-      // Mostrar IDs de função dos usuários para debug
-      usuariosFiltrados.forEach(u => console.log(`Usuário ${u.nome}: função ID = ${u.funcao?.toString()}`));
-      
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => {
-        const match = usuario.funcao?.toString() === funcaoId;
-        console.log(`Comparando ${usuario.funcao?.toString()} com ${funcaoId}: ${match}`);
-        return match;
-      });
-      
-      console.log('Após filtro de função:', usuariosFiltrados.length);
     }
     
     this.usuariosFiltrados = usuariosFiltrados;
@@ -265,7 +232,9 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
    * Limpa os filtros e restaura a lista completa
    */
   limparFiltros() {
-    this.usuariosFiltrados = [...this.usuarios];
+    this.searchTerm = '';
+    this.statusFiltro = '';
+    this.aplicarFiltros();
   }
   
   /**

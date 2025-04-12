@@ -1,17 +1,15 @@
-import { Component, OnInit, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { PacienteService } from '../services/paciente.service';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { PacienteAvatarComponent } from '../../../shared/components/paciente-avatar/paciente-avatar.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
-import { FormsModule } from '@angular/forms';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
 import { map, tap, catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
-import { PacienteBuscaComponent } from '../paciente-busca/paciente-busca.component';
-import { StatusStyleService } from '../../../../styles/status-style.service';
 
 @Component({
   selector: 'app-pacientes-list',
@@ -19,10 +17,9 @@ import { StatusStyleService } from '../../../../styles/status-style.service';
   imports: [
     CommonModule, 
     RouterModule, 
-    PacienteAvatarComponent, 
-    StatusBadgeComponent,
     FormsModule,
-    PacienteBuscaComponent
+    PacienteAvatarComponent, 
+    StatusBadgeComponent
   ],
   templateUrl: './pacientes-list.component.html',
   styleUrls: ['./pacientes-list.component.scss']
@@ -41,207 +38,151 @@ export class PacientesListComponent implements OnInit {
   currentPage: number = 1;
   totalPages: number = 1;
   
-  // Adicionar a referência ao enum StatusPaciente
-  statusPaciente = Object.values(StatusPaciente);
-
   constructor(
-    private router: Router, 
     private pacienteService: PacienteService,
+    private router: Router,
     private dateFormatter: DateFormatterService,
-    private notificacaoService: NotificacaoService,
-    public statusStyleService: StatusStyleService
+    private notificacaoService: NotificacaoService
   ) {}
 
   ngOnInit(): void {
     this.carregarPacientes();
   }
 
-  /**
-   * Carrega a lista de pacientes do serviço
-   */
   carregarPacientes(): void {
     this.isLoading = true;
-    this.pacienteService.listarTodosPacientes().subscribe({
-      next: (pacientes) => {
-        this.pacientes = pacientes;
-        this.aplicarFiltros(); // Processa os pacientes
-        this.isLoading = false;
-      },
-      error: () => {
-        this.notificacaoService.mostrarErro('Erro ao carregar pacientes. Tente novamente.');
-        this.isLoading = false;
-        this.error = 'Erro ao carregar pacientes. Por favor, tente novamente mais tarde.';
+    this.error = null;
+    
+    this.pacienteService.listarTodosPacientes()
+      .pipe(
+        tap(pacientes => {
+          this.pacientes = pacientes;
+          this.totalPacientes = pacientes.length;
+          this.totalPages = Math.ceil(this.totalPacientes / this.pageSize);
+          this.aplicarFiltrosLocais();
+        }),
+        catchError(error => {
+          console.error('Erro ao carregar pacientes:', error);
+          this.error = 'Não foi possível carregar a lista de pacientes. Por favor, tente novamente mais tarde.';
+          return of([]);
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe();
+  }
+
+  aplicarFiltrosLocais(): void {
+    let filtered = [...this.pacientes];
+    
+    // Aplicar filtro de texto (nome, CPF ou ID)
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        (p.nome_completo?.toLowerCase().includes(term)) || 
+        (p.cpf?.toLowerCase().includes(term)) ||
+        (p.id?.toString().includes(term))
+      );
+    }
+    
+    // Aplicar filtro de status
+    if (this.statusFiltro) {
+      filtered = filtered.filter(p => p.status === this.statusFiltro);
+    }
+    
+    // Ordenar
+    filtered = this.ordenarPacientes(filtered);
+    
+    // Aplicar paginação
+    this.totalPacientes = filtered.length;
+    this.totalPages = Math.ceil(this.totalPacientes / this.pageSize);
+    
+    // Atualizar resultados
+    this.filteredPacientes = this.aplicarPaginacao(filtered);
+  }
+  
+  aplicarPaginacao(lista: Paciente[]): Paciente[] {
+    const inicio = (this.currentPage - 1) * this.pageSize;
+    const fim = inicio + this.pageSize;
+    return lista.slice(inicio, fim);
+  }
+
+  ordenarPacientes(pacientes: Paciente[]): Paciente[] {
+    return [...pacientes].sort((a, b) => {
+      let valueA = a[this.sortBy as keyof Paciente];
+      let valueB = b[this.sortBy as keyof Paciente];
+      
+      // Tratamento especial para datas
+      if (this.sortBy === 'data_nascimento' || this.sortBy === 'created_at' || this.sortBy === 'updated_at') {
+        valueA = new Date(valueA as string).getTime();
+        valueB = new Date(valueB as string).getTime();
       }
+      
+      if (valueA === valueB) return 0;
+      
+      // Ordenar em ordem ascendente ou descendente
+      const comparison = (valueA ?? '') < (valueB ?? '') ? -1 : 1;
+      return this.sortDirection === 'asc' ? comparison : -comparison;
     });
   }
 
-  /**
-   * Aplica os filtros recebidos do componente de busca
-   */
-  aplicarFiltros(filtros: any = {}): void {
-    // Primeiro filtra por termo de busca
-    let pacientesFiltrados = this.pacientes;
-    
-    if (filtros) {
-      // Filtra por nome
-      if (filtros.nome) {
-        const termo = filtros.nome.toLowerCase();
-        pacientesFiltrados = pacientesFiltrados.filter(p => 
-          p.nome_completo?.toLowerCase().includes(termo)
-        );
-      }
-      
-      // Filtra por CPF
-      if (filtros.cpf) {
-        const termo = filtros.cpf.toLowerCase().replace(/\D/g, ''); // Remove não dígitos
-        pacientesFiltrados = pacientesFiltrados.filter(p => 
-          p.cpf?.toLowerCase().replace(/\D/g, '').includes(termo)
-        );
-      }
-      
-      // Filtra por status
-      if (filtros.status) {
-        pacientesFiltrados = pacientesFiltrados.filter(p => 
-          p.status === filtros.status
-        );
-      }
-    }
-    
-    // Aplica ordenação
-    pacientesFiltrados = this.ordenarPacientes(pacientesFiltrados);
-    
-    // Atualiza contadores
-    this.totalPacientes = pacientesFiltrados.length;
-    this.totalPages = Math.ceil(this.totalPacientes / this.pageSize);
-    
-    // Aplica paginação
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    this.filteredPacientes = pacientesFiltrados.slice(startIndex, startIndex + this.pageSize);
-  }
-  
-  /**
-   * Ordena a lista de pacientes com base nos critérios atuais
-   */
-  ordenarPacientes(pacientes: Paciente[]): Paciente[] {
-    return [...pacientes].sort((a, b) => {
-      let valorA: any;
-      let valorB: any;
-      
-      // Determina os valores a serem comparados com base no critério de ordenação
-      switch(this.sortBy) {
-        case 'nome_completo':
-          valorA = a.nome_completo?.toLowerCase() || '';
-          valorB = b.nome_completo?.toLowerCase() || '';
-          break;
-        case 'data_nascimento':
-          valorA = new Date(a.data_nascimento || '');
-          valorB = new Date(b.data_nascimento || '');
-          break;
-        case 'updated_at':
-          valorA = new Date(a.updated_at || '');
-          valorB = new Date(b.updated_at || '');
-          break;
-        default:
-          valorA = a[this.sortBy as keyof Paciente];
-          valorB = b[this.sortBy as keyof Paciente];
-      }
-      
-      // Aplica a direção de ordenação
-      if (valorA < valorB) {
-        return this.sortDirection === 'asc' ? -1 : 1;
-      }
-      if (valorA > valorB) {
-        return this.sortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  }
-  
-  /**
-   * Manipula mudança na ordenação da tabela
-   */
-  toggleSort(coluna: string): void {
-    if (this.sortBy === coluna) {
-      // Se já estamos ordenando por esta coluna, mude a direção
+  toggleSort(campo: string): void {
+    if (this.sortBy === campo) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      // Caso contrário, mude a coluna e volte para a ordenação padrão
-      this.sortBy = coluna;
+      this.sortBy = campo;
       this.sortDirection = 'asc';
     }
-    
-    this.aplicarFiltros();
+    this.aplicarFiltrosLocais();
   }
-  
-  /**
-   * Limpar todos os filtros
-   */
+
   limparFiltros(): void {
     this.searchTerm = '';
     this.statusFiltro = '';
     this.currentPage = 1;
-    this.sortBy = 'nome_completo';
-    this.sortDirection = 'asc';
-    this.aplicarFiltros();
+    this.aplicarFiltrosLocais();
   }
-  
-  /**
-   * Navega para o próximo conjunto de resultados
-   */
+
   proximaPagina(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.aplicarFiltros();
+      this.aplicarFiltrosLocais();
     }
   }
-  
-  /**
-   * Navega para o conjunto anterior de resultados
-   */
+
   paginaAnterior(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.aplicarFiltros();
+      this.aplicarFiltrosLocais();
     }
   }
-  
-  /**
-   * Visualizar detalhes do paciente selecionado
-   */
-  visualizarPaciente(pacienteId: number | string): void {
-    this.router.navigate(['/pacientes/visualizar', pacienteId]);
+
+  visualizarPaciente(id: number): void {
+    if (id) {
+      this.router.navigate(['/pacientes/visualizar', id]);
+    }
   }
 
-  /**
-   * Navegar para tela de cadastro de paciente
-   */
+  editarPaciente(id: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (id) {
+      this.router.navigate(['/pacientes/editar', id]);
+    }
+  }
+
   cadastrarNovoPaciente(): void {
     this.router.navigate(['/pacientes/criar']);
   }
-  
-  /**
-   * Navegar para tela de edição de paciente
-   */
-  editarPaciente(pacienteId: number | string, event: Event): void {
-    event.stopPropagation(); // Evita que o evento propague para o clique da linha
-    this.router.navigate(['/pacientes/editar/', pacienteId]);
-  }
-  
-  /**
-   * Formata a data para exibição
-   */
-  formatarData(data?: string): string {
-    if (!data) return 'N/A';
-    return this.dateFormatter.formatarDataParaFormulario(data, 'data_nascimento');
-  }
 
-  /**
-   * Inicializa os tooltips do Bootstrap
-   */
-  initializeTooltips() {
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    if ((window as any).bootstrap) {
-      tooltipTriggerList.forEach(el => new (window as any).bootstrap.Tooltip(el));
-    }
+  formatarData(data: string | Date | undefined): string {
+    if (!data) return 'N/A';
+    return this.dateFormatter.toBackendFormat(data);
+  }
+  
+  getStatusOptions(): string[] {
+    return Object.values(StatusPaciente);
   }
 }
