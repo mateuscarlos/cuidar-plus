@@ -20,7 +20,7 @@ export const USUARIOS_ROUTES: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'cadastrar',
+    path: 'criar',
     component: CadastrarUsuarioComponent,
     canActivate: [AuthGuard]
   },

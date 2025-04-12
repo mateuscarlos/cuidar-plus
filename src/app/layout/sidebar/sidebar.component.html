@@ -1,29 +1,17 @@
-<nav class="sidebar bg-white">
+<nav class="sidebar bg-white h-100 d-flex flex-column">
   <div class="sidebar-wrapper">
     <!-- Conteúdo do Sidebar -->
-    <div class="sidebar-content">
-      <!-- Logo -->
-      <div class="sidebar-logo py-4 px-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <a href="#" class="text-decoration-none">
-            <i class="bi bi-heart-pulse text-primary me-2"></i>
-            <span class="text-dark fs-5 fw-bold">Cuidar+</span>
-          </a>
-          <button class="btn btn-link text-dark d-md-none" (click)="onToggleSidebar()">
-            <i class="bi bi-x-lg"></i>
-          </button>
-        </div>
-      </div>
+    
 
       <!-- Menu de navegação -->
-      <ul class="sidebar-menu list-unstyled ps-0 pt-2">
+      <ul class="sidebar-menu list-unstyled px-3">
         <!-- Itens do menu -->
         <li class="sidebar-item mb-1" *ngFor="let item of menuItems">
           <a 
             [routerLink]="item.subItems?.length ? null : item.route"
             [class.active]="item.active"
             [class.disabled]="item.inConstruction"
-            class="sidebar-link d-flex align-items-center px-3 py-2 text-decoration-none"
+            class="sidebar-link d-flex align-items-center px-3 py-2 rounded text-decoration-none"
             (click)="toggleMenuItem(item)"
           >
             <i [class]="item.icon + ' me-3 text-primary'" aria-hidden="true"></i>
@@ -50,11 +38,17 @@
                     href="#" 
                     class="sidebar-sublink d-flex align-items-center px-3 py-2 text-decoration-none"
                     [class.active]="subItem.active"
+                    [class.disabled]="subItem.inConstruction"
                     (click)="toggleSubMenu($event, subItem)"
                   >
                     <i *ngIf="subItem.icon" [class]="subItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
                     <span>{{ subItem.title }}</span>
-                    <i class="bi ms-auto" [ngClass]="subItem.expanded ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                    <i class="bi bi-tools text-warning ms-auto" *ngIf="subItem.inConstruction" title="Em construção"></i>
+                    <i 
+                      *ngIf="subItem.subItems?.length && !subItem.inConstruction" 
+                      class="bi ms-auto" 
+                      [ngClass]="subItem.expanded ? 'bi-chevron-down' : 'bi-chevron-right'"
+                    ></i>
                   </a>
                   
                   <!-- Nível 3 (subitems aninhados) -->
@@ -63,11 +57,15 @@
                       <li *ngFor="let nestedItem of subItem.subItems" class="sidebar-subitem">
                         <a 
                           [routerLink]="nestedItem.route" 
-                          class="sidebar-sublink d-flex align-items-center px-3 py-1 text-decoration-none"
                           [class.active]="nestedItem.active"
+                          [class.disabled]="nestedItem.inConstruction"
+                          class="sidebar-sublink d-flex align-items-center px-3 py-2 rounded text-decoration-none"
                         >
                           <i *ngIf="nestedItem.icon" [class]="nestedItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
                           <span>{{ nestedItem.title }}</span>
+                          
+                          <!-- Indicator de item em construção -->
+                          <i class="bi bi-tools text-warning ms-auto" *ngIf="nestedItem.inConstruction" title="Em construção"></i>
                         </a>
                       </li>
                     </ul>
@@ -78,11 +76,15 @@
                 <a 
                   *ngIf="!subItem.subItems?.length"
                   [routerLink]="subItem.route" 
-                  class="sidebar-sublink d-flex align-items-center px-3 py-2 text-decoration-none"
+                  class="sidebar-sublink d-flex align-items-center px-3 py-2 rounded text-decoration-none"
                   [class.active]="subItem.active"
+                  [class.disabled]="subItem.inConstruction"
                 >
                   <i *ngIf="subItem.icon" [class]="subItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
                   <span>{{ subItem.title }}</span>
+                  
+                  <!-- Adicionar o indicador de item em construção -->
+                  <i class="bi bi-tools text-warning ms-auto" *ngIf="subItem.inConstruction" title="Em construção"></i>
                 </a>
               </li>
             </ul>
@@ -93,5 +95,5 @@
     
     <!-- Overlay para dispositivos móveis -->
     <div class="sidebar-overlay" *ngIf="showOverlay" (click)="onToggleSidebar()"></div>
-  </div>
+  
 </nav>
