@@ -29,11 +29,14 @@
         <div class="card-body">
           <div class="d-flex align-items-center">
             <div class="icon-container bg-success text-white">
-              <i class="bi bi-person-check-fill"></i>
+              <i class="bi bi-check-circle"></i>
             </div>
             <div class="stat-content">
               <h5 class="card-title mb-0">Pacientes Ativos</h5>
               <p class="stat-value">{{isLoading ? '...' : totalAtivos}}</p>
+              <div class="mt-2">
+                <app-status-badge [status]="'Ativo'"></app-status-badge>
+              </div>
             </div>
           </div>
         </div>

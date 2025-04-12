@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Paciente, StatusPaciente, STATUS_BOOTSTRAP_CLASSES } from '../models/paciente.model';
+import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { Plano } from '../models/plano.model';
 import { Endereco } from '../models/endereco.model';
 import { Convenio } from '../models/convenio.model';
@@ -14,7 +14,8 @@ import { BehaviorSubject, Observable, catchError, finalize, of, tap } from 'rxjs
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 declare var bootstrap: any; // Para manipular os modais do Bootstrap
 
@@ -24,7 +25,12 @@ declare var bootstrap: any; // Para manipular os modais do Bootstrap
 @Component({
   selector: 'app-cadastrar-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    RouterModule,
+    StatusBadgeComponent
+  ],
   templateUrl: './cadastrar-paciente.component.html',
   styleUrls: ['./cadastrar-paciente.component.scss']
 })

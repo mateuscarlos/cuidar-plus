@@ -12,10 +12,14 @@ import { Convenio } from '../models/convenio.model';
 // Serviços
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { PacienteService } from '../services/paciente.service';
+import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 
 // Pipes
 import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
-import { NotificacaoService } from '../../../shared/services/notificacao.service';
+
+// Componentes
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-paciente-busca-avancada',
@@ -23,7 +27,8 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    CpfMaskPipe
+    CpfMaskPipe,
+    StatusBadgeComponent
   ],
   templateUrl: './paciente-busca-avancada.component.html',
   styleUrls: ['./paciente-busca-avancada.component.scss']
@@ -61,7 +66,8 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
     private convenioPlanoService: ConvenioPlanoService,
     private pacienteService: PacienteService,
     private notificacaoService: NotificacaoService,
-    private router: Router // Adicione o router aqui
+    private statusStyleService: StatusStyleService,
+    private router: Router
   ) {
     this.buscaForm = this.fb.group({
       nome: [''],
@@ -82,9 +88,9 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Configurar o debounce para busca com um tempo maior
+    // Configurar o debounce para busca
     this.searchTerms.pipe(
-      debounceTime(800),  // Aumentado para 800ms conforme recomendação
+      debounceTime(800),
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(() => {
@@ -247,7 +253,8 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
    */
   aplicarPaginacao() {
     const startIndex = (this.currentPage - 1) * this.pageSize;
-    this.resultadosBusca = this.resultadosBusca.slice(startIndex, startIndex + this.pageSize);
+    const endIndex = startIndex + this.pageSize;
+    this.resultadosBusca = this.resultadosBusca.slice(startIndex, endIndex);
   }
   
   /**
@@ -320,16 +327,33 @@ export class PacienteBuscaAvancadaComponent implements OnInit, OnDestroy {
     
     return convenio ? convenio.nome : 'Convênio não encontrado';
   }
+
+  /**
+   * Obtém os estilos para o status específico
+   */
+  getStatusClasses(status: string): any {
+    return this.statusStyleService.getStatusClasses(status);
+  }
   
   /**
    * Navega para a visualização detalhada do paciente selecionado
    */
   visualizarPaciente(paciente: Paciente) {
     if (paciente && paciente.id) {
-      console.log('Navegando para visualizar paciente:', paciente.id);
       this.router.navigate(['/pacientes/visualizar', paciente.id]);
     } else {
       this.notificacaoService.mostrarErro('Não foi possível visualizar este paciente. ID inválido.');
+    }
+  }
+
+  /**
+   * Navega para a tela de edição do paciente selecionado
+   */
+  editarPaciente(paciente: Paciente) {
+    if (paciente && paciente.id) {
+      this.router.navigate(['/pacientes/editar', paciente.id]);
+    } else {
+      this.notificacaoService.mostrarErro('Não foi possível editar este paciente. ID inválido.');
     }
   }
 }

@@ -6,11 +6,12 @@ import { debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { Paciente, ResultadoBusca } from '../models/paciente.model';
 import { PacienteService } from '../services/paciente.service';
 import { CpfMaskPipe } from '../../../shared/pipes/cpf-mask.pipe';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-busca-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, CpfMaskPipe],
+  imports: [CommonModule, ReactiveFormsModule, CpfMaskPipe, StatusBadgeComponent],
   templateUrl: './busca-paciente.component.html',
   styleUrls: ['./busca-paciente.component.scss']
 })

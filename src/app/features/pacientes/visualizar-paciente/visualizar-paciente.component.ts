@@ -11,7 +11,7 @@ import { Endereco } from '../models/endereco.model';
 import { ResultadoBusca } from '../models/busca-paciente.model';
 import { PacienteService } from '../services/paciente.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';

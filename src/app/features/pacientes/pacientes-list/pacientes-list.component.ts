@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChildren, QueryList, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { PacienteService } from '../services/paciente.service';
-import { Paciente } from '../models/paciente.model';
+import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { PacienteAvatarComponent } from '../../../shared/components/paciente-avatar/paciente-avatar.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,8 @@ import { DateFormatterService } from '../../../core/services/date-formatter.serv
 import { map, tap, catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
+import { PacienteBuscaComponent } from '../paciente-busca/paciente-busca.component';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 
 @Component({
   selector: 'app-pacientes-list',
@@ -19,7 +21,8 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
     RouterModule, 
     PacienteAvatarComponent, 
     StatusBadgeComponent,
-    FormsModule
+    FormsModule,
+    PacienteBuscaComponent
   ],
   templateUrl: './pacientes-list.component.html',
   styleUrls: ['./pacientes-list.component.scss']
@@ -37,12 +40,16 @@ export class PacientesListComponent implements OnInit {
   pageSize: number = 10;
   currentPage: number = 1;
   totalPages: number = 1;
+  
+  // Adicionar a referência ao enum StatusPaciente
+  statusPaciente = Object.values(StatusPaciente);
 
   constructor(
     private router: Router, 
     private pacienteService: PacienteService,
     private dateFormatter: DateFormatterService,
-    private notificacaoService: NotificacaoService
+    private notificacaoService: NotificacaoService,
+    public statusStyleService: StatusStyleService
   ) {}
 
   ngOnInit(): void {
@@ -57,36 +64,47 @@ export class PacientesListComponent implements OnInit {
     this.pacienteService.listarTodosPacientes().subscribe({
       next: (pacientes) => {
         this.pacientes = pacientes;
-        this.aplicarFiltros(); // Adicionar esta linha para processar e exibir os pacientes
+        this.aplicarFiltros(); // Processa os pacientes
         this.isLoading = false;
       },
       error: () => {
         this.notificacaoService.mostrarErro('Erro ao carregar pacientes. Tente novamente.');
         this.isLoading = false;
+        this.error = 'Erro ao carregar pacientes. Por favor, tente novamente mais tarde.';
       }
     });
   }
 
   /**
-   * Aplica os filtros de busca e status à lista de pacientes
+   * Aplica os filtros recebidos do componente de busca
    */
-  aplicarFiltros(): void {
+  aplicarFiltros(filtros: any = {}): void {
     // Primeiro filtra por termo de busca
     let pacientesFiltrados = this.pacientes;
     
-    if (this.searchTerm) {
-      const termo = this.searchTerm.toLowerCase();
-      pacientesFiltrados = pacientesFiltrados.filter(p => 
-        p.nome_completo?.toLowerCase().includes(termo) || 
-        p.cpf?.toLowerCase().includes(termo)
-      );
-    }
-    
-    // Depois filtra por status, se aplicável
-    if (this.statusFiltro) {
-      pacientesFiltrados = pacientesFiltrados.filter(p => 
-        p.status === this.statusFiltro
-      );
+    if (filtros) {
+      // Filtra por nome
+      if (filtros.nome) {
+        const termo = filtros.nome.toLowerCase();
+        pacientesFiltrados = pacientesFiltrados.filter(p => 
+          p.nome_completo?.toLowerCase().includes(termo)
+        );
+      }
+      
+      // Filtra por CPF
+      if (filtros.cpf) {
+        const termo = filtros.cpf.toLowerCase().replace(/\D/g, ''); // Remove não dígitos
+        pacientesFiltrados = pacientesFiltrados.filter(p => 
+          p.cpf?.toLowerCase().replace(/\D/g, '').includes(termo)
+        );
+      }
+      
+      // Filtra por status
+      if (filtros.status) {
+        pacientesFiltrados = pacientesFiltrados.filter(p => 
+          p.status === filtros.status
+        );
+      }
     }
     
     // Aplica ordenação
@@ -156,14 +174,6 @@ export class PacientesListComponent implements OnInit {
   }
   
   /**
-   * Manipula a busca de pacientes
-   */
-  onSearch(): void {
-    this.currentPage = 1; // Volta para a primeira página ao realizar uma busca
-    this.aplicarFiltros();
-  }
-  
-  /**
    * Limpar todos os filtros
    */
   limparFiltros(): void {
@@ -222,23 +232,16 @@ export class PacientesListComponent implements OnInit {
    */
   formatarData(data?: string): string {
     if (!data) return 'N/A';
-  return this.dateFormatter.formatarDataParaFormulario(data, 'data_nascimento');
-}
+    return this.dateFormatter.formatarDataParaFormulario(data, 'data_nascimento');
+  }
 
   /**
-   * Excluir paciente
+   * Inicializa os tooltips do Bootstrap
    */
-  excluirPaciente(id: number): void {
-    if (confirm('Tem certeza que deseja excluir este paciente?')) {
-      this.pacienteService.excluirPaciente(id).subscribe({
-        next: () => {
-          this.notificacaoService.mostrarSucesso('Paciente excluído com sucesso!');
-          this.carregarPacientes();
-        },
-        error: () => {
-          this.notificacaoService.mostrarErro('Erro ao excluir paciente. Tente novamente.');
-        }
-      });
+  initializeTooltips() {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    if ((window as any).bootstrap) {
+      tooltipTriggerList.forEach(el => new (window as any).bootstrap.Tooltip(el));
     }
   }
 }

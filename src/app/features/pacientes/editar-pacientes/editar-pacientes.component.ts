@@ -12,11 +12,12 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { BehaviorSubject, catchError, finalize, of, tap } from 'rxjs';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 declare var bootstrap: any;
 
@@ -30,7 +31,8 @@ declare var bootstrap: any;
     CommonModule, 
     ReactiveFormsModule, 
     BuscaPacienteComponent,
-    RouterModule
+    RouterModule,
+    StatusBadgeComponent
   ],
   templateUrl: './editar-pacientes.component.html',
   styleUrls: ['./editar-pacientes.component.scss']
@@ -701,4 +703,7 @@ export class EditarPacientesComponent implements OnInit {
     const backdrops = document.querySelectorAll('.modal-backdrop');
     backdrops.forEach(backdrop => backdrop.remove());
   }
+
+  // Adicionar à classe
+  protected Object = Object;
 }
