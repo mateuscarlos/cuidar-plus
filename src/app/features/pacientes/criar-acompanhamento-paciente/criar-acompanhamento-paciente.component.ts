@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { 
   TipoAtendimento,
   MotivoAtendimento,
@@ -20,7 +21,7 @@ import { Paciente, StatusPaciente, ResultadoBusca } from '../models/paciente.mod
 import { PacienteService } from '../services/paciente.service';
 import { AcompanhamentoService } from '../services/acompanhamento.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 import { finalize } from 'rxjs/operators';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
 
@@ -31,7 +32,8 @@ import { DateFormatterService } from '../../../core/services/date-formatter.serv
     CommonModule, 
     ReactiveFormsModule, 
     BuscaPacienteComponent,
-    RouterModule
+    RouterModule,
+    StatusBadgeComponent
   ],
   templateUrl: './criar-acompanhamento-paciente.component.html',
   styleUrls: ['./criar-acompanhamento-paciente.component.scss']

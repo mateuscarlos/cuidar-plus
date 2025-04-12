@@ -5,10 +5,8 @@ import { CadastrarPacienteComponent } from './cadastrar-paciente/cadastrar-pacie
 import { EditarPacientesComponent } from './editar-pacientes/editar-pacientes.component';
 import { VisualizarPacienteComponent } from './visualizar-paciente/visualizar-paciente.component';
 import { CriarAcompanhamentoPacienteComponent } from './criar-acompanhamento-paciente/criar-acompanhamento-paciente.component';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { PacienteBuscaAvancadaComponent } from './paciente-busca-avancada/paciente-busca-avancada.component';
-import { BuscaPacienteComponent } from './busca-paciente/busca-paciente.component';
+import { PacienteBuscaPageComponent } from './paciente-busca-page/paciente-busca-page.component';
+import { AuthGuard } from '../../core/guards/auth.guard';
 
 /**
  * Rotas para o módulo de Pacientes
@@ -17,46 +15,36 @@ export const PACIENTES_ROUTES: Routes = [
   {
     path: '',
     component: PacientesComponent,
-    title: 'Pacientes - Página Inicial'
+    canActivate: [AuthGuard]
   },
   {
     path: 'lista',
     component: PacientesListComponent,
-    title: 'Lista de Pacientes'
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'busca',
+    component: PacienteBuscaPageComponent, // Usando o novo componente de busca
+    canActivate: [AuthGuard]
   },
   {
     path: 'criar',
     component: CadastrarPacienteComponent,
-    title: 'Cadastrar Novo Paciente'
-  },
-  {
-    path: 'editar',
-    component: EditarPacientesComponent,
-    title: 'Selecionar Paciente para Edição'
+    canActivate: [AuthGuard]
   },
   {
     path: 'editar/:id',
     component: EditarPacientesComponent,
-    title: 'Editar Paciente'
-  },
-  {
-    path: 'visualizar',
-    component: VisualizarPacienteComponent,
-    title: 'Visualizar Paciente'
+    canActivate: [AuthGuard]
   },
   {
     path: 'visualizar/:id',
     component: VisualizarPacienteComponent,
-    title: 'Detalhes do Paciente'
+    canActivate: [AuthGuard]
   },
   {
     path: 'acompanhamento',
     component: CriarAcompanhamentoPacienteComponent,
-    title: 'Acompanhamento de Paciente'
-  },
-  {
-    path: 'busca',
-    component: PacienteBuscaAvancadaComponent,
-    title: 'Busca de Pacientes - Cuidar+'
+    canActivate: [AuthGuard]
   }
 ];

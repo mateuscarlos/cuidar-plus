@@ -38,6 +38,7 @@ export interface Usuario {
   cargo?: string | null;
   created_at?: string;
   updated_at?: string;
+  statusFormatado?: string;
 }
 
 // Enumeração para os status possíveis de um usuário

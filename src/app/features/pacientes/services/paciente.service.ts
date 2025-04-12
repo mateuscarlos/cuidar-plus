@@ -45,30 +45,61 @@ export class PacienteService {
   }
 
   /**
-   * Realiza a busca de pacientes com base nos critérios fornecidos
+   * Busca pacientes com filtros avançados
+   * @param filtros Objeto com os filtros a serem aplicados
+   * @returns Observable de lista de pacientes
    */
-  buscarPacientes(criterios: ResultadoBusca): Observable<Paciente[]> {
+  buscarPacientes(filtros: any): Observable<any> {
+    // Construir parâmetros da URL com base nos filtros
     let params = new HttpParams();
-
-    if (criterios.nome) {
-      params = params.append('tipo', 'nome');
-      params = params.append('valor', criterios.nome);
-    } else if (criterios.cpf) {
-      params = params.append('tipo', 'cpf');
-      params = params.append('valor', criterios.cpf);
-    } else if (criterios.id) {
-      params = params.append('tipo', 'id');
-      params = params.append('valor', criterios.id.toString());
-    }
-
-    return this.http.get<Paciente[]>(`${this.apiUrl}/buscar`, { params }).pipe(
-      retry(1),
-      map(pacientes => this.normalizarPacientes(pacientes)),
-      catchError(error => {
-        console.error('Erro ao buscar pacientes:', error);
-        return of([]); // Retorna uma lista vazia
-      })
-    );
+    
+    // Adicionar os filtros como parâmetros se tiverem valores
+    Object.keys(filtros).forEach(key => {
+      const value = filtros[key];
+      if (value !== null && value !== undefined && value !== '') {
+        params = params.append(key, value.toString());
+      }
+    });
+    
+    // Log para debug
+    console.log('Enviando parâmetros de busca:', params.toString());
+    
+    // Verificar qual endpoint usar - tentar primeiro busca avançada, com fallback para busca simples
+    return this.http.get<any>(`${this.apiUrl}/busca-avancada`, { params })
+      .pipe(
+        tap(response => console.log('Resposta bruta da API:', response)),
+        catchError(error => {
+          if (error.status === 404) {
+            console.warn('Endpoint de busca avançada não encontrado, tentando endpoint de busca simples');
+            
+            // Fallback: usar o endpoint de busca simples se o avançado não existir
+            // Simplificar para buscar apenas por um critério principal (nome ou cpf ou id)
+            let tipo = 'nome';
+            let valor = '';
+            
+            if (filtros.cpf) {
+              tipo = 'cpf';
+              valor = filtros.cpf;
+            } else if (filtros.id) {
+              tipo = 'id';
+              valor = filtros.id;
+            } else if (filtros.nome) {
+              tipo = 'nome';
+              valor = filtros.nome;
+            }
+            
+            if (valor) {
+              return this.http.get<any>(`${this.apiUrl}/buscar`, { 
+                params: new HttpParams().append('tipo', tipo).append('valor', valor) 
+              });
+            }
+            
+            // Se não houver critério válido, retornar array vazio
+            return of([]);
+          }
+          return throwError(() => error);
+        })
+      );
   }
 
   /**

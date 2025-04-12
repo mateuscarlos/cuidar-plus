@@ -1,19 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { PacienteService } from './services/paciente.service';
 import { NotificacaoService } from '../../shared/services/notificacao.service';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-pacientes',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, StatusBadgeComponent],
   templateUrl: './pacientes.component.html',
   styleUrls: ['./pacientes.component.scss']
 })
-export class PacientesComponent {
+export class PacientesComponent implements OnInit {
   totalPacientes: number = 0;
   totalAtivos: number = 0;
   totalEmAvaliacao: number = 0;

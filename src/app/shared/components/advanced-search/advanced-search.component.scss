@@ -131,33 +131,3 @@ table {
     }
   }
 }
-
-// Melhorar aparência do select com muitos itens
-select.form-select {
-  max-height: 38px;
-  overflow-y: auto;
-}
-
-// Melhorar estilo das tabelas
-.table {
-  th {
-    font-weight: 600;
-    color: #495057;
-  }
-  
-  tbody tr {
-    transition: background-color 0.15s ease-in-out;
-    
-    &:hover {
-      background-color: rgba(13, 110, 253, 0.05);
-    }
-  }
-}
-
-// Efeitos de transição para carregamento
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
-}
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-}

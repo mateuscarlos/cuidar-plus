@@ -74,22 +74,23 @@
                   </div>
                 </div>
                 
-                <div class="col-md-2">
-                  <label for="status" class="form-label field-required">Status</label>
+                <div class="col-md-3">
+                  <label for="status" class="form-label">Status</label>
                   <div class="input-group">
-                    <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
-                      <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
-                    </span>
+                    <span class="input-group-text"><i class="bi bi-tag"></i></span>
                     <select 
                       class="form-select" 
                       id="status" 
                       formControlName="status"
-                      [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)"
                     >
-                      <option *ngFor="let status of statusPaciente" [value]="status">
+                      <option *ngFor="let status of Object.values(statusPaciente)" [value]="status">
                         {{ status }}
                       </option>
                     </select>
+                  </div>
+                  <!-- Exibir o status selecionado com o badge -->
+                  <div class="mt-2" *ngIf="pacienteForm.get('status')?.value">
+                    <app-status-badge [status]="pacienteForm.get('status')?.value"></app-status-badge>
                   </div>
                 </div>
                 

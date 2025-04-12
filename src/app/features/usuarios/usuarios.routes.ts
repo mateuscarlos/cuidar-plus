@@ -1,42 +1,42 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from '../../core/guards/auth.guard';
+import { UsuariosComponent } from './usuarios.component';
 import { UsuariosListComponent } from './usuarios-list/usuarios-list.component';
 import { CadastrarUsuarioComponent } from './cadastrar-usuario/cadastrar-usuario.component';
 import { EditarUsuarioComponent } from './editar-usuario/editar-usuario.component';
 import { VisualizarUsuarioComponent } from './visualizar-usuario/visualizar-usuario.component';
 import { LoginComponent } from './login/login.component';
-import { AuthGuard } from '../../core/guards/auth.guard';
+import { UsuarioBuscaPageComponent } from './usuario-busca-page/usuario-busca-page.component';
 
-/**
- * Rotas para o módulo de Usuários
- */
 export const USUARIOS_ROUTES: Routes = [
   {
     path: '',
+    component: UsuariosComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'lista',
     component: UsuariosListComponent,
-    canActivate: [AuthGuard],
-    title: 'Usuários - Cuidar+'
+    canActivate: [AuthGuard]
   },
   {
-    path: 'login',
-    component: LoginComponent,
-    title: 'Login - Cuidar+'
-  },
-  {
-    path: 'criar',
+    path: 'cadastrar',
     component: CadastrarUsuarioComponent,
-    canActivate: [AuthGuard],
-    title: 'Cadastrar Usuário - Cuidar+'
+    canActivate: [AuthGuard]
   },
   {
     path: 'editar/:id',
     component: EditarUsuarioComponent,
-    canActivate: [AuthGuard],
-    title: 'Editar Usuário - Cuidar+'
+    canActivate: [AuthGuard]
   },
   {
-    path: 'visualizar',
+    path: 'visualizar/:id',
     component: VisualizarUsuarioComponent,
-    canActivate: [AuthGuard],
-    title: 'Visualizar Usuário - Cuidar+'
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'busca',
+    component: UsuarioBuscaPageComponent,
+    canActivate: [AuthGuard]
   }
 ];

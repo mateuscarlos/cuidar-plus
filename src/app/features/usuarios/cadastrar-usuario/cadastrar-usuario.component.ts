@@ -54,9 +54,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   // Tipos de contratação para o select
   tiposContratacao = [
-    { value: 'contratada', viewValue: 'Contratada' },
-    { value: 'terceirizada', viewValue: 'Terceirizada' },
-    { value: 'pj', viewValue: 'Pessoa Jurídica' }
+    { value: 'c', viewValue: 'Contratada' },
+    { value: 't', viewValue: 'Terceirizada' },
+    { value: 'p', viewValue: 'Pessoa Jurídica' }
   ];
 
   // Tipos de acesso para o select

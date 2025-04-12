@@ -1,7 +1,7 @@
-export interface ResultadoBusca {
-  [key: string]: any;
-  nome?: string;
-  email?: string;
-  perfil?: string;
-  status?: string;
+export interface ResultadoBusca<T> {
+  items: T[];
+  total: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
 }

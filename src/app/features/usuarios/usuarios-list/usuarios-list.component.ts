@@ -2,8 +2,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { NgxMaskDirective, NgxMaskPipe, provideNgxMask } from 'ngx-mask';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 
 // Serviços
 import { UsuarioService} from '../services/usuario.service';
@@ -17,6 +18,7 @@ import { Funcao } from '../models/funcao.model';
 
 // Componentes
 import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component';
+import { UsuarioBuscaPageComponent } from '../usuario-busca-page/usuario-busca-page.component';
 
 @Component({
   selector: 'app-usuarios-list',
@@ -26,7 +28,9 @@ import { UsuarioBuscaComponent } from '../usuario-busca/usuario-busca.component'
     RouterModule, 
     NgxMaskDirective, 
     NgxMaskPipe,
-    UsuarioBuscaComponent
+    FormsModule,
+    UsuarioBuscaComponent,
+    UsuarioBuscaPageComponent
   ],
   providers: [provideNgxMask()],
   templateUrl: './usuarios-list.component.html',
@@ -48,12 +52,16 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
     { value: UserStatus.AFASTADO_OUTROS, label: 'Afastado por Outros Motivos' }
   ];
   
-
   // Dados da tabela
   usuarios: Usuario[] = [];
   usuariosFiltrados: Usuario[] = [];
   isLoading: boolean = false;
   error: string | null = null;
+  totalItems: number = 0;
+  
+  // Filtros
+  searchTerm: string = '';
+  statusFiltro: string = '';
   
   // Mapas para armazenar relações ID -> Nome
   setoresMap: Map<string, string> = new Map<string, string>();
@@ -74,7 +82,30 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.carregarDados();
+    // Carregar dados auxiliares primeiro (setores, funções)
+    forkJoin({
+      setores: this.usuarioService.listarSetores(),
+      funcoes: this.usuarioService.listarFuncoes()
+    }).subscribe({
+      next: (result) => {
+        // Armazenar setores e funções
+        this.setores = result.setores;
+        this.funcoes = result.funcoes;
+        
+        // Criar mapas para consulta rápida
+        this.setoresMap = new Map(this.setores.map(setor => [setor.id.toString(), setor.nome]));
+        this.funcoesMap = new Map(this.funcoes.map(funcao => [funcao.id.toString(), funcao.nome]));
+        
+        // Agora podemos carregar os usuários
+        this.carregarUsuarios();
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar dados auxiliares:', erro);
+        this.error = 'Não foi possível carregar configurações necessárias.';
+        // Ainda assim, tentar carregar usuários
+        this.carregarUsuarios();
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -83,102 +114,36 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   }
   
   /**
-   * Carrega todos os dados necessários para a listagem
-   */
-  carregarDados() {
-    this.isLoading = true;
-    this.error = null;
-    
-    // Carregar setores
-    this.usuarioService.listarSetores()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (setores) => {
-          this.setores = setores;
-          
-          // Armazenar setores em um mapa para acesso rápido
-          setores.forEach(setor => {
-            this.setoresMap.set(setor.id.toString(), setor.nome);
-          });
-          
-          // Carregar usuários após setores
-          this.carregarUsuarios();
-        },
-        error: (error) => {
-          this.error = 'Erro ao carregar setores';
-          this.isLoading = false;
-          this.notificacaoService.mostrarErro('Não foi possível carregar a lista de setores');
-          console.error('Erro ao carregar setores:', error);
-        }
-      });
-      
-    // Carregar funções (mesmo que não precisemos carregar todos)
-    this.usuarioService.listarFuncoes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (funcoes) => {
-          this.funcoes = funcoes;
-          
-          // Armazenar funções em um mapa para acesso rápido
-          funcoes.forEach(funcao => {
-            this.funcoesMap.set(funcao.id.toString(), funcao.nome);
-          });
-        },
-        error: (error) => {
-          console.error('Erro ao carregar funções:', error);
-          // Não exibimos erro porque os nomes das funções serão obtidos na API de usuários
-        }
-      });
-  }
-
-  /**
    * Carrega a lista de usuários
    */
   carregarUsuarios() {
-    this.usuarioService.listarUsuarios()
+    this.isLoading = true;
+    this.error = null;
+    
+    this.usuarioService.listarTodosUsuarios()
       .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.isLoading = false)
+        finalize(() => {
+          this.isLoading = false;
+          setTimeout(() => this.initializeTooltips(), 100);
+        })
       )
       .subscribe({
         next: (usuarios) => {
-          console.log('Resposta da API:', usuarios);
-          
-          // Verificar e adaptar a estrutura de resposta
-          let listaUsuarios: Usuario[];
-          
-          if (Array.isArray(usuarios)) {
-            // Se a API retornar um array diretamente
-            listaUsuarios = usuarios;
-          } else if (usuarios && Array.isArray(usuarios.items)) {
-            // Se a API retornar um objeto com propriedade 'items'
-            listaUsuarios = usuarios.items;
-          } else {
-            console.error('Formato de resposta inesperado:', usuarios);
-            this.notificacaoService.mostrarErro('Erro no formato de dados recebidos');
-            this.error = 'Formato de dados inválido';
-            listaUsuarios = [];
-          }
-          
-          this.usuarios = listaUsuarios.map((usuario: Usuario): Usuario & { setorNome: string; funcaoNome: string } => {
-            // Resto do código de processamento existente
-            if (usuario.setor) usuario.setor = usuario.setor.toString();
-            if (usuario.funcao) usuario.funcao = usuario.funcao.toString();
-            
+          this.usuarios = usuarios.map(user => {
+            // Adicionar propriedades calculadas para exibição
             return {
-              ...usuario,
-              setorNome: this.getNomeSetor(usuario.setor),
-              funcaoNome: this.getNomeFuncao(usuario.funcao)
+              ...user,
+              setorNome: this.getNomeSetor(user.setor),
+              funcaoNome: this.getNomeFuncao(user.funcao)
             };
           });
-          
           this.usuariosFiltrados = [...this.usuarios];
-          setTimeout(() => this.initializeTooltips(), 300);
+          this.totalItems = this.usuarios.length;
+          console.log('Usuários carregados:', this.usuarios);
         },
-        error: (error) => {
-          this.error = 'Erro ao carregar usuários';
-          this.notificacaoService.mostrarErro('Não foi possível carregar a lista de usuários');
-          console.error('Erro ao carregar usuários:', error);
+        error: (erro) => {
+          console.error('Erro ao carregar usuários:', erro);
+          this.error = 'Não foi possível carregar a lista de usuários. Tente novamente mais tarde.';
         }
       });
   }
@@ -196,66 +161,28 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   /**
    * Aplica os filtros de busca aos usuários
    */
-  aplicarFiltros(filtros: any) {
+  aplicarFiltros() {
     if (!this.usuarios.length) return;
-    
-    console.log('Aplicando filtros:', filtros); // Debug
     
     let usuariosFiltrados = [...this.usuarios];
     
-    // Filtrar por nome
-    if (filtros.nome && filtros.nome.trim() !== '') {
-      const termoBusca = filtros.nome.toLowerCase().trim();
+    // Filtrar por texto (nome, email, CPF ou ID)
+    if (this.searchTerm && this.searchTerm.trim() !== '') {
+      const termoBusca = this.searchTerm.toLowerCase().trim();
       usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.nome?.toLowerCase().includes(termoBusca)
+        (usuario.nome?.toLowerCase().includes(termoBusca)) || 
+        (usuario.email?.toLowerCase().includes(termoBusca)) ||
+        (usuario.cpf?.toLowerCase().includes(termoBusca)) ||
+        (usuario.id?.toString().includes(termoBusca))
       );
-      console.log('Após filtro de nome:', usuariosFiltrados.length);
-    }
-    
-    // Filtrar por email
-    if (filtros.email && filtros.email.trim() !== '') {
-      const termoBusca = filtros.email.toLowerCase().trim();
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.email?.toLowerCase().includes(termoBusca)
-      );
-      console.log('Após filtro de email:', usuariosFiltrados.length);
     }
     
     // Filtrar por status
-    if (filtros.status) {
-      const statusValue = filtros.status;
+    if (this.statusFiltro) {
+      const statusValue = this.statusFiltro;
       usuariosFiltrados = usuariosFiltrados.filter(usuario => 
         usuario.status === statusValue
       );
-      console.log('Após filtro de status:', usuariosFiltrados.length);
-    }
-    
-    // Filtrar por setor
-    if (filtros.setor) {
-      const setorId = filtros.setor.toString();
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => 
-        usuario.setor?.toString() === setorId
-      );
-      console.log('Após filtro de setor:', usuariosFiltrados.length, 'ID Setor:', setorId);
-    }
-    
-    // Filtrar por função (se um setor estiver selecionado)
-    if (filtros.funcao) {
-      const funcaoId = filtros.funcao.toString();
-      
-      console.log('Filtrando por função ID:', funcaoId);
-      console.log('Usuários antes do filtro:', usuariosFiltrados.length);
-      
-      // Mostrar IDs de função dos usuários para debug
-      usuariosFiltrados.forEach(u => console.log(`Usuário ${u.nome}: função ID = ${u.funcao?.toString()}`));
-      
-      usuariosFiltrados = usuariosFiltrados.filter(usuario => {
-        const match = usuario.funcao?.toString() === funcaoId;
-        console.log(`Comparando ${usuario.funcao?.toString()} com ${funcaoId}: ${match}`);
-        return match;
-      });
-      
-      console.log('Após filtro de função:', usuariosFiltrados.length);
     }
     
     this.usuariosFiltrados = usuariosFiltrados;
@@ -265,7 +192,9 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
    * Limpa os filtros e restaura a lista completa
    */
   limparFiltros() {
-    this.usuariosFiltrados = [...this.usuarios];
+    this.searchTerm = '';
+    this.statusFiltro = '';
+    this.aplicarFiltros();
   }
   
   /**
