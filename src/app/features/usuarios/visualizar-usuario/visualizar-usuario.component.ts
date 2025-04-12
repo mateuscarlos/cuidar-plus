@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize, catchError, tap, of } from 'rxjs';
 
-import { Usuario, UsuarioAdapter } from '../models/user.model';
+import { Usuario, UsuarioAdapter, TipoContratacao, TipoAcesso } from '../models/user.model';
 import { UsuarioService } from '../services/usuario.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { ConselhoProfissional, FUNCOES_DETALHES, FuncoesComRegistro, 
@@ -57,7 +57,7 @@ export class VisualizarUsuarioComponent implements OnInit {
             this.carregarUsuarioPorId(queryParams['usuarioId']);
           } else {
             this.error = 'ID do usuário não fornecido';
-            this.isLoading = false;
+            this.notificacaoService.mostrarErro(this.error);
           }
         });
       }
@@ -68,14 +68,34 @@ export class VisualizarUsuarioComponent implements OnInit {
    * Carrega os dados de um usuário pelo ID
    */
   carregarUsuarioPorId(id: string): void {
-    this.usuarioService.obterUsuarioPorId(id).subscribe({
-      next: (usuario) => {
-        this.usuario = usuario;
-      },
-      error: () => {
-        this.notificacaoService.mostrarErro('Erro ao carregar usuário. Tente novamente.');
-      }
-    });
+    this.isLoading = true;
+    
+    this.usuarioService.obterUsuarioPorId(id)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe({
+        next: (usuario) => {
+          this.usuario = usuario;
+          
+          if (this.usuario) {
+            // Carregar informações adicionais
+            if (this.usuario.setor) {
+              this.obterNomeDoSetor(this.usuario.setor);
+            }
+            
+            if (this.usuario.funcao) {
+              this.obterNomeDaFuncao(this.usuario.funcao);
+            }
+          }
+        },
+        error: (erro) => {
+          this.error = 'Erro ao carregar usuário';
+          this.notificacaoService.mostrarErro('Erro ao carregar usuário. Tente novamente.');
+        }
+      });
   }
   
   /**
@@ -97,9 +117,14 @@ export class VisualizarUsuarioComponent implements OnInit {
     }
     
     // Se não encontrou nos mapeamentos, busca no serviço
-    this.usuarioService.obterNomeSetor(setorId).subscribe(nome => {
-      if (this.usuario) {
-        this.usuario.setorNome = nome;
+    this.usuarioService.obterNomeSetor(setorId).subscribe({
+      next: (nome) => {
+        if (this.usuario) {
+          this.usuario.setorNome = nome;
+        }
+      },
+      error: (erro) => {
+        // Erro silencioso
       }
     });
   }
@@ -125,7 +150,6 @@ export class VisualizarUsuarioComponent implements OnInit {
     this.usuarioService.obterNomeFuncao(funcaoId)
       .pipe(
         catchError(erro => {
-          console.error('Erro ao obter nome da função:', erro);
           // Fornecer um valor fallback quando a API falha
           return of(`Função ${funcaoId}`);
         })
@@ -141,7 +165,9 @@ export class VisualizarUsuarioComponent implements OnInit {
    * Determina o nome do conselho com base na função e setor
    */
   obterNomeConselho(): string {
-    if (!this.usuario) return 'Registro Profissional';
+    if (!this.usuario) {
+      return 'Registro Profissional';
+    }
     
     // Verificamos primeiro pelos detalhes da função
     const detalhesFuncao = this.obterDetalhesFuncao();
@@ -150,10 +176,11 @@ export class VisualizarUsuarioComponent implements OnInit {
     }
     
     // Se não encontramos pelos detalhes, usamos o método padrão
-    return UsuarioAdapter.obterNomeConselho(
+    const nomeConselho = UsuarioAdapter.obterNomeConselho(
       this.usuario.funcao,
       this.usuario.setor
     );
+    return nomeConselho;
   }
   
   /**
@@ -258,20 +285,41 @@ export class VisualizarUsuarioComponent implements OnInit {
    * Obtém os detalhes da função do usuário, se disponíveis
    */
   obterDetalhesFuncao() {
-    if (!this.usuario || !this.usuario.funcao) return null;
-    return UsuarioAdapter.obterDetalhesFuncao(this.usuario.funcao);
+    if (!this.usuario || !this.usuario.funcao) {
+      return null;
+    }
+    
+    const detalhes = UsuarioAdapter.obterDetalhesFuncao(this.usuario.funcao);
+    return detalhes;
   }
 
   /**
    * Verifica se a informação de registro deve ser exibida
    */
   temRegistro(): boolean {
-    return !!this.usuario?.registro_categoria && this.usuario.registro_categoria.trim() !== '';
+    const resultado = !!this.usuario?.registro_categoria && this.usuario.registro_categoria.trim() !== '';
+    return resultado;
   }
+  
   /**
    * Verifica se a informação de especialidade deve ser exibida
    */
   temEspecialidade(): boolean {
-    return !!this.usuario?.especialidade && this.usuario.especialidade.trim() !== '';
+    const resultado = !!this.usuario?.especialidade && this.usuario.especialidade.trim() !== '';
+    return resultado;
+  }
+
+  /**
+   * Formata o tipo de contratação para exibição
+   */
+  formatarTipoContratacao(tipo?: string): string {
+    return UsuarioAdapter.formatarTipoContratacao(tipo);
+  }
+
+  /**
+   * Formata o tipo de acesso para exibição
+   */
+  formatarTipoAcesso(tipo?: string): string {
+    return UsuarioAdapter.formatarTipoAcesso(tipo);
   }
 }

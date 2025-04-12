@@ -288,6 +288,16 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Novo método para filtrar caracteres não numéricos do CEP
+  filtrarCep(event: any): void {
+    const input = event.target;
+    // Remove qualquer caractere que não seja número
+    const valor = input.value.replace(/\D/g, '');
+    
+    // Atualiza o valor do campo com apenas os números
+    this.usuarioForm.get('endereco.cep')?.setValue(valor, {emitEvent: false});
+  }
+
   carregarUsuario(id: number): void {
     this.isLoading = true;
     this.usuarioService.obterUsuarioPorId(id.toString())
@@ -352,19 +362,18 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.usuarioForm.invalid) {
+      // Marcar todos os campos como tocados para exibir validações
+      this.markFormGroupTouched(this.usuarioForm);
       this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
   
-    this.usuarioService.criarUsuario(this.usuarioForm.value).subscribe({
-      next: () => {
-        this.notificacaoService.mostrarSucesso('Usuário cadastrado com sucesso!');
-        this.usuarioForm.reset();
-      },
-      error: () => {
-        this.notificacaoService.mostrarErro('Erro ao cadastrar usuário. Tente novamente.');
-      }
-    });
+    // Armazenar dados temporariamente e ir para o componente de senha
+    this.tempUsuarioData = this.prepararDadosUsuario();
+    this.currentStep = 'passwordForm';
+    
+    // Rolar para o topo da página para focar no novo componente
+    window.scrollTo(0, 0);
   }
 
   // Método para marcar todos os campos como touched para mostrar validações

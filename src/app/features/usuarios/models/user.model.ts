@@ -56,16 +56,16 @@ export enum UserStatus {
 }
 
 export enum TipoContratacao {
-  C = 'Contratação Direta',
-  T = 'Terceirizado',
-  P = 'Pessoa Jurídica'
+  contratada = 'Contratação Direta',
+  terceirizada = 'Terceirizado',
+  pj = 'Pessoa Jurídica'
 }
 
 export enum TipoAcesso {
-  Administrador = 'Administrador',
-  Gestor = 'Gestor',
-  Padrao = 'Padrão',
-  Restrito = 'Restrito'
+  admin = 'Administrador',
+  gestor = 'Gestor',
+  padrao = 'Padrão',
+  restrito = 'Restrito'
 }
 
 export interface Endereco {
@@ -101,23 +101,47 @@ export class UsuarioAdapter {
   static formatarTipoContratacao(tipo?: string): string {
     if (!tipo) return 'Não informado';
     
-    switch(tipo.toLowerCase()) {
-      case 'c': return 'Contratada';
-      case 't': return 'Terceirizado';
-      case 'p': return 'Pessoa Jurídica';
-      default: return tipo;
+    // Verifica nos valores do enum
+    const tipoLower = tipo.toLowerCase();
+    
+    // Verificar se é um código ou valor direto
+    switch(tipoLower) {
+      case 'c': return TipoContratacao.contratada;
+      case 't': return TipoContratacao.terceirizada;
+      case 'p': return TipoContratacao.pj;
+      case 'contratada': return TipoContratacao.contratada;
+      case 'terceirizada': return TipoContratacao.terceirizada;
+      case 'pj': return TipoContratacao.pj;
+      default:
+        // Tenta encontrar no enum
+        for (const key in TipoContratacao) {
+          if (tipoLower === key.toLowerCase()) {
+            return TipoContratacao[key as keyof typeof TipoContratacao];
+          }
+        }
+        return tipo;
     }
   }
   
   static formatarTipoAcesso(tipo?: string): string {
     if (!tipo) return 'Não informado';
     
-    switch(tipo.toLowerCase()) {
-      case 'admin': return 'Administrador';
-      case 'gestor': return 'Gestor';
-      case 'padrao': return 'Padrão';
-      case 'restrito': return 'Restrito';
-      default: return tipo;
+    const tipoLower = tipo.toLowerCase();
+    
+    // Verificar mapeamento direto
+    switch(tipoLower) {
+      case 'admin': return TipoAcesso.admin;
+      case 'gestor': return TipoAcesso.gestor;
+      case 'padrao': return TipoAcesso.padrao;
+      case 'restrito': return TipoAcesso.restrito;
+      default:
+        // Tenta encontrar no enum
+        for (const key in TipoAcesso) {
+          if (tipoLower === key.toLowerCase()) {
+            return TipoAcesso[key as keyof typeof TipoAcesso];
+          }
+        }
+        return tipo;
     }
   }
   

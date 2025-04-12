@@ -97,7 +97,7 @@ export class UsuarioService {
   }
 
   criarUsuario(usuario: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}`, usuario).pipe(
+    return this.http.post<Usuario>(`${this.apiUrl}/criar`, usuario).pipe(
       catchError(error => {
         console.error('Erro ao criar usuário:', error);
         return throwError(() => error);

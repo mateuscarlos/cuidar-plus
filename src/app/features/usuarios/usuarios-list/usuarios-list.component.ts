@@ -142,9 +142,26 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (usuarios) => {
-          // Garantir que todos os IDs sejam tratados como strings para facilitar comparações
-            this.usuarios = usuarios.items.map((usuario: Usuario): Usuario & { setorNome: string; funcaoNome: string } => {
-            // Converter todos os IDs para string para consistência
+          console.log('Resposta da API:', usuarios);
+          
+          // Verificar e adaptar a estrutura de resposta
+          let listaUsuarios: Usuario[];
+          
+          if (Array.isArray(usuarios)) {
+            // Se a API retornar um array diretamente
+            listaUsuarios = usuarios;
+          } else if (usuarios && Array.isArray(usuarios.items)) {
+            // Se a API retornar um objeto com propriedade 'items'
+            listaUsuarios = usuarios.items;
+          } else {
+            console.error('Formato de resposta inesperado:', usuarios);
+            this.notificacaoService.mostrarErro('Erro no formato de dados recebidos');
+            this.error = 'Formato de dados inválido';
+            listaUsuarios = [];
+          }
+          
+          this.usuarios = listaUsuarios.map((usuario: Usuario): Usuario & { setorNome: string; funcaoNome: string } => {
+            // Resto do código de processamento existente
             if (usuario.setor) usuario.setor = usuario.setor.toString();
             if (usuario.funcao) usuario.funcao = usuario.funcao.toString();
             
@@ -153,16 +170,9 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
               setorNome: this.getNomeSetor(usuario.setor),
               funcaoNome: this.getNomeFuncao(usuario.funcao)
             };
-            });
-          
-          // Log para debug
-          console.log('Usuários carregados:', this.usuarios.length);
-          this.usuarios.forEach(u => {
-            console.log(`Usuário: ${u.nome}, Setor ID: ${u.setor}, Função ID: ${u.funcao}`);
           });
           
           this.usuariosFiltrados = [...this.usuarios];
-          
           setTimeout(() => this.initializeTooltips(), 300);
         },
         error: (error) => {
@@ -350,8 +360,6 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
     if (!setorId) return [];
     return this.funcoes.filter(funcao => funcao.setor_id?.toString() === setorId.toString());
   }
-
-  // Removed duplicate carregarUsuarios method to resolve the error.
 
   excluirUsuario(id: number): void {
     if (confirm('Tem certeza que deseja excluir este usuário?')) {
