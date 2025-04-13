@@ -51,8 +51,14 @@
     "karma-coverage": "~2.2.1",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "karma-spec-reporter": "^0.0.36",
+    "karma-webpack": "^5.0.1",
     "lru-cache": "^11.1.0",
+    "path-browserify": "^1.0.1",
+    "ts-loader": "^9.5.2",
     "typedoc": "^0.28.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "webpack": "^5.99.5",
+    "webpack-cli": "^6.0.1"
   }
 }

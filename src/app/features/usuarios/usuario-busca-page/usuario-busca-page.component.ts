@@ -45,6 +45,10 @@ import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
   `
 })
 export class UsuarioBuscaPageComponent implements OnInit {
+
+  mensagem: string = '';
+  filtros: any = {};
+
   camposBusca: SearchField[] = [
     {
       name: 'nome',

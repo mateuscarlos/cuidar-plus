@@ -1,59 +1,195 @@
 # CuidarPlus
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.5.
+![CuidarPlus Logo](src/assets/images/logo.png) 
 
-## Development server
+## 📋 Sobre o Projeto
 
-To start a local development server, run:
+O CuidarPlus é uma plataforma completa para gestão de pacientes e cuidados de saúde, desenvolvida com Angular 19.2.5. Nossa missão é facilitar o dia a dia de profissionais de saúde, oferecendo uma interface intuitiva e moderna para gerenciar pacientes, medicamentos, e acompanhamentos clínicos.
+
+## ✨ Principais Funcionalidades
+
+- **Gestão de Pacientes**: Cadastre, visualize e acompanhe informações completas dos pacientes
+- **Farmácia**: Controle de medicamentos e prescrições
+- **Relatórios**: Visualize métricas e estatísticas importantes
+- **Configurações Personalizáveis**: Adapte o sistema às suas necessidades
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Framework Frontend**: Angular 19.2.5
+- **UI/UX**: Bootstrap 5.3.4 & Bootstrap Icons 1.11.3
+- **Testes**: Jasmine & Karma
+- **Containerização**: Docker
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── app/
+│   ├── core/         # Serviços e interceptadores globais
+│   ├── features/     # Módulos de funcionalidades (pacientes, farmácia, etc.)
+│   ├── layout/       # Componentes de layout (header, sidebar, footer)
+│   ├── shared/       # Componentes, pipes e serviços reutilizáveis
+├── assets/           # Recursos estáticos (imagens, ícones, etc.)
+├── environments/     # Configurações de ambiente
+```
+
+### 🧩 Componentes Principais
+
+Nosso sistema é construído com base em uma arquitetura de componentes modernos e reutilizáveis:
+
+- **Componentes de Layout**:
+  - Header com notificações e informações do usuário
+  - Sidebar de navegação intuitiva
+  - Footer responsivo
+
+- **Componentes Compartilhados**:
+  - `PacienteAvatarComponent`: Exibe avatares de pacientes com iniciais
+  - `DateInputComponent`: Entrada de datas customizada
+  - `AlertComponent`: Sistema de notificações animadas
+  - `PaginacaoComponent`: Controle avançado de paginação
+
+## 🚀 Como Começar
+
+### Requisitos
+
+- Node.js 18.x ou superior
+- NPM 9.x ou superior
+- Angular CLI 19.2.6 ou superior
+
+### Instalação
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seu-usuario/cuidar-plus.git
+   cd cuidar-plus
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Inicie o servidor de desenvolvimento:
+   ```bash
+   ng serve
+   ```
+
+4. Acesse no navegador:
+   ```
+   http://localhost:4200/
+   ```
+
+## 💻 Scripts Disponíveis
+
+### Desenvolvimento
+
+Inicie o servidor de desenvolvimento com:
 
 ```bash
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+A aplicação recarregará automaticamente se você alterar qualquer arquivo fonte.
 
-## Code scaffolding
+### Build
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Para criar uma build de produção:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Os arquivos serão gerados no diretório `dist/`.
 
-## Running unit tests
+### Testes
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Execute os testes unitários com:
 
 ```bash
 ng test
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Para testes end-to-end:
 
 ```bash
 ng e2e
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 🧪 Desenvolvimento e Contribuição
 
-## Additional Resources
+### Geração de Componentes
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+O Angular CLI facilita a criação de novos componentes:
+
+```bash
+ng generate component nome-do-componente
+```
+
+Ou de forma abreviada:
+
+```bash
+ng g c nome-do-componente
+```
+
+Para outros tipos de elementos:
+
+```bash
+ng generate directive|pipe|service|class|guard|interface|enum|module nome
+```
+
+### Padrões de Código
+
+- **TypeScript Estrito**: Use sempre tipos apropriados
+- **Componentes Standalone**: Prefira a abordagem standalone para novos componentes
+- **Reactive Forms**: Utilize formulários reativos para validação e manipulação de dados
+- **Lazy Loading**: Implemente carregamento sob demanda para módulos grandes
+
+## 🐳 Docker
+
+Para ambientes containerizados, utilize:
+
+```bash
+# Construir a imagem
+docker build -t cuidar-plus .
+
+# Executar o container
+docker run -p 80:80 cuidar-plus
+```
+
+## 📊 Arquitetura
+
+### Serviços Principais
+
+- **PacienteService**: Gerencia operações relacionadas aos pacientes
+- **DateFormatterService**: Formatação e manipulação de datas
+- **AcompanhamentoService**: Controle de acompanhamentos clínicos
+- **NotificacaoService**: Sistema de notificações e alertas
+
+### Design Responsivo
+
+O CuidarPlus foi projetado para funcionar perfeitamente em dispositivos móveis e desktops, utilizando:
+
+- Grid system do Bootstrap
+- Media queries personalizadas
+- DeviceDetectorService para otimizações específicas de dispositivos
+
+## 🔮 Melhorias Planejadas
+
+- Implantação de testes e2e
+- Implementação de modo offline usando IndexedDB
+- Expansão da cobertura de testes unitários
+- Internacionalização (i18n)
+
+## 📚 Recursos Adicionais
+
+- [Documentação do Angular](https://angular.dev/)
+- [Documentação do Bootstrap](https://getbootstrap.com/docs/5.3)
+- [Documentação de Bootstrap Icons](https://icons.getbootstrap.com/)
+
+## 📝 Licença
+
+Este projeto está licenciado sob a [Licença MIT](LICENSE).
+
+---
+
+© 2025 CuidarPlus. Todos os direitos reservados.
