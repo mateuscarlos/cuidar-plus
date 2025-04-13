@@ -1,0 +1,91 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  
+  &:hover {
+    background-color: var(--bs-gray-100);
+  }
+  
+  i {
+    opacity: 0.7;
+    font-size: 0.8rem;
+  }
+}
+
+.avatar {
+  width: 35px;
+  height: 35px;
+  
+  &.avatar-sm {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+  }
+}
+
+// Estilo para manter consistência com a lista de usuários
+.table thead th {
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
+}
+
+// Estilo para status badge
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  text-transform: capitalize;
+}
+
+// Estilo para os grupos de botões
+.btn-group .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.card-header {
+  padding: 0.75rem 1.25rem;
+}
+
+.form-control, .form-select {
+  &:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+  }
+}
+
+.input-group {
+  .input-group-text {
+    background-color: var(--bs-gray-100);
+  }
+}
+
+.table {
+  margin-bottom: 0;
+  
+  th {
+    font-weight: 600;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
+}

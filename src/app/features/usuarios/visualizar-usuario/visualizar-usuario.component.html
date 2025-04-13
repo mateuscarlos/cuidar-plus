@@ -1,0 +1,162 @@
+<div class="container-fluid py-4">
+  <!-- Loading spinner -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+       style="z-index: 1050;" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="mb-1">Visualização de Usuário</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/usuarios">Usuários</a></li>
+          <li class="breadcrumb-item active">Visualizar Usuário</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+  
+  <!-- Alerta de erro -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ error }}
+  </div>
+
+  <!-- Modo de visualização - exibido quando o usuário for carregado -->
+  <div *ngIf="usuario && !isLoading">
+    <!-- Botões de navegação (topo) -->
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
+        </button>
+      </div>
+      <div>
+        <button class="btn btn-primary" (click)="irParaEdicao()">
+          <i class="bi bi-pencil me-2"></i>Editar Usuário
+        </button>
+      </div>
+    </div>
+    
+    <!-- Cabeçalho do Usuário -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap">
+          <!-- Informações básicas do usuário -->
+          <div class="d-flex align-items-center mb-3 mb-md-0">
+            <app-usuario-avatar [nome]="usuario.nome" size="lg" class="me-3"></app-usuario-avatar>
+            <div>
+              <h4 class="mb-0">{{ usuario.nome }}</h4>
+              <p class="text-muted mb-0">
+                <app-status-badge [status]="usuario.status || ''" class="me-2"></app-status-badge>
+                ID: {{ usuario.id }} | CPF: {{ usuario.cpf || usuario.document || 'Não informado' }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Informações de cadastro -->
+          <div class="text-md-end">
+            <p class="mb-0 text-muted small">
+              <strong>Data de Cadastro:</strong> {{ formatarData(usuario.created_at) }}
+            </p>
+            <p class="mb-0 text-muted small">
+              <strong>Última Atualização:</strong> {{ formatarData(usuario.updated_at) }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Abas de informações -->
+    <div class="row">
+      <!-- Informações Profissionais -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações Profissionais" icon="briefcase-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Data de Admissão:</span>
+              <strong>
+                <app-formatted-date [date]="usuario?.dataAdmissao || usuario?.data_admissao" format="displayDateOnly"></app-formatted-date>
+              </strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Setor:</span>
+              <strong>{{ usuario.setorNome || 'Carregando...' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Função:</span>
+              <strong>{{ usuario.funcaoNome || 'Carregando...' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Especialidade:</span>
+              <strong>{{ usuario.especialidade || 'Não informado' }}</strong>
+            </li>
+            <!-- Registro de categoria com nome de conselho dinâmico -->
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">{{ obterNomeConselho() }}:</span>
+              <strong>{{ usuario.registro_categoria || usuario.registroCategoria || 'Não informado' }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Tipo de Contratação:</span>
+              <strong>{{ formatarTipoContratacao(usuario.tipo_contratacao || usuario.tipoContratacao) }}</strong>
+            </li>
+            
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Informações de Contato -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Contato" icon="telephone-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Email:</span>
+              <strong>{{ usuario.email }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Telefone:</span>
+              <strong>{{ usuario.telefone || 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+      
+      <!-- Endereço -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Endereço" icon="house-fill">
+          <p class="mb-0">{{ formatarEndereco(usuario.endereco) }}</p>
+        </app-info-card>
+      </div>
+      
+      <!-- Informações de Acesso -->
+      <div class="col-md-6 mb-4">
+        <app-info-card title="Informações de Acesso" icon="shield-lock-fill">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Tipo de Acesso:</span>
+              <strong>{{ formatarTipoAcesso(usuario.tipo_acesso || usuario.tipoAcesso) }}</strong>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-muted">Permissões:</span>
+              <strong>{{ usuario.permissions && usuario.permissions.length ? usuario.permissions.join(', ') : 'Não informado' }}</strong>
+            </li>
+          </ul>
+        </app-info-card>
+      </div>
+    </div>
+    
+    <!-- Botões de navegação (rodapé) -->
+    <div class="d-flex justify-content-between mb-4">
+      <div>
+        <button class="btn btn-outline-secondary" (click)="voltarParaLista()">
+          <i class="bi bi-arrow-left me-2"></i>Voltar para a Lista
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

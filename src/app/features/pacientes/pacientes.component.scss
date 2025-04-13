@@ -1,21 +1,112 @@
-.avatar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+:host {
+  display: block;
+}
+
+// Estilos para cards de estatísticas
+.stats-row {
+  margin-bottom: 2rem;
+}
+
+.card-stats {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .icon-container {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  .stat-content {
+    flex: 1;
+  }
+  
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+}
+
+// Estilos para cards de ação
+.action-cards {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  color: #555;
-  border: 1px solid #dee2e6;
+  flex-wrap: wrap;
 }
 
-.table th {
-  font-weight: 600;
-  color: #495057;
+.action-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .icon-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-title {
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+  
+  .card-text {
+    margin-bottom: 1.5rem;
+    color: var(--bs-gray-600);
+    flex-grow: 1;
+  }
+  
+  .btn {
+    margin-top: auto;
+    align-self: center;
+    width: 100%;
+  }
 }
 
-.btn-group .btn {
-  border-radius: 4px;
-  margin: 0 2px;
+/* Responsividade para diferentes tamanhos de tela */
+@media (max-width: 991.98px) {
+  .action-card .card-text {
+    min-height: 3rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .stats-row .col-sm-6:nth-child(odd) {
+    padding-right: calc(var(--bs-gutter-x) * .25);
+  }
+  
+  .stats-row .col-sm-6:nth-child(even) {
+    padding-left: calc(var(--bs-gutter-x) * .25);
+  }
 }

@@ -1,3 +1,52 @@
+// Importar o tema centralizado
+@import "./styles/theme.scss";
+
+// Importação de componentes de estilo
+@import "./styles/forms.scss";
+@import "./styles/tables.scss";
+
+// Adicione após os imports existentes
+
+// Estilos para o layout principal
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+// Componentes com altura fixa
+.header {
+  --header-height: 60px;
+  height: var(--header-height);
+}
+
+.footer {
+  --footer-height: 60px;
+  height: var(--footer-height);
+}
+
+// Melhorias para rolagem
+.overflow-auto, .overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.overflow-auto::-webkit-scrollbar, 
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb, 
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.overflow-auto::-webkit-scrollbar-track, 
+.overflow-y-auto::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
 /* Reset globals */
 html, body {
   height: 100%;
@@ -9,6 +58,8 @@ html, body {
 body {
   overflow-x: hidden;
   padding-top: 0 !important; /* Garante que não há padding automático do Bootstrap */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: $dark;
 }
 
 /* Elementos de conteúdo principal */
@@ -28,10 +79,101 @@ app-root {
   main {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
+  }
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
+
+/* Estilos globais para melhorar os Mat Autocomplete */
+.mat-autocomplete-panel {
+  z-index: 1050 !important;
 }
+
+.cdk-overlay-container {
+  z-index: 1060 !important;
+}
+
+.cdk-overlay-connected-position-bounding-box {
+  z-index: 1060 !important;
+}
+
+// Garantir que o overlay seja exibido acima de tudo
+::ng-deep .cdk-overlay-container {
+  z-index: 1060 !important;
+}
+
+::ng-deep .cdk-overlay-backdrop {
+  z-index: 1050 !important;
+}
+
+::ng-deep .cdk-global-overlay-wrapper {
+  z-index: 1060 !important;
+}
+
+.sucesso-snackbar {
+  background-color: #4caf50; // Verde
+  color: #fff;
+}
+
+.erro-snackbar {
+  background-color: #f44336; // Vermelho
+  color: #fff;
+}
+
+.aviso-snackbar {
+  background-color: #ff9800; // Laranja
+  color: #fff;
+}
+
+// Classes de espaçamento consistentes
+.content-container {
+  padding: 1.5rem;
+}
+
+// Padronização de tipografia
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+// Estilo padrão para formulários
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+// Estilos para links do sistema
+a.app-link {
+  color: $primary;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  
+  &:hover {
+    color: darken($primary, 10%);
+    text-decoration: underline;
+  }
+}
+
+// Campo obrigatório
+.field-required::after {
+  content: "*";
+  color: $danger;
+  margin-left: 2px;
+}
+
+// Melhorias para tabelas
+.table {
+  th {
+    font-weight: 600;
+  }
+  
+  tr.cursor-pointer:hover {
+    background-color: rgba($primary, 0.05);
+  }
+}
+
+// Classes utilitárias
+.icon-left { margin-right: 0.5rem; }
+.icon-right { margin-left: 0.5rem; }

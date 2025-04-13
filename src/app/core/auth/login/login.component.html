@@ -1,0 +1,87 @@
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow border-0">
+        <div class="card-body p-4 p-sm-5">
+          <div class="text-center mb-4">
+            <h2 class="mb-0 fw-bold">Cuidar<span class="text-success">+</span></h2>
+            <p class="text-muted mt-2">Faça login para acessar o sistema</p>
+          </div>
+          
+          <!-- Add this in the appropriate place in your login form -->
+          <div class="text-center mb-4">
+            <img src="assets/images/logo.png" alt="Cuidar+" height="60">
+            <h4 class="mt-2">Cuidar+</h4>
+            <p class="text-muted">Sistema de Gestão de Cuidados Médicos</p>
+          </div>
+          
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <!-- Alerta de erro -->
+            <div class="alert alert-danger" *ngIf="error">
+              {{ error }}
+            </div>
+            
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">E-mail</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-envelope"></i>
+                </span>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="email" 
+                  formControlName="email"
+                  placeholder="seu@email.com"
+                  [ngClass]="{'is-invalid': loginForm.controls['email'].invalid && loginForm.controls['email'].touched}">
+                <div class="invalid-feedback">
+                  Por favor, insira um e-mail válido.
+                </div>
+              </div>
+            </div>
+            
+            <!-- Senha -->
+            <div class="mb-4">
+              <label for="senha" class="form-label">Senha</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-lock"></i>
+                </span>
+                <input 
+                  type="password" 
+                  class="form-control" 
+                  id="senha" 
+                  formControlName="senha"
+                  placeholder="Sua senha"
+                  [ngClass]="{'is-invalid': loginForm.controls['senha'].invalid && loginForm.controls['senha'].touched}">
+                <div class="invalid-feedback">
+                  A senha é obrigatória.
+                </div>
+              </div>
+            </div>
+            
+            <!-- Botão de Login -->
+            <div class="d-grid">
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-lg" 
+                [disabled]="loginForm.invalid || isLoading">
+                <span class="spinner-border spinner-border-sm me-2" *ngIf="isLoading"></span>
+                Entrar
+              </button>
+            </div>
+            
+            <div class="text-center mt-4">
+              <a href="#" class="text-decoration-none">Esqueceu a senha?</a>
+            </div>
+          </form>
+          
+        </div>
+      </div>
+      <div class="text-center text-muted mt-3">
+        <small>© 2025 Cuidar+ Todos os direitos reservados.</small>
+      </div>
+    </div>
+  </div>
+</div>

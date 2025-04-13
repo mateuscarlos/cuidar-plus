@@ -49,10 +49,10 @@ export class PacienteStore {
   carregarPaciente(id: string) {
     this.state.update(s => ({ ...s, carregando: true, erro: null }));
 
-    this.pacienteService.getPaciente(id).pipe(
+    this.pacienteService.obterPacientePorId(id).pipe(
       tap(paciente => {
         if (paciente) {
-          this.state.update(s => ({ ...s, pacienteSelecionado: paciente, carregando: false }));
+          this.state.update(s => ({ ...s, pacienteSelecionado: paciente as Paciente, carregando: false }));
         } else {
           this.state.update(s => ({ ...s, erro: 'Paciente não encontrado', carregando: false }));
         }
@@ -91,14 +91,14 @@ export class PacienteStore {
     ).subscribe();
   }
 
-  atualizarPaciente(id: string, paciente: Partial<Paciente>) {
+  atualizarPaciente(id: string | number, paciente: Partial<Paciente>) {
     this.state.update(s => ({ ...s, carregando: true, erro: null }));
 
-    this.pacienteService.atualizarPaciente(id, paciente).pipe(
+    this.pacienteService.atualizarPaciente(String(id), paciente).pipe(
       tap(pacienteAtualizado => {
         this.state.update(s => ({
           ...s,
-          pacientes: s.pacientes.map(p => p.id === id ? pacienteAtualizado : p),
+          pacientes: s.pacientes.map(p => p.id !== undefined && p.id.toString() === id.toString() ? pacienteAtualizado : p),
           pacienteSelecionado: pacienteAtualizado,
           carregando: false
         }));

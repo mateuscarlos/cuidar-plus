@@ -1,56 +1,66 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { PACIENTES_ROUTES } from './features/pacientes/pacientes.routes';
+import { USUARIOS_ROUTES } from './features/usuarios/usuarios.routes';
+import { CONFIGURACOES_ROUTES } from './features/configuracoes/configuracoes.routes';
 
+/**
+ * Rotas principais da aplicação
+ * Cada módulo de feature possui seu próprio arquivo de rotas
+ */
 export const routes: Routes = [
+  // Rota padrão
   {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
   },
+  
+  // Dashboard principal
   {
     path: 'home',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
+    canActivate: [AuthGuard],
+    title: 'Home - Cuidar+'
   },
+  
+  // Rotas do módulo de Pacientes
   {
     path: 'pacientes',
-    loadComponent: () => import('./features/pacientes/pacientes.component').then(m => m.PacientesComponent),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    children: PACIENTES_ROUTES
   },
+  
+  // Rotas do módulo de Usuários
   {
-    path: 'pacientes/cadastrar',
-    loadComponent: () => import('./features/pacientes/cadastrar-paciente/cadastrar-paciente.component').then(m => m.CadastrarPacienteComponent),
-    canActivate: [AuthGuard]
+    path: 'usuarios',
+    children: USUARIOS_ROUTES
   },
-  {
-    path: 'pacientes/editar',
-    loadComponent: () => import('./features/pacientes/editar-paciente/editar-paciente.component').then(m => m.EditarPacienteComponent),
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'pacientes/visualizar',
-    loadComponent: () => import('./features/pacientes/visualizar-paciente/visualizar-paciente.component').then(m => m.VisualizarPacienteComponent),
-    canActivate: [AuthGuard]
-  },
-  {
-    path: 'pacientes/acompanhamento',
-    loadComponent: () => import('./features/pacientes/criar-acompanhamento-paciente/criar-acompanhamento-paciente.component').then(m => m.CriarAcompanhamentoPacienteComponent),
-    canActivate: [AuthGuard]
-  },
+  
+  // Relatórios
   {
     path: 'relatorios',
     loadComponent: () => import('./features/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    title: 'Relatórios - Cuidar+'
   },
+  
+  // Farmácia
   {
     path: 'farmacia',
     loadComponent: () => import('./features/farmacia/farmacia.component').then(m => m.FarmaciaComponent),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    title: 'Farmácia - Cuidar+'
   },
+  
+  // Configurações e suas subrotas
   {
     path: 'configuracoes',
-    loadComponent: () => import('./features/configuracoes/configuracoes.component').then(m => m.ConfiguracoesComponent),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    children: CONFIGURACOES_ROUTES
   },
+  
+  // Rota de fallback para página não encontrada
   {
     path: '**',
     redirectTo: 'home'

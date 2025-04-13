@@ -1,3 +1,7 @@
+:host {
+  display: contents;
+}
+
 .app-container {
   display: flex;
   min-height: 100vh;
@@ -15,11 +19,14 @@
   position: relative;
 }
 
-header {
+.header {
+  height: 60px;
+  z-index: 1030;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
   position: sticky;
   top: 0;
-  z-index: 1000;
-  width: 100%;
 }
 
 main {
@@ -28,7 +35,12 @@ main {
   margin-top: 0;
 }
 
-footer {
+.footer {
+  height: 60px;
+  z-index: 1020;
+  background-color: #fff;
+  border-top: 1px solid #dee2e6;
+  flex-shrink: 0;
   margin-top: auto;
 }
 
@@ -52,13 +64,19 @@ footer {
   transition: transform 0.3s ease;
   height: 100%;
   position: relative;
-  z-index: 1000;
+  z-index: 1020;
   background-color: #fff;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  overflow-y: auto;
 }
 
 .content-area {
   overflow-y: auto;
   padding-bottom: 20px;
+  flex: 1;
+  background-color: #f8f9fa;
+  padding: 1.5rem;
 }
 
 // Ajustes para dispositivos móveis
@@ -76,8 +94,8 @@ footer {
     position: fixed;
     left: 0;
     top: 60px; // Altura do header
-    bottom: 0;
-    z-index: 1030;
+    bottom: 60px;
+    z-index: 1025;
     transform: translateX(-100%);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   }
@@ -91,9 +109,15 @@ footer {
     top: 60px;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 60px;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1020;
+    z-index: 1024;
+  }
+
+  .footer {
+    // Garantir que o footer fique visível em dispositivos móveis
+    position: sticky;
+    bottom: 0;
   }
 }
 

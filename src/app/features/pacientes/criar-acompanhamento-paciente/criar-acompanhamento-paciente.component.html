@@ -1,427 +1,784 @@
 <div class="container-fluid py-4">
-  <div class="card">
-    <div class="card-header bg-info text-white">
-      <h5 class="mb-0">Acompanhamento de Paciente - Home Care</h5>
+  <!-- Loading spinner -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+       style="z-index: 1050;" *ngIf="isLoading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
     </div>
-    <div class="card-body">
-      <!-- Componente de busca -->
-      <app-busca-paciente *ngIf="!modoEdicao" (resultadoBusca)="buscarPaciente($event)"></app-busca-paciente>
+  </div>
+  
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="mb-1">Acompanhamento de Paciente</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
+          <li class="breadcrumb-item active">Novo Acompanhamento</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
 
-      <!-- Resultados da busca - exibidos apenas quando houver resultados e não estiver no modo de edição -->
-      <div class="card border-0 shadow-sm mb-4" *ngIf="resultadosBusca.length > 0 && !modoEdicao">
-        <div class="card-body">
-          <h6 class="card-title mb-3">Resultados da Busca</h6>
-          
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>CPF</th>
-                  <th>Data de Nasc.</th>
-                  <th>Telefone</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let paciente of resultadosBusca" (click)="selecionarPaciente(paciente)" style="cursor: pointer;">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="avatar-circle bg-light me-3">
-                        <span>{{ paciente.nome_completo.split(' ')[0][0] }}{{ paciente.nome_completo.split(' ').length > 1 ? paciente.nome_completo.split(' ')[1][0] : '' }}</span>
-                      </div>
-                      <div>
-                        <p class="mb-0 fw-medium">{{ paciente.nome_completo }}</p>
-                        <small class="text-muted">ID: {{ paciente.id }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{{ paciente.cpf }}</td>
-                  <td>{{ paciente.data_nascimento | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ paciente.telefone }}</td>
-                  <td>
-                    <button class="btn btn-sm btn-info" (click)="selecionarPaciente(paciente); $event.stopPropagation();">
-                      <i class="bi bi-clipboard-plus me-1"></i> Registrar
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+  <!-- Card principal -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-info text-white py-3">
+      <h5 class="card-title mb-0">
+        <i class="bi bi-clipboard-pulse me-2"></i>Registro de Acompanhamento
+      </h5>
+    </div>
+    <div class="card-body p-4">
+      <!-- Componente de busca - exibido quando não há paciente selecionado -->
+      <app-busca-paciente
+        *ngIf="!modoEdicao"
+        (pacienteSelecionado)="buscarPaciente($event)"
+        [modoVisualizacao]="'acompanhamento'"
+      ></app-busca-paciente>
 
-          <!-- Mensagem caso não encontre resultados -->
-          <div class="alert alert-info" *ngIf="resultadosBusca.length === 0">
-            Nenhum paciente encontrado com os critérios de busca informados.
-          </div>
+      <!-- Mensagem de erro -->
+      <div class="alert alert-danger" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+      </div>
+      
+      <!-- Resultados de busca -->
+      <div *ngIf="resultadosBusca.length > 0 && !modoEdicao" class="mb-4">
+        <h6 class="mb-3">Resultados da busca:</h6>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Data de Nascimento</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let paciente of resultadosBusca">
+                <td>{{ paciente.nome_completo }}</td>
+                <td>{{ paciente.cpf }}</td>
+                <td>{{ paciente.data_nascimento | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <app-status-badge [status]="paciente.status"></app-status-badge>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-primary" (click)="selecionarPaciente(paciente)">
+                    <i class="bi bi-check-lg me-1"></i>Selecionar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- Formulário de acompanhamento - exibido apenas quando um paciente estiver selecionado -->
-      <form [formGroup]="acompanhamentoForm" (ngSubmit)="salvarAcompanhamento()" *ngIf="modoEdicao && pacienteSelecionado">
-        <!-- Cabeçalho do paciente -->
-        <div class="d-flex align-items-center mb-4">
-          <div class="avatar-circle bg-light me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
-            <span>{{ pacienteSelecionado.nome_completo.split(' ')[0][0] }}{{ pacienteSelecionado.nome_completo.split(' ').length > 1 ? pacienteSelecionado.nome_completo.split(' ')[1][0] : '' }}</span>
-          </div>
-          <div>
-            <h5 class="mb-0">{{ pacienteSelecionado.nome_completo }}</h5>
-            <p class="text-muted mb-0">ID: {{ pacienteSelecionado.id }} | CPF: {{ pacienteSelecionado.cpf }}</p>
-            <p class="text-muted mb-0">Nasc.: {{ pacienteSelecionado.data_nascimento | date:'dd/MM/yyyy' }}</p>
+      <!-- Formulário de acompanhamento - exibido após selecionar um paciente -->
+      <form
+        [formGroup]="acompanhamentoForm"
+        (ngSubmit)="salvarAcompanhamento()"
+        *ngIf="modoEdicao && pacienteSelecionado"
+      >
+        <!-- Cabeçalho do paciente selecionado -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body d-flex align-items-center">
+            <div class="avatar-circle bg-info-subtle text-info me-3 d-flex align-items-center justify-content-center fs-3" style="width: 60px; height: 60px;">
+              <i class="bi bi-person"></i>
+            </div>
+            <div>
+              <h5 class="mb-1">{{ pacienteSelecionado.nome_completo }}</h5>
+              <p class="text-muted mb-0 small">
+                <span class="me-3"><i class="bi bi-person-vcard me-1"></i>{{ pacienteSelecionado.cpf }}</span>
+                <span class="me-3"><i class="bi bi-calendar me-1"></i>{{ pacienteSelecionado.data_nascimento | date:'dd/MM/yyyy' }}</span>
+                <span class="badge" [ngClass]="getStatusClasses(pacienteSelecionado.status)">{{ pacienteSelecionado.status }}</span>
+              </p>
+            </div>
           </div>
         </div>
-        
-        <!-- Dados do Atendimento -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Dados do Atendimento</h6>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="data_hora_atendimento" class="form-label">Data e Hora do Atendimento*</label>
-            <input type="datetime-local" class="form-control" id="data_hora_atendimento" 
+
+        <!-- 1. DADOS DO ATENDIMENTO -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-calendar-check me-2 text-info"></i>
+              <span>Dados do Atendimento</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="data_hora_atendimento" class="form-label field-required">
+                  Data e Hora do Atendimento
+                </label>
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  id="data_hora_atendimento"
                   formControlName="data_hora_atendimento"
-                  [ngClass]="{'is-invalid': isFieldValid('data_hora_atendimento')}">
-            <div class="invalid-feedback">Data e hora são obrigatórias.</div>
+                  [ngClass]="{'is-invalid': isFieldValid('data_hora_atendimento')}"
+                />
+                <div class="invalid-feedback">
+                  Data e hora são obrigatórias.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="tipo_atendimento" class="form-label field-required">
+                  Tipo de Atendimento
+                </label>
+                <select
+                  class="form-select"
+                  id="tipo_atendimento"
+                  formControlName="tipo_atendimento"
+                  [ngClass]="{'is-invalid': isFieldValid('tipo_atendimento')}"
+                >
+                  <option *ngFor="let tipo of tiposAtendimento" [value]="tipo">
+                    {{ tipo }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  O tipo de atendimento é obrigatório.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="motivo_atendimento" class="form-label field-required">
+                  Motivo do Atendimento
+                </label>
+                <select
+                  class="form-select"
+                  id="motivo_atendimento"
+                  formControlName="motivo_atendimento"
+                  [ngClass]="{'is-invalid': isFieldValid('motivo_atendimento')}"
+                >
+                  <option *ngFor="let motivo of motivosAtendimento" [value]="motivo">
+                    {{ motivo }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  O motivo do atendimento é obrigatório.
+                </div>
+              </div>
+
+              <!-- Campo condicional para descrição de motivo específico -->
+              <div class="col-md-12" *ngIf="deveExibirCampo('motivo_atendimento', motivosAtendimento)">
+                <label for="descricao_motivo" class="form-label field-required">
+                  Descrição do Motivo
+                </label>
+                <textarea
+                  class="form-control"
+                  id="descricao_motivo"
+                  rows="2"
+                  formControlName="descricao_motivo"
+                  [ngClass]="{'is-invalid': isFieldValid('descricao_motivo')}"
+                ></textarea>
+                <div class="invalid-feedback">
+                  A descrição do motivo é obrigatória.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <!-- Profissional Responsável -->
-        <div class="row mb-4" formGroupName="profissional">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Profissional Responsável</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="nome_profissional" class="form-label">Nome Completo*</label>
-            <input type="text" class="form-control" id="nome_profissional" 
+
+        <!-- 2. PROFISSIONAL RESPONSÁVEL -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body" formGroupName="profissional">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-person-badge me-2 text-info"></i>
+              <span>Profissional Responsável</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="nome" class="form-label field-required">
+                  Nome do Profissional
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nome"
                   formControlName="nome"
-                  [ngClass]="{'is-invalid': isNestedFieldValid('profissional', 'nome')}">
-            <div class="invalid-feedback">O nome do profissional é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="cargo" class="form-label">Cargo/Função*</label>
-            <input type="text" class="form-control" id="cargo" 
+                  [ngClass]="{'is-invalid': isNestedFieldValid('profissional', 'nome')}"
+                />
+                <div class="invalid-feedback">
+                  Nome do profissional é obrigatório.
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="cargo" class="form-label field-required">
+                  Cargo/Função
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cargo"
                   formControlName="cargo"
-                  [ngClass]="{'is-invalid': isNestedFieldValid('profissional', 'cargo')}">
-            <div class="invalid-feedback">O cargo do profissional é obrigatório.</div>
-          </div>
-        </div>
-        
-        <!-- Tipo de Atendimento -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Tipo e Motivo do Atendimento</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="tipo_atendimento" class="form-label">Tipo de Atendimento*</label>
-            <select class="form-select" id="tipo_atendimento" 
-                   formControlName="tipo_atendimento"
-                   [ngClass]="{'is-invalid': isFieldValid('tipo_atendimento')}">
-              <option *ngFor="let tipo of tiposAtendimento" [value]="tipo">{{ tipo }}</option>
-            </select>
-            <div class="invalid-feedback">O tipo de atendimento é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="motivo_atendimento" class="form-label">Motivo do Atendimento*</label>
-            <select class="form-select" id="motivo_atendimento" 
-                   formControlName="motivo_atendimento"
-                   [ngClass]="{'is-invalid': isFieldValid('motivo_atendimento')}">
-              <option *ngFor="let motivo of motivosAtendimento" [value]="motivo">{{ motivo }}</option>
-            </select>
-            <div class="invalid-feedback">O motivo do atendimento é obrigatório.</div>
-          </div>
-          
-          <div class="col-md-12 mb-3" *ngIf="acompanhamentoForm.get('motivo_atendimento')?.value === 'Queixa/sintoma específico' || acompanhamentoForm.get('motivo_atendimento')?.value === 'Outros'">
-            <label for="descricao_motivo" class="form-label">Descreva o motivo*</label>
-            <textarea class="form-control" id="descricao_motivo" rows="3" 
-                     formControlName="descricao_motivo"></textarea>
-          </div>
-        </div>
-        
-        <!-- Avaliação do Paciente - Sinais Vitais -->
-        <div class="row mb-4" formGroupName="sinais_vitais">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Avaliação do Paciente - Sinais Vitais</h6>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="pressao_arterial" class="form-label">Pressão Arterial (mmHg)</label>
-            <input type="text" class="form-control" id="pressao_arterial" 
-                  formControlName="pressao_arterial" 
-                  placeholder="Ex: 120/80">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="frequencia_cardiaca" class="form-label">Frequência Cardíaca (bpm)</label>
-            <input type="number" class="form-control" id="frequencia_cardiaca" 
-                  formControlName="frequencia_cardiaca">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="temperatura" class="form-label">Temperatura (°C)</label>
-            <input type="number" class="form-control" id="temperatura" 
-                  formControlName="temperatura" step="0.1">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="saturacao_oxigenio" class="form-label">Saturação de Oxigênio (%)</label>
-            <input type="number" class="form-control" id="saturacao_oxigenio" 
-                  formControlName="saturacao_oxigenio">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="glicemia" class="form-label">Glicemia (mg/dL)</label>
-            <input type="number" class="form-control" id="glicemia" 
-                  formControlName="glicemia">
-          </div>
-        </div>
-        
-        <!-- Avaliação do Paciente - Condição Geral -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Avaliação do Paciente - Condição Geral</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="condicao_paciente" class="form-label">Condição do Paciente*</label>
-            <select class="form-select" id="condicao_paciente" 
-                   formControlName="condicao_paciente"
-                   [ngClass]="{'is-invalid': isFieldValid('condicao_paciente')}">
-              <option *ngFor="let condicao of condicoesPaciente" [value]="condicao">{{ condicao }}</option>
-            </select>
-            <div class="invalid-feedback">A condição do paciente é obrigatória.</div>
-          </div>
-          
-          <div class="col-md-6 mb-3" *ngIf="acompanhamentoForm.get('condicao_paciente')?.value === 'Instável'">
-            <label for="descricao_condicao" class="form-label">Descreva a condição*</label>
-            <textarea class="form-control" id="descricao_condicao" rows="3" 
-                     formControlName="descricao_condicao"></textarea>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="nivel_dor" class="form-label">Nível de Dor</label>
-            <select class="form-select" id="nivel_dor" 
-                   formControlName="nivel_dor">
-              <option *ngFor="let nivel of niveisDor" [value]="nivel">{{ nivel }}</option>
-            </select>
-          </div>
-          
-          <div class="col-md-8 mb-3" *ngIf="acompanhamentoForm.get('nivel_dor')?.value !== 'Sem dor'">
-            <label for="localizacao_dor" class="form-label">Localização da Dor</label>
-            <input type="text" class="form-control" id="localizacao_dor" 
-                  formControlName="localizacao_dor">
-          </div>
-        </div>
-        
-        <!-- Avaliação de Feridas/Curativos -->
-        <div class="row mb-4" formGroupName="avaliacao_feridas">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Avaliação de Feridas/Curativos (se aplicável)</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="aspecto" class="form-label">Aspecto da Ferida</label>
-            <textarea class="form-control" id="aspecto" rows="2" 
-                     formControlName="aspecto"></textarea>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="form-check mt-4">
-              <input class="form-check-input" type="checkbox" id="sinais_infeccao" 
-                    formControlName="sinais_infeccao">
-              <label class="form-check-label" for="sinais_infeccao">
-                Presença de sinais de infecção
-              </label>
+                  [ngClass]="{'is-invalid': isNestedFieldValid('profissional', 'cargo')}"
+                />
+                <div class="invalid-feedback">
+                  Cargo/função é obrigatório.
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="tipo_curativo" class="form-label">Tipo de Curativo Realizado</label>
-            <input type="text" class="form-control" id="tipo_curativo" 
-                  formControlName="tipo_curativo">
-          </div>
         </div>
-        
-        <!-- Avaliação de Dispositivos -->
-        <div class="row mb-4" formGroupName="avaliacao_dispositivos">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Avaliação de Dispositivos (sondas, cateteres, etc.)</h6>
-          </div>
-          
-          <div class="col-md-3 mb-3">
-            <div class="form-check mt-2">
-              <input class="form-check-input" type="checkbox" id="funcionamento_adequado" 
-                    formControlName="funcionamento_adequado">
-              <label class="form-check-label" for="funcionamento_adequado">
-                Funcionamento adequado
-              </label>
+
+        <!-- 3. CONDIÇÃO DO PACIENTE -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-heart-pulse me-2 text-info"></i>
+              <span>Avaliação da Condição do Paciente</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="condicao_paciente" class="form-label field-required">
+                  Condição do Paciente
+                </label>
+                <select
+                  class="form-select"
+                  id="condicao_paciente"
+                  formControlName="condicao_paciente"
+                  [ngClass]="{'is-invalid': isFieldValid('condicao_paciente')}"
+                >
+                  <option *ngFor="let condicao of condicoesPaciente" [value]="condicao">
+                    {{ condicao }}
+                  </option>
+                </select>
+                <div class="invalid-feedback">
+                  A condição do paciente é obrigatória.
+                </div>
+              </div>
+
+              <!-- Campo condicional para descrição da condição instável -->
+              <div class="col-md-8" *ngIf="deveExibirCampo('condicao_paciente', condicoesPaciente)">
+                <label for="descricao_condicao" class="form-label field-required">
+                  Descrição da Condição
+                </label>
+                <textarea
+                  class="form-control"
+                  id="descricao_condicao"
+                  rows="2"
+                  formControlName="descricao_condicao"
+                  [ngClass]="{'is-invalid': isFieldValid('descricao_condicao')}"
+                ></textarea>
+                <div class="invalid-feedback">
+                  A descrição da condição é obrigatória quando o paciente está instável.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label for="nivel_dor" class="form-label">
+                  Nível de Dor
+                </label>
+                <select
+                  class="form-select"
+                  id="nivel_dor"
+                  formControlName="nivel_dor"
+                >
+                  <option *ngFor="let nivel of niveisDor" [value]="nivel">
+                    {{ nivel }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Campo condicional para localização da dor -->
+              <div class="col-md-8" *ngIf="deveExibirCampo('nivel_dor', niveisDor)">
+                <label for="localizacao_dor" class="form-label field-required">
+                  Localização da Dor
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="localizacao_dor"
+                  formControlName="localizacao_dor"
+                  [ngClass]="{'is-invalid': isFieldValid('localizacao_dor')}"
+                />
+                <div class="invalid-feedback">
+                  A localização da dor é obrigatória quando há dor.
+                </div>
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-9 mb-3">
-            <label for="sinais_complicacao" class="form-label">Presença de sinais de complicação</label>
-            <textarea class="form-control" id="sinais_complicacao" rows="2" 
-                     formControlName="sinais_complicacao"></textarea>
-          </div>
         </div>
-        
-        <!-- Intervenções Realizadas -->
-        <div class="row mb-4" formGroupName="intervencoes">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Intervenções Realizadas</h6>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="medicacao_administrada" class="form-label">Medicação Administrada</label>
-            <textarea class="form-control" id="medicacao_administrada" rows="2" 
-                     formControlName="medicacao_administrada" 
-                     placeholder="Nome, dose, via"></textarea>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="curativo_realizado" class="form-label">Curativo Realizado</label>
-            <textarea class="form-control" id="curativo_realizado" rows="2" 
-                     formControlName="curativo_realizado"></textarea>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="orientacoes_fornecidas" class="form-label">Orientações Fornecidas</label>
-            <textarea class="form-control" id="orientacoes_fornecidas" rows="2" 
-                     formControlName="orientacoes_fornecidas"></textarea>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="procedimentos_realizados" class="form-label">Procedimentos Realizados</label>
-            <textarea class="form-control" id="procedimentos_realizados" rows="2" 
-                     formControlName="procedimentos_realizados"></textarea>
-          </div>
-          
-          <div class="col-md-12 mb-3">
-            <label for="outras_intervencoes" class="form-label">Outras Intervenções</label>
-            <textarea class="form-control" id="outras_intervencoes" rows="2" 
-                     formControlName="outras_intervencoes"></textarea>
-          </div>
-        </div>
-        
-        <!-- Plano de Ação -->
-        <div class="row mb-4" formGroupName="plano_acao">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Plano de Ação</h6>
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="data_proximo" class="form-label">Data do Próximo Atendimento</label>
-            <input type="date" class="form-control" id="data_proximo" 
-                  formControlName="data_proximo">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="hora_proximo" class="form-label">Hora do Próximo Atendimento</label>
-            <input type="time" class="form-control" id="hora_proximo" 
-                  formControlName="hora_proximo">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <label for="profissional_responsavel" class="form-label">Profissional Responsável</label>
-            <input type="text" class="form-control" id="profissional_responsavel" 
-                  formControlName="profissional_responsavel">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <div class="form-check mt-4">
-              <input class="form-check-input" type="checkbox" id="necessidade_contato_outros" 
-                    formControlName="necessidade_contato_outros">
-              <label class="form-check-label" for="necessidade_contato_outros">
-                Necessidade de contato com outros profissionais
-              </label>
+
+        <!-- 4. SINAIS VITAIS -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="sinais_vitais">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-activity me-2 text-info"></i>
+              <span>Sinais Vitais</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4 col-sm-6">
+                <label for="pressao_arterial" class="form-label">
+                  Pressão Arterial (mmHg)
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="pressao_arterial"
+                  formControlName="pressao_arterial"
+                  placeholder="Ex: 120/80"
+                />
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <label for="frequencia_cardiaca" class="form-label">
+                  Frequência Cardíaca (bpm)
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="frequencia_cardiaca"
+                  formControlName="frequencia_cardiaca"
+                />
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <label for="temperatura" class="form-label">
+                  Temperatura (°C)
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="temperatura"
+                  formControlName="temperatura"
+                  step="0.1"
+                />
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <label for="saturacao_oxigenio" class="form-label">
+                  Saturação de O₂ (%)
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="saturacao_oxigenio"
+                  formControlName="saturacao_oxigenio"
+                />
+              </div>
+
+              <div class="col-md-4 col-sm-6">
+                <label for="glicemia" class="form-label">
+                  Glicemia (mg/dL)
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="glicemia"
+                  formControlName="glicemia"
+                />
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-8 mb-3" *ngIf="acompanhamentoForm.get('plano_acao.necessidade_contato_outros')?.value">
-            <label for="profissionais_contatar" class="form-label">Profissionais a contatar</label>
-            <input type="text" class="form-control" id="profissionais_contatar" 
-                  formControlName="profissionais_contatar">
-          </div>
-          
-          <div class="col-md-4 mb-3">
-            <div class="form-check mt-4">
-              <input class="form-check-input" type="checkbox" id="necessidade_exames" 
-                    formControlName="necessidade_exames">
-              <label class="form-check-label" for="necessidade_exames">
-                Necessidade de exames/consultas adicionais
-              </label>
+        </div>
+
+        <!-- 5. AVALIAÇÃO DE FERIDAS -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="avaliacao_feridas">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-bandaid me-2 text-info"></i>
+              <span>Avaliação de Feridas e Curativos</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label for="aspecto" class="form-label">
+                  Aspecto da Ferida
+                </label>
+                <textarea
+                  class="form-control"
+                  id="aspecto"
+                  rows="2"
+                  formControlName="aspecto"
+                  placeholder="Descreva o aspecto da ferida (tamanho, coloração, exsudato, etc.)"
+                ></textarea>
+              </div>
+
+              <div class="col-md-4 d-flex align-items-center">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="sinais_infeccao"
+                    formControlName="sinais_infeccao"
+                  />
+                  <label class="form-check-label" for="sinais_infeccao">
+                    Presença de sinais de infecção
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="tipo_curativo" class="form-label">
+                  Tipo de Curativo Realizado
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="tipo_curativo"
+                  formControlName="tipo_curativo"
+                  placeholder="Especifique o tipo de curativo aplicado"
+                />
+              </div>
             </div>
           </div>
-          
-          <div class="col-md-8 mb-3" *ngIf="acompanhamentoForm.get('plano_acao.necessidade_exames')?.value">
-            <label for="exames_consultas" class="form-label">Exames/Consultas necessários</label>
-            <input type="text" class="form-control" id="exames_consultas" 
-                  formControlName="exames_consultas">
+        </div>
+
+        <!-- 6. AVALIAÇÃO DE DISPOSITIVOS -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="avaliacao_dispositivos">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-tools me-2 text-info"></i>
+              <span>Avaliação de Dispositivos</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-4 d-flex align-items-center">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="funcionamento_adequado"
+                    formControlName="funcionamento_adequado"
+                  />
+                  <label class="form-check-label" for="funcionamento_adequado">
+                    Dispositivos funcionando adequadamente
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-md-8">
+                <label for="sinais_complicacao" class="form-label">
+                  Sinais de Complicação
+                </label>
+                <textarea
+                  class="form-control"
+                  id="sinais_complicacao"
+                  rows="2"
+                  formControlName="sinais_complicacao"
+                  placeholder="Descreva qualquer sinal de complicação observado"
+                ></textarea>
+              </div>
+            </div>
           </div>
-          
-          <div class="col-md-12 mb-3">
-            <label for="outras_recomendacoes" class="form-label">Outras Recomendações</label>
-            <textarea class="form-control" id="outras_recomendacoes" rows="2" 
-                     formControlName="outras_recomendacoes"></textarea>
+        </div>
+
+        <!-- 7. INTERVENÇÕES REALIZADAS -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="intervencoes">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-capsule me-2 text-info"></i>
+              <span>Intervenções Realizadas</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="medicacao_administrada" class="form-label">
+                  Medicação Administrada
+                </label>
+                <textarea
+                  class="form-control"
+                  id="medicacao_administrada"
+                  rows="2"
+                  formControlName="medicacao_administrada"
+                  placeholder="Nome, dose, via de administração"
+                ></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label for="curativo_realizado" class="form-label">
+                  Curativos Realizados
+                </label>
+                <textarea
+                  class="form-control"
+                  id="curativo_realizado"
+                  rows="2"
+                  formControlName="curativo_realizado"
+                  placeholder="Detalhes dos curativos realizados"
+                ></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label for="orientacoes_fornecidas" class="form-label">
+                  Orientações Fornecidas
+                </label>
+                <textarea
+                  class="form-control"
+                  id="orientacoes_fornecidas"
+                  rows="2"
+                  formControlName="orientacoes_fornecidas"
+                  placeholder="Orientações dadas ao paciente/cuidador"
+                ></textarea>
+              </div>
+
+              <div class="col-md-6">
+                <label for="procedimentos_realizados" class="form-label">
+                  Outros Procedimentos
+                </label>
+                <textarea
+                  class="form-control"
+                  id="procedimentos_realizados"
+                  rows="2"
+                  formControlName="procedimentos_realizados"
+                  placeholder="Outros procedimentos realizados"
+                ></textarea>
+              </div>
+              
+              <div class="col-12">
+                <label for="outras_intervencoes" class="form-label">
+                  Intervenções Adicionais
+                </label>
+                <textarea
+                  class="form-control"
+                  id="outras_intervencoes"
+                  rows="2"
+                  formControlName="outras_intervencoes"
+                  placeholder="Outras intervenções relevantes"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 8. PLANO DE AÇÃO -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="plano_acao">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-calendar-plus me-2 text-info"></i>
+              <span>Plano de Ação</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="data_proximo" class="form-label">
+                  Data do Próximo Atendimento
+                </label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="data_proximo"
+                  formControlName="data_proximo"
+                />
+              </div>
+
+              <div class="col-md-2">
+                <label for="hora_proximo" class="form-label">
+                  Horário
+                </label>
+                <input
+                  type="time"
+                  class="form-control"
+                  id="hora_proximo"
+                  formControlName="hora_proximo"
+                />
+              </div>
+
+              <div class="col-md-7">
+                <label for="profissional_responsavel" class="form-label">
+                  Profissional Responsável pelo Próximo Atendimento
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="profissional_responsavel"
+                  formControlName="profissional_responsavel"
+                  placeholder="Nome do profissional"
+                />
+              </div>
+
+              <div class="col-md-4 d-flex align-items-center mt-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="necessidade_contato_outros"
+                    formControlName="necessidade_contato_outros"
+                  />
+                  <label class="form-check-label" for="necessidade_contato_outros">
+                    Necessidade de contato com outros profissionais
+                  </label>
+                </div>
+              </div>
+
+              <!-- Campo condicional -->
+              <div class="col-md-8 mt-3" *ngIf="acompanhamentoForm.get('plano_acao.necessidade_contato_outros')?.value">
+                <label for="profissionais_contatar" class="form-label">
+                  Profissionais a Contatar
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="profissionais_contatar"
+                  formControlName="profissionais_contatar"
+                  placeholder="Nomes e especialidades dos profissionais"
+                />
+              </div>
+
+              <div class="col-md-4 d-flex align-items-center mt-3">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="necessidade_exames"
+                    formControlName="necessidade_exames"
+                  />
+                  <label class="form-check-label" for="necessidade_exames">
+                    Necessidade de exames/consultas adicionais
+                  </label>
+                </div>
+              </div>
+
+              <!-- Campo condicional -->
+              <div class="col-md-8 mt-3" *ngIf="acompanhamentoForm.get('plano_acao.necessidade_exames')?.value">
+                <label for="exames_consultas" class="form-label">
+                  Exames/Consultas Necessários
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="exames_consultas"
+                  formControlName="exames_consultas"
+                  placeholder="Exames e consultas a serem realizados"
+                />
+              </div>
+              
+              <div class="col-12 mt-3">
+                <label for="outras_recomendacoes" class="form-label">
+                  Outras Recomendações
+                </label>
+                <textarea
+                  class="form-control"
+                  id="outras_recomendacoes"
+                  rows="2"
+                  formControlName="outras_recomendacoes"
+                  placeholder="Recomendações adicionais para o tratamento"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. COMUNICAÇÃO COM CUIDADOR/FAMILIAR -->
+        <div class="card mb-4 border-0 bg-light" formGroupName="comunicacao_cuidador">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-chat-quote me-2 text-info"></i>
+              <span>Comunicação com Cuidador/Familiar</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="nome_cuidador" class="form-label">
+                  Nome do Cuidador/Familiar
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="nome_cuidador"
+                  formControlName="nome_cuidador"
+                  placeholder="Nome da pessoa de contato"
+                />
+              </div>
+              
+              <div class="col-md-6">
+                <label for="informacoes_repassadas" class="form-label">
+                  Informações Repassadas
+                </label>
+                <textarea
+                  class="form-control"
+                  id="informacoes_repassadas"
+                  rows="2"
+                  formControlName="informacoes_repassadas"
+                  placeholder="Informações transmitidas ao cuidador/familiar"
+                ></textarea>
+              </div>
+              
+              <div class="col-md-6">
+                <label for="orientacoes_fornecidas" class="form-label">
+                  Orientações Fornecidas
+                </label>
+                <textarea
+                  class="form-control"
+                  id="orientacoes_fornecidas"
+                  rows="2"
+                  formControlName="orientacoes_fornecidas"
+                  placeholder="Orientações específicas para o cuidador/familiar"
+                ></textarea>
+              </div>
+              
+              <div class="col-md-6">
+                <label for="duvidas_esclarecidas" class="form-label">
+                  Dúvidas Esclarecidas
+                </label>
+                <textarea
+                  class="form-control"
+                  id="duvidas_esclarecidas"
+                  rows="2"
+                  formControlName="duvidas_esclarecidas"
+                  placeholder="Dúvidas esclarecidas durante o atendimento"
+                ></textarea>
+              </div>
+            </div>
           </div>
         </div>
         
-        <!-- Comunicação com o Cuidador/Familiar -->
-        <div class="row mb-4" formGroupName="comunicacao_cuidador">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Comunicação com o Cuidador/Familiar</h6>
-          </div>
-          
-          <div class="col-md-12 mb-3">
-            <label for="nome_cuidador" class="form-label">Nome do Cuidador/Familiar</label>
-            <input type="text" class="form-control" id="nome_cuidador" 
-                  formControlName="nome_cuidador">
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="informacoes_repassadas" class="form-label">Informações Repassadas</label>
-            <textarea class="form-control" id="informacoes_repassadas" rows="3" 
-                     formControlName="informacoes_repassadas"></textarea>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label for="duvidas_questionamentos" class="form-label">Dúvidas/Questionamentos</label>
-            <textarea class="form-control" id="duvidas_questionamentos" rows="3" 
-                     formControlName="duvidas_questionamentos"></textarea>
-          </div>
-        </div>
-        
-        <!-- Observações Gerais -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h6 class="border-bottom pb-2 mb-3">Observações Gerais</h6>
-          </div>
-          
-          <div class="col-12 mb-3">
-            <label for="observacoes_gerais" class="form-label">Anotações adicionais</label>
-            <textarea class="form-control" id="observacoes_gerais" rows="4" 
-                     formControlName="observacoes_gerais"></textarea>
+        <!-- 10. OBSERVAÇÕES GERAIS -->
+        <div class="card mb-4 border-0 bg-light">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center mb-3">
+              <i class="bi bi-journal-text me-2 text-info"></i>
+              <span>Observações Gerais</span>
+            </h5>
+            
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="observacoes_gerais" class="form-label">
+                  Anotações Adicionais
+                </label>
+                <textarea
+                  class="form-control"
+                  id="observacoes_gerais"
+                  rows="3"
+                  formControlName="observacoes_gerais"
+                  placeholder="Observações adicionais relevantes para o caso"
+                ></textarea>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <!-- Botões -->
-        <div class="d-flex justify-content-between mt-4">
-          <div>
-            <button type="button" class="btn btn-secondary me-2" (click)="cancelar()">
-              <i class="bi bi-x-lg me-2"></i>Cancelar
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="voltarParaLista()">
-              <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
-            </button>
-          </div>
-          <button type="submit" class="btn btn-info">
-            <i class="bi bi-save me-2"></i>Salvar Acompanhamento
+
+        <!-- Botões de ação -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <button type="button" class="btn btn-outline-secondary d-flex align-items-center" (click)="voltarParaLista()">
+            <i class="bi bi-arrow-left me-2"></i>Voltar para Lista
           </button>
+          
+          <div>
+            <button type="button" class="btn btn-outline-danger me-2" (click)="cancelar()">
+              <i class="bi bi-x-circle me-2"></i>Cancelar
+            </button>
+            <button type="submit" class="btn btn-info d-flex align-items-center" [disabled]="isLoading">
+              <i class="bi bi-save me-2"></i>
+              <span *ngIf="!isLoading">Salvar Acompanhamento</span>
+              <span *ngIf="isLoading">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Salvando...
+              </span>
+            </button>
+          </div>
         </div>
       </form>
     </div>
+  </div>
+  
+  <!-- Indicador de campos obrigatórios -->
+  <div class="mt-3 small text-muted" *ngIf="modoEdicao">
+    <p class="mb-0"><i class="bi bi-info-circle me-1"></i>Os campos com <span class="required">*</span> são obrigatórios</p>
   </div>
 </div>

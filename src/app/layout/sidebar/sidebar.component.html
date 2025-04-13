@@ -1,57 +1,99 @@
-<nav class="sidebar bg-white">
-  <!-- Header do sidebar -->
-  <div class="sidebar-header d-flex align-items-center justify-content-between">
-    <a [routerLink]="['/']" class="text-decoration-none d-flex align-items-center">
-      <h5 class="text-primary m-0">Cuidar<span class="text-success">+</span></h5>
-    </a>
-    <button class="btn btn-sm p-1 d-lg-none" type="button" (click)="onToggleSidebar()">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
-  
-  <!-- Links de navegação -->
-  <div class="sidebar-content">
-    <ul class="nav flex-column">
-      <li class="nav-item" *ngFor="let item of menuItems">
-        <a class="nav-link d-flex align-items-center justify-content-between" 
-           [routerLink]="item.subItems && item.subItems.length > 0 ? null : item.route" 
-           (click)="toggleMenuItem(item)"
-           routerLinkActive="active"
-           [routerLinkActiveOptions]="{exact: item.route === '/home'}"
-           [class.active]="item.active" 
-           [attr.aria-expanded]="item.active">
-          <div>
-            <i class="bi {{ item.icon }}"></i>
+<nav class="sidebar bg-white h-100 d-flex flex-column">
+  <div class="sidebar-wrapper">
+    <!-- Conteúdo do Sidebar -->
+    
+
+      <!-- Menu de navegação -->
+      <ul class="sidebar-menu list-unstyled px-3">
+        <!-- Itens do menu -->
+        <li class="sidebar-item mb-1" *ngFor="let item of menuItems">
+          <a 
+            [routerLink]="item.subItems?.length ? null : item.route"
+            [class.active]="item.active"
+            [class.disabled]="item.inConstruction"
+            class="sidebar-link d-flex align-items-center px-3 py-2 rounded text-decoration-none"
+            (click)="toggleMenuItem(item)"
+          >
+            <i [class]="item.icon + ' me-3 text-primary'" aria-hidden="true"></i>
             <span>{{ item.title }}</span>
+            
+            <!-- Indicator de item em construção (usando ícone) -->
+            <i class="bi bi-tools text-warning ms-auto" *ngIf="item.inConstruction" title="Em construção"></i>
+            
+            <!-- Indicador de dropdown para itens com subitens -->
+            <i 
+              *ngIf="item.subItems?.length && !item.inConstruction" 
+              class="bi ms-auto" 
+              [ngClass]="item.expanded ? 'bi-chevron-down' : 'bi-chevron-right'"
+            ></i>
+          </a>
+
+          <!-- Subitens (dropdown) -->
+          <div *ngIf="item.subItems?.length" class="collapse" [class.show]="item.expanded">
+            <ul class="sidebar-submenu list-unstyled ms-4 my-1">
+              <li *ngFor="let subItem of item.subItems" class="sidebar-subitem">
+                <!-- Submenu com subitems adicionais -->
+                <ng-container *ngIf="subItem.subItems?.length">
+                  <a 
+                    href="#" 
+                    class="sidebar-sublink d-flex align-items-center px-3 py-2 text-decoration-none"
+                    [class.active]="subItem.active"
+                    [class.disabled]="subItem.inConstruction"
+                    (click)="toggleSubMenu($event, subItem)"
+                  >
+                    <i *ngIf="subItem.icon" [class]="subItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
+                    <span>{{ subItem.title }}</span>
+                    <i class="bi bi-tools text-warning ms-auto" *ngIf="subItem.inConstruction" title="Em construção"></i>
+                    <i 
+                      *ngIf="subItem.subItems?.length && !subItem.inConstruction" 
+                      class="bi ms-auto" 
+                      [ngClass]="subItem.expanded ? 'bi-chevron-down' : 'bi-chevron-right'"
+                    ></i>
+                  </a>
+                  
+                  <!-- Nível 3 (subitems aninhados) -->
+                  <div class="collapse" [class.show]="subItem.expanded">
+                    <ul class="sidebar-submenu list-unstyled ms-4 my-1">
+                      <li *ngFor="let nestedItem of subItem.subItems" class="sidebar-subitem">
+                        <a 
+                          [routerLink]="nestedItem.route" 
+                          [class.active]="nestedItem.active"
+                          [class.disabled]="nestedItem.inConstruction"
+                          class="sidebar-sublink d-flex align-items-center px-3 py-2 rounded text-decoration-none"
+                        >
+                          <i *ngIf="nestedItem.icon" [class]="nestedItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
+                          <span>{{ nestedItem.title }}</span>
+                          
+                          <!-- Indicator de item em construção -->
+                          <i class="bi bi-tools text-warning ms-auto" *ngIf="nestedItem.inConstruction" title="Em construção"></i>
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </ng-container>
+                
+                <!-- Submenu sem subitems adicionais -->
+                <a 
+                  *ngIf="!subItem.subItems?.length"
+                  [routerLink]="subItem.route" 
+                  class="sidebar-sublink d-flex align-items-center px-3 py-2 rounded text-decoration-none"
+                  [class.active]="subItem.active"
+                  [class.disabled]="subItem.inConstruction"
+                >
+                  <i *ngIf="subItem.icon" [class]="subItem.icon + ' me-2 text-primary-lighter'" aria-hidden="true"></i>
+                  <span>{{ subItem.title }}</span>
+                  
+                  <!-- Adicionar o indicador de item em construção -->
+                  <i class="bi bi-tools text-warning ms-auto" *ngIf="subItem.inConstruction" title="Em construção"></i>
+                </a>
+              </li>
+            </ul>
           </div>
-          <div>
-            <span class="badge bg-warning text-dark" *ngIf="item.inConstruction">Beta</span>
-            <i class="bi bi-chevron-down ms-2 small" *ngIf="item.subItems && item.subItems.length > 0" 
-              [class.bi-chevron-up]="item.active"></i>
-          </div>
-        </a>
-        
-        <!-- Exibir subitens se disponíveis e o item estiver ativo -->
-        <ul class="nav flex-column submenu" *ngIf="item.subItems && item.active">
-          <li class="nav-item" *ngFor="let subItem of item.subItems">
-            <a class="nav-link d-flex align-items-center" 
-              [routerLink]="subItem.route" 
-              (click)="isMobile ? onToggleSidebar() : null"
-              routerLinkActive="active">
-              <i class="bi" [ngClass]="subItem.icon" *ngIf="subItem.icon"></i>
-              <span>{{ subItem.title }}</span>
-            </a>
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-  
-  <!-- Sidebar footer -->
-  <div class="sidebar-footer">
-    <div class="d-flex align-items-center justify-content-between text-muted">
-      <span>© 2025 Cuidar+</span>
-      <span>v1.0.0</span>
+        </li>
+      </ul>
     </div>
-  </div>
+    
+    <!-- Overlay para dispositivos móveis -->
+    <div class="sidebar-overlay" *ngIf="showOverlay" (click)="onToggleSidebar()"></div>
+  
 </nav>
