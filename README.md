@@ -60,7 +60,7 @@ Nosso sistema é construído com base em uma arquitetura de componentes modernos
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/cuidar-plus.git
+   git clone https://github.com/mateuscarlos/cuidar-plus.git
    cd cuidar-plus
    ```
 
