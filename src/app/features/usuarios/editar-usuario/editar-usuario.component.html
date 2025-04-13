@@ -1,4 +1,13 @@
 <div class="container-fluid py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+      <li class="breadcrumb-item"><a routerLink="/usuarios">Usuários</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Editar Usuário</li>
+    </ol>
+  </nav>
+
   <!-- Alerta de erro -->
   <div class="alert alert-danger" *ngIf="error">
     <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}

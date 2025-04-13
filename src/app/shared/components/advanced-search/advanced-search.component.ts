@@ -66,10 +66,10 @@ export interface SearchResult {
                 </span>
               </ng-container>
               <ng-container *ngIf="col.pipe">
-                {{ getItemValue(item, col) | dynamicPipe:col.pipe:col.pipeArgs }}
+                {{ col.formatFn ? col.formatFn(getItemValue(item, col), item) : getItemValue(item, col) | dynamicPipe:col.pipe:col.pipeArgs }}
               </ng-container>
               <ng-container *ngIf="!col.type && !col.pipe">
-                {{ col.formatFn ? col.formatFn(getItemValue(item, col)) : getItemValue(item, col) }}
+                {{ col.formatFn ? col.formatFn(getItemValue(item, col), item) : getItemValue(item, col) }}
               </ng-container>
             </td>
             <td class="text-end">
@@ -100,7 +100,7 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
   @Input() fields: SearchField[] = [];
   @Input() isLoading: boolean = false;
   @Input() resultados: any[] = [];
-  @Input() colunas: {header: string, field: string, type?: string, pipe?: any, pipeArgs?: any[], formatFn?: (value: any) => string}[] = [];
+  @Input() colunas: {header: string, field: string, type?: string, pipe?: any, pipeArgs?: any[], formatFn?: (value: any, item?: any) => string}[] = [];
   @Input() pageSize: number = 10;
   @Input() totalItems: number = 0;
   @Input() showActions: boolean = true;
@@ -280,5 +280,21 @@ export class AdvancedSearchComponent implements OnInit, OnDestroy {
 
   calculatePaginationEnd(): number {
     return Math.min(this.currentPage * this.pageSize, this.totalItems);
+  }
+
+  getItemValue(item: any, col: any): any {
+    // Se não houver campo definido, retorna o item completo
+    if (!col.field) return item;
+    
+    // Tenta acessar o campo diretamente ou por caminho aninhado (ex: "endereco.cidade")
+    const path = col.field.split('.');
+    let value = item;
+    
+    for (const prop of path) {
+      if (value === null || value === undefined) return null;
+      value = value[prop];
+    }
+    
+    return value;
   }
 }
