@@ -16,13 +16,6 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
   
-  // Autenticação
-  {
-    path: 'login',
-    loadComponent: () => import('./core/auth/login/login.component').then(m => m.LoginComponent),
-    title: 'Login - Cuidar+'
-  },
-  
   // Dashboard principal
   {
     path: 'home',
@@ -41,7 +34,6 @@ export const routes: Routes = [
   // Rotas do módulo de Usuários
   {
     path: 'usuarios',
-    canActivate: [AuthGuard],
     children: USUARIOS_ROUTES
   },
   

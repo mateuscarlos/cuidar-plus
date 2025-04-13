@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
@@ -30,31 +30,45 @@ export class SetoresFuncoesService {
     return this.http.get<Setor[]>(`${this.apiUrl}/setores`).pipe(
       catchError(error => {
         console.error('Erro ao buscar setores:', error);
-        return of([]);
+        return of([]); // Retorna uma lista vazia
       })
     );
   }
 
   createSetor(setor: Setor): Observable<Setor> {
-    return this.http.post<Setor>(`${this.apiUrl}/setores`, setor);
+    return this.http.post<Setor>(`${this.apiUrl}/setores`, setor).pipe(
+      catchError(error => {
+        console.error('Erro ao criar setor:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   updateSetor(id: number, setor: Setor): Observable<Setor> {
-    return this.http.put<Setor>(`${this.apiUrl}/setores/${id}`, setor);
+    return this.http.put<Setor>(`${this.apiUrl}/setores/${id}`, setor).pipe(
+      catchError(error => {
+        console.error(`Erro ao atualizar setor ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
 
   deleteSetor(id: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/setores/${id}`);
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/setores/${id}`).pipe(
+      catchError(error => {
+        console.error(`Erro ao excluir setor ${id}:`, error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getSetorPorId(id: string | number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/setores/${id}`)
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao buscar setor ${id}:`, error);
-          return of({ nome: 'Não disponível' });
-        })
-      );
+    return this.http.get<any>(`${this.apiUrl}/setores/${id}`).pipe(
+      catchError(error => {
+        console.error(`Erro ao buscar setor ${id}:`, error);
+        return of({ nome: 'Não disponível' }); // Retorna um valor padrão
+      })
+    );
   }
 
   // Método para obter o dicionário de setores
@@ -68,7 +82,12 @@ export class SetoresFuncoesService {
   }
 
   getFuncoes(): Observable<Funcao[]> {
-    return this.http.get<Funcao[]>(`${this.apiUrl}/funcoes`);
+    return this.http.get<Funcao[]>(`${this.apiUrl}/funcoes`).pipe(
+      catchError(error => {
+        console.error('Erro ao buscar funções:', error);
+        return of([]); // Retorna uma lista vazia
+      })
+    );
   }
 
   getFuncoesPorSetor(setorId: number): Observable<Funcao[]> {

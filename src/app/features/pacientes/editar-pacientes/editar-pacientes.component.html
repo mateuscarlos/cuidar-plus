@@ -48,7 +48,7 @@
         </button>
       </div>
       <div class="card-body p-4">
-        <form [formGroup]="pacienteForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="pacienteForm" (ngSubmit)="abrirModalConfirmacao()">
           
           <!-- 1. INFORMAÇÕES PESSOAIS -->
           <div class="card mb-4 border-0 bg-light">
@@ -74,22 +74,23 @@
                   </div>
                 </div>
                 
-                <div class="col-md-2">
-                  <label for="status" class="form-label field-required">Status</label>
+                <div class="col-md-3">
+                  <label for="status" class="form-label">Status</label>
                   <div class="input-group">
-                    <span class="input-group-text" [ngClass]="statusStyle.getTextClass(pacienteForm.get('status')?.value)">
-                      <i [class]="statusStyle.getIcon(pacienteForm.get('status')?.value)"></i>
-                    </span>
+                    <span class="input-group-text"><i class="bi bi-tag"></i></span>
                     <select 
                       class="form-select" 
                       id="status" 
                       formControlName="status"
-                      [ngClass]="getStatusClasses(pacienteForm.get('status')?.value)"
                     >
-                      <option *ngFor="let status of statusPaciente" [value]="status">
+                      <option *ngFor="let status of Object.values(statusPaciente)" [value]="status">
                         {{ status }}
                       </option>
                     </select>
+                  </div>
+                  <!-- Exibir o status selecionado com o badge -->
+                  <div class="mt-2" *ngIf="pacienteForm.get('status')?.value">
+                    <app-status-badge [status]="pacienteForm.get('status')?.value"></app-status-badge>
                   </div>
                 </div>
                 
@@ -323,7 +324,7 @@
                     type="text" 
                     class="form-control" 
                     id="cidade" 
-                    formControlName="cidade"
+                    formControlName="localidade"
                     placeholder="Nome da cidade"
                     [ngClass]="{'is-invalid': isEnderecoFieldValid('cidade')}"
                   >
@@ -338,8 +339,8 @@
                     type="text" 
                     class="form-control" 
                     id="estado" 
-                    formControlName="estado"
-                    placeholder="UF"
+                    formControlName="uf"
+                    placeholder="Estado (UF)"
                     [ngClass]="{'is-invalid': isEnderecoFieldValid('estado')}"
                   >
                   <div class="invalid-feedback">
@@ -592,6 +593,43 @@
     <!-- Indicador de campos obrigatórios -->
     <div class="mt-3 small text-muted">
       <p class="mb-0"><i class="bi bi-info-circle me-1"></i>Os campos com <span class="required">*</span> são obrigatórios</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmacaoModalLabel">Confirmação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza de que deseja salvar as alterações neste paciente?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="confirmarEdicao()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Sucesso -->
+<div class="modal fade" id="sucessoModal" tabindex="-1" aria-labelledby="sucessoModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sucessoModalLabel">Sucesso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Paciente atualizado com sucesso!
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="redirecionarParaPacientes()">Ok</button>
+      </div>
     </div>
   </div>
 </div>

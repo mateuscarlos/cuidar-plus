@@ -1,0 +1,133 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Transições suaves para elementos interativos
+.transition {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+  }
+}
+
+// Destacar campos com filtros aplicados
+.is-invalid {
+  border-color: var(--bs-primary) !important;
+  box-shadow: 0 0 0 0.15rem rgba(var(--bs-primary-rgb), 0.15) !important;
+}
+
+// Estilização para os badges de filtro
+.badge {
+  transition: all 0.2s ease;
+  padding: 0.5rem 0.65rem;
+  font-weight: 500;
+  
+  .btn-close {
+    opacity: 0.7;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+  
+  &.bg-light {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Estilização para os campos do formulário
+.form-group {
+  label {
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+    color: var(--bs-gray-700);
+  }
+  
+  .input-group {
+    .input-group-text {
+      border-right: 0;
+    }
+    
+    .form-control, .form-select {
+      border-left: 0;
+      
+      &:focus {
+        box-shadow: none;
+        border-color: var(--bs-gray-400);
+        
+        & + .input-group-text {
+          border-color: var(--bs-gray-400);
+        }
+      }
+    }
+    
+    .btn-outline-secondary {
+      border-left: 0;
+      &:hover {
+        background-color: var(--bs-gray-200);
+        border-color: var(--bs-gray-400);
+      }
+    }
+  }
+}
+
+// Estilização para os botões de ação
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+// Estilização para tabelas
+table {
+  th {
+    font-weight: 600;
+    color: var(--bs-gray-700);
+    border-top: none;
+  }
+  
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Paginação
+.pagination {
+  .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+  }
+}
+
+// Cards
+.card {
+  border-radius: 0.5rem;
+  border-color: rgba(0, 0, 0, 0.08);
+  
+  .card-header {
+    padding: 1rem;
+    background-color: transparent;
+  }
+}
+
+// Estilização para spinner
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+// Melhorar seleção em dispositivos móveis
+@media (max-width: 576px) {
+  tr.cursor-pointer td {
+    padding: 0.75rem 0.5rem;
+    
+    &:first-child {
+      font-weight: 600;
+    }
+  }
+}

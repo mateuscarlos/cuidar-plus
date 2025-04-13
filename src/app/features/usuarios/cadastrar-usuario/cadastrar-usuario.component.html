@@ -1,15 +1,23 @@
 <div class="container-fluid py-4">
-  <!-- Alerta de erro -->
-  <div class="alert alert-danger" *ngIf="error">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-  </div>
-
-  <!-- Overlay de carregamento -->
-  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" 
-       *ngIf="isLoading"
-       style="background-color: rgba(255,255,255,0.7); z-index: 1050;">
+  <!-- Loading spinner (exibido durante operações assíncronas) -->
+  <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
+       style="z-index: 1050;" *ngIf="isLoading">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+
+  <!-- Cabeçalho da página -->
+  <div class="row mb-4">
+    <div class="col">
+      <h4 class="mb-1">{{ modoEdicao ? 'Edição de Usuário' : 'Cadastro de Usuário' }}</h4>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/usuarios">Usuários</a></li>
+          <li class="breadcrumb-item active">{{ modoEdicao ? 'Editar' : 'Novo Cadastro' }}</li>
+        </ol>
+      </nav>
     </div>
   </div>
 
@@ -20,329 +28,348 @@
         <div class="step-icon-wrap">
           <div class="step-icon"><i class="bi bi-person-fill"></i></div>
         </div>
-        <h4 class="step-title">Informações do Usuário</h4>
+        <h6 class="step-title">Informações do Usuário</h6>
       </div>
       <div class="step" [ngClass]="{'active': currentStep === 'passwordForm'}">
         <div class="step-icon-wrap">
           <div class="step-icon"><i class="bi bi-lock-fill"></i></div>
         </div>
-        <h4 class="step-title">Definição de Senha</h4>
+        <h6 class="step-title">Definição de Senha</h6>
       </div>
     </div>
   </div>
 
   <!-- Step 1: Formulário de Usuário -->
-  <div class="card shadow-sm" *ngIf="currentStep === 'userForm'">
-    <div class="card-header bg-transparent">
-      <h4 class="mb-0">{{ modoEdicao ? 'Editar Usuário' : 'Cadastrar Novo Usuário' }}</h4>
+  <div *ngIf="currentStep === 'userForm'">
+    <!-- Formulário principal -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-primary text-white py-3">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-person-plus me-2"></i>{{ modoEdicao ? 'Atualizar Usuário' : 'Novo Usuário' }}
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
+          
+          <!-- 1. Dados Pessoais -->
+          <div class="card mb-4 border-0 bg-light">
+            <div class="card-body">
+              <h5 class="card-title d-flex align-items-center mb-3">
+                <i class="bi bi-person-badge me-2 text-primary"></i>
+                <span>Dados Pessoais</span>
+              </h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="nome" class="form-label field-required">Nome Completo</label>
+                  <input type="text" class="form-control" id="nome" formControlName="nome" 
+                         placeholder="Nome completo do usuário"
+                         [ngClass]="{'is-invalid': usuarioForm.get('nome')?.invalid && usuarioForm.get('nome')?.touched}">
+                  <div class="invalid-feedback">
+                    Nome é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="cpf" class="form-label field-required">CPF</label>
+                  <input type="text" class="form-control" id="cpf" formControlName="cpf"
+                         placeholder="000.000.000-00"
+                         [ngClass]="{'is-invalid': usuarioForm.get('cpf')?.invalid && usuarioForm.get('cpf')?.touched}">
+                  <div class="invalid-feedback">
+                    CPF é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="status" class="form-label field-required">Status</label>
+                  <div class="input-group">
+                    <span class="input-group-text" [ngClass]="getStatusTextClass(usuarioForm.get('status')?.value)">
+                      <i [class]="getStatusIcon(usuarioForm.get('status')?.value)"></i>
+                    </span>
+                    <select 
+                      id="status" 
+                      formControlName="status"
+                      class="form-select"
+                      [ngClass]="{'is-invalid': usuarioForm.get('status')?.invalid && usuarioForm.get('status')?.touched}">
+                      <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption">
+                        {{ statusOption }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('status')?.errors?.['required'] && usuarioForm.get('status')?.touched">
+                    Status é obrigatório.
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="email" class="form-label field-required">Email</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control" id="email" formControlName="email"
+                           placeholder="email@exemplo.com"
+                           [ngClass]="{'is-invalid': usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched}">
+                    <div class="invalid-feedback" *ngIf="usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched">
+                      Email válido é obrigatório
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="telefone" class="form-label">Telefone</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                    <input type="text" class="form-control" id="telefone" formControlName="telefone"
+                           placeholder="(00) 00000-0000">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Endereço -->
+          <div class="card mb-4 border-0 bg-light" formGroupName="endereco">
+            <div class="card-body">
+              <h5 class="card-title d-flex align-items-center mb-3">
+                <i class="bi bi-house me-2 text-primary"></i>
+                <span>Endereço</span>
+              </h5>
+              
+              <div class="row g-3">
+                <div class="col-md-3">
+                  <label for="cep" class="form-label field-required">CEP</label>
+                  <div class="input-group">
+                    <input 
+                      type="text" 
+                      class="form-control" 
+                      id="cep" 
+                      formControlName="cep"
+                      placeholder="00000-000"
+                      maxlength="8" 
+                      (input)="filtrarCep($event)" 
+                      [ngClass]="{'is-invalid': usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched}">
+                    <button class="btn btn-outline-secondary" type="button" (click)="consultarCep()">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched">
+                    CEP é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="rua" class="form-label field-required">Rua/Logradouro</label>
+                  <input type="text" class="form-control" id="rua" formControlName="rua"
+                         placeholder="Rua, Avenida, etc."
+                         [ngClass]="{'is-invalid': usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched">
+                    Logradouro é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="numero" class="form-label field-required">Número</label>
+                  <input type="text" class="form-control" id="numero" formControlName="numero"
+                         placeholder="Ex: 123"
+                         [ngClass]="{'is-invalid': usuarioForm.get('endereco.numero')?.invalid && usuarioForm.get('endereco.numero')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.numero')?.invalid && usuarioForm.get('endereco.numero')?.touched">
+                    Número é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-5">
+                  <label for="complemento" class="form-label">Complemento</label>
+                  <input 
+                    type="text" 
+                    id="complemento" 
+                    class="form-control" 
+                    formControlName="complemento" 
+                    placeholder="Apto, Bloco, etc.">
+                </div>
+
+                <div class="col-md-7">
+                  <label for="bairro" class="form-label field-required">Bairro</label>
+                  <input type="text" class="form-control" id="bairro" formControlName="bairro"
+                         placeholder="Nome do bairro"
+                         [ngClass]="{'is-invalid': usuarioForm.get('endereco.bairro')?.invalid && usuarioForm.get('endereco.bairro')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.bairro')?.invalid && usuarioForm.get('endereco.bairro')?.touched">
+                    Bairro é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-7">
+                  <label for="cidade" class="form-label field-required">Cidade</label>
+                  <input type="text" class="form-control" id="cidade" formControlName="cidade"
+                         placeholder="Nome da cidade"
+                         [ngClass]="{'is-invalid': usuarioForm.get('endereco.cidade')?.invalid && usuarioForm.get('endereco.cidade')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cidade')?.invalid && usuarioForm.get('endereco.cidade')?.touched">
+                    Cidade é obrigatória
+                  </div>
+                </div>
+
+                <div class="col-md-5">
+                  <label for="estado" class="form-label field-required">Estado</label>
+                  <input type="text" class="form-control" id="estado" formControlName="estado"
+                         placeholder="UF"
+                         [ngClass]="{'is-invalid': usuarioForm.get('endereco.estado')?.invalid && usuarioForm.get('endereco.estado')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.estado')?.invalid && usuarioForm.get('endereco.estado')?.touched">
+                    Estado é obrigatório
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Informações Profissionais -->
+          <div class="card mb-4 border-0 bg-light">
+            <div class="card-body">
+              <h5 class="card-title d-flex align-items-center mb-3">
+                <i class="bi bi-briefcase me-2 text-primary"></i>
+                <span>Informações Profissionais</span>
+              </h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="setor" class="form-label field-required">Setor</label>
+                  <select class="form-select" id="setor" formControlName="setor"
+                          [ngClass]="{'is-invalid': usuarioForm.get('setor')?.invalid && usuarioForm.get('setor')?.touched}">
+                    <option value="" selected disabled>Selecione um setor</option>
+                    <option *ngFor="let setor of setores" [value]="setor.id">{{ setor.nome }}</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('setor')?.invalid && usuarioForm.get('setor')?.touched">
+                    Setor é obrigatório
+                  </div>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="funcao" class="form-label field-required">Função</label>
+                  <select class="form-select" id="funcao" formControlName="funcao"
+                          [ngClass]="{'is-invalid': usuarioForm.get('funcao')?.invalid && usuarioForm.get('funcao')?.touched}"
+                          [disabled]="!usuarioForm.get('setor')?.value || funcoes.length === 0">
+                    <option value="" selected disabled>{{ funcoes.length ? 'Selecione uma função' : 'Selecione um setor primeiro' }}</option>
+                    <option *ngFor="let funcao of funcoes" [value]="funcao.id">{{ funcao.nome }}</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('funcao')?.invalid && usuarioForm.get('funcao')?.touched">
+                    Função é obrigatória
+                  </div>
+                </div>
+
+                <!-- Campos condicionais que aparecem quando há conselho profissional -->
+                <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
+                  <label for="registroCategoria" class="form-label field-required">{{ labelConselhoProfissional }}</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="registroCategoria" 
+                    formControlName="registroCategoria"
+                    placeholder="Digite o número de registro"
+                    [ngClass]="{'is-invalid': usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched}">
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched">
+                    {{ labelConselhoProfissional }} é obrigatório
+                  </div>
+                </div>
+
+                <div class="col-md-6" *ngIf="mostrarEspecialidade">
+                  <label for="especialidade" class="form-label">Especialidade</label>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    id="especialidade" 
+                    formControlName="especialidade"
+                    placeholder="Digite a especialidade (se aplicável)">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 4. Contratação e Acesso -->
+          <div class="card mb-4 border-0 bg-light">
+            <div class="card-body">
+              <h5 class="card-title d-flex align-items-center mb-3">
+                <i class="bi bi-shield-lock me-2 text-primary"></i>
+                <span>Contratação e Acesso</span>
+              </h5>
+              
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="tipoContratacao" class="form-label field-required">Tipo de Contratação</label>
+                  <select class="form-select" id="tipoContratacao" formControlName="tipoContratacao"
+                         [ngClass]="{'is-invalid': usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched}">
+                    <option *ngFor="let tipo of tiposContratacao" [value]="tipo.value">{{ tipo.viewValue }}</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched">
+                    Tipo de contratação é obrigatório
+                  </div>
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="dataAdmissao" class="form-label">Data de Admissão</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                    <input type="date" class="form-control" id="dataAdmissao" formControlName="dataAdmissao">
+                  </div>
+                </div>
+                
+                <div class="col-md-4">
+                  <label for="tipoAcesso" class="form-label field-required">Nível de Acesso</label>
+                  <select class="form-select" id="tipoAcesso" formControlName="tipoAcesso"
+                          [ngClass]="{'is-invalid': usuarioForm.get('tipoAcesso')?.invalid && usuarioForm.get('tipoAcesso')?.touched}">
+                    <option *ngFor="let tipo of tiposAcesso" [value]="tipo.value">{{ tipo.viewValue }}</option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoAcesso')?.invalid && usuarioForm.get('tipoAcesso')?.touched">
+                    Nível de acesso é obrigatório
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Botões de ação -->
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <button type="button" class="btn btn-outline-secondary d-flex align-items-center" (click)="cancelar()">
+              <i class="bi bi-x-circle me-2"></i>Cancelar
+            </button>
+            
+            <div>
+              <button type="button" class="btn btn-outline-primary me-2" (click)="cancelar()">
+                <i class="bi bi-arrow-left me-2"></i>Voltar
+              </button>
+              <button type="submit" class="btn btn-primary d-flex align-items-center" [disabled]="isLoading || usuarioForm.invalid">
+                <i class="bi bi-arrow-right me-2"></i>
+                <span *ngIf="!isLoading">Continuar</span>
+                <span *ngIf="isLoading">
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Processando...
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
-    <div class="card-body">
-      <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
-        <!-- Alerta de erro -->
-        <div class="alert alert-danger" *ngIf="error">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-        </div>
-
-        <!-- Overlay de carregamento -->
-        <div class="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" 
-             *ngIf="isLoading" style="z-index: 1000;">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-        
-        <!-- Dados Pessoais -->
-        <div class="mb-4">
-          <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
-            <i class="bi bi-person-fill me-2 text-primary"></i>Dados Pessoais
-          </h6>
-          
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="nome" class="form-label">Nome Completo*</label>
-              <input type="text" class="form-control" id="nome" formControlName="nome" 
-                     [ngClass]="{'is-invalid': usuarioForm.get('nome')?.invalid && usuarioForm.get('nome')?.touched}">
-              <div class="invalid-feedback">
-                Nome é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-3">
-              <label for="cpf" class="form-label">CPF*</label>
-              <input type="text" class="form-control" id="cpf" formControlName="cpf"
-                     [ngClass]="{'is-invalid': usuarioForm.get('cpf')?.invalid && usuarioForm.get('cpf')?.touched}">
-              <div class="invalid-feedback">
-                CPF é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-3">
-              <label for="telefone" class="form-label">Telefone</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                <input type="text" class="form-control" id="telefone" formControlName="telefone">
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <label for="email" class="form-label">Email*</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="email" formControlName="email"
-                       [ngClass]="{'is-invalid': usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched}">
-              </div>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('email')?.invalid && usuarioForm.get('email')?.touched">
-                Email válido é obrigatório
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Endereço -->
-        <div class="mb-4" formGroupName="endereco">
-          <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
-            <i class="bi bi-geo-alt-fill me-2 text-primary"></i>Endereço
-          </h6>
-
-          <div class="form-group mb-3">
-            <label for="cep" class="form-label">CEP*</label>
-            <input 
-              type="text" 
-              id="cep" 
-              formControlName="cep" 
-              maxlength="8" 
-              (blur)="consultarCep()" 
-              class="form-control"
-              [ngClass]="{'is-invalid': usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched}">
-            <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cep')?.invalid && usuarioForm.get('endereco.cep')?.touched">
-              CEP é obrigatório
-            </div>
-          </div>
-          
-          <div class="row g-3">
-            <div class="col-md-7">
-              <label for="rua" class="form-label">Rua/Logradouro*</label>
-              <input type="text" class="form-control" id="rua" formControlName="rua"
-                     [ngClass]="{'is-invalid': usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.rua')?.invalid && usuarioForm.get('endereco.rua')?.touched">
-                Logradouro é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-2">
-              <label for="numero" class="form-label">Número*</label>
-              <input type="text" class="form-control" id="numero" formControlName="numero"
-                     [ngClass]="{'is-invalid': usuarioForm.get('endereco.numero')?.invalid && usuarioForm.get('endereco.numero')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.numero')?.invalid && usuarioForm.get('endereco.numero')?.touched">
-                Número é obrigatório
-              </div>
-            </div>
-
-            <div class="col-md-6">
-                <label for="complemento" class="form-label">Complemento</label>
-                <input 
-                  type="text" 
-                  id="complemento" 
-                  class="form-control" 
-                  formControlName="complemento" 
-                  placeholder="Ex: Apto 101, Bloco B">
-              </div>
-            
-            <div class="col-md-4">
-              <label for="bairro" class="form-label">Bairro*</label>
-              <input type="text" class="form-control" id="bairro" formControlName="bairro"
-                     [ngClass]="{'is-invalid': usuarioForm.get('endereco.bairro')?.invalid && usuarioForm.get('endereco.bairro')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.bairro')?.invalid && usuarioForm.get('endereco.bairro')?.touched">
-                Bairro é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-5">
-              <label for="cidade" class="form-label">Cidade*</label>
-              <input type="text" class="form-control" id="cidade" formControlName="cidade"
-                     [ngClass]="{'is-invalid': usuarioForm.get('endereco.cidade')?.invalid && usuarioForm.get('endereco.cidade')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.cidade')?.invalid && usuarioForm.get('endereco.cidade')?.touched">
-                Cidade é obrigatória
-              </div>
-            </div>
-            
-            <div class="col-md-3">
-              <label for="estado" class="form-label">Estado*</label>
-              <input type="text" class="form-control" id="estado" formControlName="estado"
-                     [ngClass]="{'is-invalid': usuarioForm.get('endereco.estado')?.invalid && usuarioForm.get('endereco.estado')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('endereco.estado')?.invalid && usuarioForm.get('endereco.estado')?.touched">
-                Estado é obrigatório
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Informações Profissionais -->
-        <div class="mb-4">
-          <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
-            <i class="bi bi-briefcase-fill me-2 text-primary"></i>Informações Profissionais
-          </h6>
-          
-          <div class="row g-3">
-            <!-- Campos de Setor e Função (removida a duplicação) -->
-            <div class="col-md-6">
-              <label for="setor" class="form-label">Setor*</label>
-              <select class="form-select" id="setor" formControlName="setor"
-                      [ngClass]="{'is-invalid': usuarioForm.get('setor')?.invalid && usuarioForm.get('setor')?.touched}">
-                <option value="" selected disabled>Selecione um setor</option>
-                <option *ngFor="let setor of setores" [value]="setor.id">{{ setor.nome }}</option>
-              </select>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('setor')?.invalid && usuarioForm.get('setor')?.touched">
-                Setor é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <label for="funcao" class="form-label">Função*</label>
-              <select class="form-select" id="funcao" formControlName="funcao"
-                      [ngClass]="{'is-invalid': usuarioForm.get('funcao')?.invalid && usuarioForm.get('funcao')?.touched}"
-                      [disabled]="!usuarioForm.get('setor')?.value || funcoes.length === 0">
-                <option value="" selected disabled>{{ funcoes.length ? 'Selecione uma função' : 'Selecione um setor primeiro' }}</option>
-                <option *ngFor="let funcao of funcoes" [value]="funcao.id">{{ funcao.nome }}</option>
-              </select>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('funcao')?.invalid && usuarioForm.get('funcao')?.touched">
-                Função é obrigatória
-              </div>
-            </div>
-            
-            <!-- Campos condicionais que aparecem quando há conselho profissional -->
-            <div class="col-md-6" *ngIf="mostrarConselhoProfissional">
-              <label for="registroCategoria" class="form-label">{{ labelConselhoProfissional }} *</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="registroCategoria" 
-                formControlName="registroCategoria"
-                placeholder="Digite o número de registro"
-                [ngClass]="{'is-invalid': usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched}">
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('registroCategoria')?.invalid && usuarioForm.get('registroCategoria')?.touched">
-                {{ labelConselhoProfissional }} é obrigatório
-              </div>
-            </div>
-
-            <div class="col-md-6" *ngIf="mostrarEspecialidade">
-              <label for="especialidade" class="form-label">Especialidade</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="especialidade" 
-                formControlName="especialidade"
-                placeholder="Digite a especialidade (se aplicável)">
-            </div>
-          </div>
-        </div>
-        
-        <!-- Contratação e Acesso -->
-        <div class="mb-4">
-          <h6 class="border-bottom pb-2 mb-3 d-flex align-items-center">
-            <i class="bi bi-shield-lock me-2 text-primary"></i>Contratação e Acesso
-          </h6>
-          
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label for="tipoContratacao" class="form-label">Tipo de Contratação*</label>
-              <select class="form-select" id="tipoContratacao" formControlName="tipoContratacao">
-                <option value="" disabled selected>Selecione o tipo de contratação</option>
-                <option value="Contratada">Contratada</option>
-                <option value="Terceirizada">Terceirizada</option>
-                <option value="Pessoa Jurídica">Pessoa Jurídica</option>
-              </select>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoContratacao')?.invalid && usuarioForm.get('tipoContratacao')?.touched">
-                Tipo de contratação é obrigatório
-              </div>
-            </div>
-            
-            <div class="col-md-4">
-              <label for="dataAdmissao" class="form-label">Data de Admissão</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
-                <input type="date" class="form-control" id="dataAdmissao" formControlName="dataAdmissao">
-              </div>
-            </div>
-            
-            <div class="col-md-4">
-              <label for="tipoAcesso" class="form-label">Nível de Acesso*</label>
-              <select class="form-select" id="tipoAcesso" formControlName="tipoAcesso"
-                      [ngClass]="{'is-invalid': usuarioForm.get('tipoAcesso')?.invalid && usuarioForm.get('tipoAcesso')?.touched}">
-                <option *ngFor="let tipo of tiposAcesso" [value]="tipo.value">{{ tipo.viewValue }}</option>
-              </select>
-              <div class="invalid-feedback" *ngIf="usuarioForm.get('tipoAcesso')?.invalid && usuarioForm.get('tipoAcesso')?.touched">
-                Nível de acesso é obrigatório
-              </div>
-            </div>
-            
-            
-          </div>
-        </div>
-
-        <!-- Adicione este código na seção apropriada do seu formulário -->
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="status" class="form-label">Status do Usuário</label>
-            <select 
-              id="status" 
-              formControlName="status"
-              class="form-select"
-              [class.is-invalid]="usuarioForm.get('status')?.invalid && usuarioForm.get('status')?.touched">
-              <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption">
-                {{ statusOption }}
-              </option>
-            </select>
-            <div class="invalid-feedback" *ngIf="usuarioForm.get('status')?.errors?.['required'] && usuarioForm.get('status')?.touched">
-              Status é obrigatório.
-            </div>
-          </div>
-        </div>
-
-        <!-- Opcionalmente, você pode mostrar uma prévia de como o status ficará -->
-        <div class="row mb-3" *ngIf="usuarioForm.get('status')?.value">
-          <div class="col-md-6">
-            <label class="form-label">Visualização do Status:</label>
-            <div class="d-flex align-items-center mt-2">
-              <span class="badge me-2" [ngClass]="getStatusClass(usuarioForm.get('status')?.value)">
-                {{ usuarioForm.get('status')?.value }}
-              </span>
-              <i [class]="getStatusIcon(usuarioForm.get('status')?.value) + ' me-2 ' + getStatusTextClass(usuarioForm.get('status')?.value)"></i>
-              <span [ngClass]="getStatusTextClass(usuarioForm.get('status')?.value)">
-                Esta é a aparência do status na lista de usuários
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Botões de ação -->
-        <div class="d-flex justify-content-between border-top pt-3 mt-4">
-          <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">
-            <i class="bi bi-x-circle me-1"></i>Cancelar
-          </button>
-          
-          <button type="submit" class="btn btn-primary" [disabled]="isLoading || usuarioForm.invalid">
-            <i class="bi" [ngClass]="modoEdicao ? 'bi-save' : 'bi-arrow-right'"></i>
-            <span class="ms-1">{{ modoEdicao ? 'Salvar Alterações' : 'Continuar' }}</span>
-          </button>
-        </div>
-      </form>
+    
+    <!-- Indicador de campos obrigatórios -->
+    <div class="mt-3 small text-muted">
+      <p class="mb-0"><i class="bi bi-info-circle me-1"></i>Os campos com <span class="text-danger">*</span> são obrigatórios</p>
     </div>
   </div>
 
   <!-- Step 2: Formulário de Senha -->
-  <div *ngIf="currentStep === 'passwordForm'" class="mb-3">
-    <div class="card shadow-sm">
-      <div class="card-header bg-transparent">
-        <div class="d-flex justify-content-between align-items-center">
-          <h4 class="mb-0">Definir Senha do Usuário</h4>
-          <button type="button" class="btn btn-outline-secondary" (click)="voltarParaFormulario()">
-            <i class="bi bi-arrow-left me-1"></i>Voltar
+  <div *ngIf="currentStep === 'passwordForm'">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-primary text-white py-3">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-lock me-2"></i>Definir Senha do Usuário
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <app-password-form (passwordSubmitted)="onPasswordSubmitted($event)"></app-password-form>
+        
+        <!-- Botões de ação -->
+        <div class="d-flex justify-content-between align-items-center mt-4 border-top pt-3">
+          <button type="button" class="btn btn-outline-primary" (click)="voltarParaFormulario()">
+            <i class="bi bi-arrow-left me-2"></i>Voltar para Formulário
           </button>
         </div>
-      </div>
-      <div class="card-body">
-        <app-password-form (passwordSubmitted)="onPasswordSubmitted($event)"></app-password-form>
       </div>
     </div>
   </div>

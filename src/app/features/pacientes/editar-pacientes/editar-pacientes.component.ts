@@ -12,11 +12,16 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { BehaviorSubject, catchError, finalize, of, tap } from 'rxjs';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+
+declare var bootstrap: any;
+
+
 
 /**
  * Componente responsável pela edição de pacientes existentes
@@ -28,7 +33,8 @@ import { BehaviorSubject, catchError, finalize, of, tap } from 'rxjs';
     CommonModule, 
     ReactiveFormsModule, 
     BuscaPacienteComponent,
-    RouterModule
+    RouterModule,
+    StatusBadgeComponent
   ],
   templateUrl: './editar-pacientes.component.html',
   styleUrls: ['./editar-pacientes.component.scss']
@@ -56,6 +62,8 @@ export class EditarPacientesComponent implements OnInit {
   // Streams de dados
   private convenioSelecionadoSubject = new BehaviorSubject<number | null>(null);
   convenioSelecionado$ = this.convenioSelecionadoSubject.asObservable();
+
+  error: string | null = null;
   
   constructor(
     private fb: FormBuilder,
@@ -114,8 +122,8 @@ export class EditarPacientesComponent implements OnInit {
         numero: ['', Validators.required],
         complemento: [''],
         bairro: ['', Validators.required],
-        cidade: ['', Validators.required],
-        estado: ['', Validators.required]
+        localidade: ['', Validators.required],
+        uf: ['', Validators.required]
       }),
       status: [StatusPaciente.ATIVO, Validators.required],
       cid_primario: ['', Validators.required],
@@ -312,8 +320,8 @@ export class EditarPacientesComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade,
-                estado: endereco.uf
+                localidade: endereco.localidade, // Use localidade ao invés de cidade
+                uf: endereco.uf // Use uf ao invés de estado
               }
             });
           } else {
@@ -382,6 +390,8 @@ export class EditarPacientesComponent implements OnInit {
     // Processar endereço com segurança
     let endereco = this.processarEndereco(paciente.endereco);
 
+    console.log('Endereço processado:', endereco); // Para debug
+    
     // Preencher todos os campos do formulário
     this.pacienteForm.patchValue({
       nome_completo: paciente.nome_completo,
@@ -452,10 +462,11 @@ export class EditarPacientesComponent implements OnInit {
       numero: this.getEnderecoField(endereco, 'numero'),
       complemento: this.getEnderecoField(endereco, 'complemento'),
       bairro: this.getEnderecoField(endereco, 'bairro'),
+      localidade: this.getEnderecoField(endereco, 'localidade', 'cidade'),
+      uf: this.getEnderecoField(endereco, 'uf', 'estado'),
+      // Também manter cidade e estado para compatibilidade
       cidade: this.getEnderecoField(endereco, 'localidade', 'cidade'),
-      estado: this.getEnderecoField(endereco, 'uf', 'estado'),
-      localidade: '', // Campos adicionais para compatibilidade com o modelo
-      uf: ''
+      estado: this.getEnderecoField(endereco, 'uf', 'estado')
     };
   }
 
@@ -487,64 +498,19 @@ export class EditarPacientesComponent implements OnInit {
    * Submete o formulário para atualizar dados do paciente
    */
   onSubmit(): void {
-    if (!this.pacienteSelecionado || !this.pacienteSelecionado.id) {
-      this.notificacaoService.mostrarErro('É necessário selecionar um paciente para editar.');
+    if (this.pacienteForm.invalid) {
+      this.notificacaoService.mostrarErro('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-    
-    // Validar o formulário antes de enviar
-    if (!this.validarFormulario()) {
-      return;
-    }
-
-    // Obter valores do formulário
-    let formValues = { ...this.pacienteForm.value };
-
-    // Sanitizar o CPF antes de enviar
-    if (formValues.cpf) {
-      formValues.cpf = formValues.cpf.replace(/\D/g, '');
-    }
-
-    // Formatar datas para o padrão do backend
-    formValues = this.processarDatasFormulario(formValues);
-
-    // Converter os campos cidade e estado para os campos esperados pelo backend
-    if (formValues.endereco) {
-      const endereco = { ...formValues.endereco } as Endereco;
-      if (endereco.cidade) {
-        endereco.localidade = endereco.cidade;
-        delete (endereco as any).cidade;
-      }
-      if (endereco.estado) {
-        endereco.uf = endereco.estado;
-        delete (endereco as any).estado;
-      }
-      formValues.endereco = endereco;
-    }
-
-    // Enviar dados para o serviço
-    this.isLoading = true;
-    
-    this.pacienteService.atualizarPaciente(String(this.pacienteSelecionado.id), formValues).pipe(
-      tap(response => {
+  
+    this.pacienteService.atualizarPaciente(this.pacienteSelecionado?.id!, this.pacienteForm.value).subscribe({
+      next: () => {
         this.notificacaoService.mostrarSucesso('Paciente atualizado com sucesso!');
-        this.router.navigate(['/pacientes/visualizar', this.pacienteSelecionado?.id]);
-      }),
-      catchError(error => {
-        console.error('Erro ao atualizar paciente:', error);
-        
-        let mensagemErro = 'Erro ao atualizar paciente.';
-        if (error.error?.message) {
-          mensagemErro = error.error.message;
-        } else if (error.error?.error) {
-          mensagemErro = error.error.error;
-        }
-        
-        this.notificacaoService.mostrarErro(mensagemErro);
-        return of(null);
-      }),
-      finalize(() => this.isLoading = false)
-    ).subscribe();
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+      }
+    });
   }
 
   /**
@@ -657,4 +623,91 @@ export class EditarPacientesComponent implements OnInit {
     this.modoEdicao = false;
     this.initForm(); // Reiniciar o formulário com valores padrão
   }
+
+  /**
+   * Método para abrir o modal de confirmação
+   */
+  abrirModalConfirmacao(): void {
+    console.log('abrirModalConfirmacao chamado');
+    if (this.pacienteForm.invalid) {
+      console.log('Formulário inválido');
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
+  
+    const modalElement = document.getElementById('confirmacaoModal');
+    if (modalElement) {
+      console.log('Exibindo modal de confirmação');
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error('Modal de confirmação não encontrado no DOM.');
+    }
+  }
+  
+  /**
+   * Método para confirmar a edição do paciente
+   */
+  confirmarEdicao(): void {
+    this.removerBackdrop(); // Remover qualquer backdrop residual
+    this.isLoading = true;
+  
+    const confirmacaoModalElement = document.getElementById('confirmacaoModal');
+    if (confirmacaoModalElement) {
+      const confirmacaoModal = bootstrap.Modal.getInstance(confirmacaoModalElement);
+      confirmacaoModal?.hide();
+    }
+  
+    // Obter os dados do formulário e processar as datas
+    const formValues = this.processarDatasFormulario(this.pacienteForm.getRawValue());
+    
+    this.pacienteService.atualizarPaciente(this.pacienteSelecionado?.id!, formValues).subscribe({
+      next: () => {
+        // Aguardar 500ms para mostrar o modal de sucesso
+        setTimeout(() => {
+          this.removerBackdrop(); // Garantir que não há backdrops antes de abrir o próximo modal
+          const modalElement = document.getElementById('sucessoModal');
+          if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error('Modal de sucesso não encontrado no DOM.');
+          }
+        }, 500);
+      },
+      error: (erro) => {
+        console.error('Erro ao atualizar paciente:', erro);
+        this.notificacaoService.mostrarErro('Erro ao atualizar paciente. Tente novamente.');
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+  
+  /**
+   * Método para redirecionar para a lista de pacientes após a edição
+   */
+  redirecionarParaPacientes(): void {
+    const modalElement = document.getElementById('sucessoModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+  
+    this.removerBackdrop(); // Garantir que o backdrop seja removido
+    this.router.navigate(['/pacientes']);
+  }
+  
+  /**
+   * Remove qualquer backdrop residual do modal
+   */
+  private removerBackdrop(): void {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+  }
+
+  // Adicionar à classe
+  protected Object = Object;
 }

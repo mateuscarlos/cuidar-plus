@@ -21,6 +21,7 @@ interface SubMenuItem {
   subItems?: SubMenuItem[];
   active?: boolean;
   expanded?: boolean;
+  inConstruction?: boolean; // Nova propriedade para indicar se está em construção
 }
 
 @Component({
@@ -56,19 +57,14 @@ export class SidebarComponent implements OnInit {
         },
         {
           title: 'Cadastrar Paciente',
-          route: '/pacientes/cadastrar',
+          route: '/pacientes/criar',
           icon: 'bi-person-plus'
         },
         {
           title: 'Buscar Paciente',
-          route: '/pacientes/visualizar',
+          route: '/pacientes/busca',
           icon: 'bi-search'
         },
-        {
-          title: 'Novo Acompanhamento',
-          route: '/pacientes/acompanhamento',
-          icon: 'bi-clipboard-pulse'
-        }
       ]
     },
     { 
@@ -103,30 +99,41 @@ export class SidebarComponent implements OnInit {
           subItems: [
             {
               title: 'Listar Usuários',
-              route: '/usuarios',
+              route: '/usuarios/lista',
               icon: 'bi-list-ul'
             },
             {
               title: 'Cadastrar Usuário',
-              route: '/usuarios/cadastrar',
+              route: '/usuarios/criar',
               icon: 'bi-person-plus'
+            },
+            {
+              title: 'Busca Usuários',
+              route: '/usuarios/busca',
+              icon: 'bi-search'
             }
           ]
         },
         {
           title: 'Convênios e Planos',
           route: '/configuracoes/convenios',
-          icon: 'bi-wallet2'
+          icon: 'bi-wallet2',
+          active: false,
+          inConstruction: true,
         },
         {
           title: 'Setores',
           route: '/setores',
-          icon: 'bi-building'
+          icon: 'bi-building',
+          active: false,
+          inConstruction: true,
         },
         {
           title: 'Funções',
           route: '/funcoes',
-          icon: 'bi-briefcase'
+          icon: 'bi-briefcase',
+          active: false,
+          inConstruction: true,
         }
       ]
     }
@@ -236,14 +243,19 @@ export class SidebarComponent implements OnInit {
    */
   toggleSubMenu(event: Event, subItem: SubMenuItem): void {
     event.preventDefault();
-    event.stopPropagation(); // Impedir propagação para não acionar o item pai
+    event.stopPropagation();
+    
+    // Se o item estiver em construção, não realizar ações
+    if (subItem.inConstruction) {
+      return;
+    }
     
     // Se tiver subitems, alternar estado de expansão
     if (subItem.subItems && subItem.subItems.length > 0) {
       subItem.expanded = !subItem.expanded;
     }
     
-    // Sempre navega para a rota quando clica em um submenu
+    // Navega para a rota quando não estiver em construção
     this.router.navigate([subItem.route]);
     
     // Para dispositivos móveis, fechar sidebar após selecionar um item

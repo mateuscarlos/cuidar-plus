@@ -61,9 +61,7 @@
                 <td>{{ paciente.cpf }}</td>
                 <td>{{ paciente.data_nascimento | date:'dd/MM/yyyy' }}</td>
                 <td>
-                  <span class="badge" [ngClass]="getStatusClasses(paciente.status)">
-                    {{ paciente.status }}
-                  </span>
+                  <app-status-badge [status]="paciente.status"></app-status-badge>
                 </td>
                 <td>
                   <button type="button" class="btn btn-sm btn-primary" (click)="selecionarPaciente(paciente)">

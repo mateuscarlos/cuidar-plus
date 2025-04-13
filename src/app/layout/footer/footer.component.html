@@ -3,7 +3,10 @@
     <div class="row">
       <!-- Logo e informações básicas -->
       <div class="col-md-4 mb-4 mb-md-0">
-        <h5 class="text-primary">Cuidar<span class="text-success">+</span></h5>
+        <div class="d-flex align-items-center mb-2">
+          <img src="assets/images/logo.png" alt="Cuidar+" height="30" class="me-2">
+          <h5 class="text-primary mb-0">Cuidar<span class="text-success">+</span></h5>
+        </div>
         <p class="text-muted">Cuidados de saúde personalizados para você e sua família.</p>
         <p class="text-muted mb-0">
           <i class="bi bi-geo-alt-fill me-2"></i>Av. Paulista, 1000
@@ -56,9 +59,18 @@
     </div>
     
     <!-- Copyright -->
-    <div class="row mt-4 pt-3 border-top">
-      <div class="col-12 text-center text-muted">
-        <small>&copy; {{ currentYear }} Cuidar+ - Todos os direitos reservados</small>
+    <div class="footer-container bg-white w-100 h-100 d-flex align-items-center border-top">
+      <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <span class="text-muted">&copy; {{ currentYear }} Cuidar+ - Todos os direitos reservados</span>
+          </div>
+          <div class="d-none d-md-block">
+            <a href="#" class="text-decoration-none text-muted me-3">Termos</a>
+            <a href="#" class="text-decoration-none text-muted me-3">Privacidade</a>
+            <a href="#" class="text-decoration-none text-muted">Suporte</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
