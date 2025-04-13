@@ -268,7 +268,7 @@ export class VisualizarUsuarioComponent implements OnInit {
    * Navega de volta para a lista de usuários
    */
   voltarParaLista(): void {
-    this.router.navigate(['/usuarios']);
+    this.router.navigate(['/usuarios/lista']);
   }
   
   /**

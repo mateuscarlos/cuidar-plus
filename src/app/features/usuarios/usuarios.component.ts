@@ -70,7 +70,7 @@ export class UsuariosComponent implements OnInit {
   }
 
   navegarParaCadastro(): void {
-    this.router.navigate(['/usuarios/cadastrar']);
+    this.router.navigate(['/usuarios/criar']);
   }
 
   navegarParaBusca(): void {

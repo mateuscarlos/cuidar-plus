@@ -255,9 +255,19 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
    * Métodos para navegação
    */
   navegarParaVisualizacao(usuario: Usuario): void {
-    this.router.navigate(['/usuarios/visualizar'], {
-      queryParams: { usuarioId: usuario.id }
-    });
+    if (!usuario || !usuario.id) {
+      this.notificacaoService.mostrarErro('ID de usuário inválido');
+      return;
+    }
+    
+    // Navegar usando o parâmetro de rota (:id) em vez de queryParams
+    this.router.navigate(['/usuarios/visualizar', usuario.id])
+      .then(success => {
+        if (!success) {
+          console.error('Navegação para visualização de usuário falhou');
+          this.notificacaoService.mostrarErro('Não foi possível acessar os detalhes do usuário');
+        }
+      });
   }
 
   navegarParaCadastro(): void {

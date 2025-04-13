@@ -22,6 +22,9 @@ import { Funcao } from '../models/funcao.model';
 import { Setor } from '../models/setor.model';
 import { SetorProfissional } from '../models/conselhos-profissionais.model';
 
+// Adicione no início do arquivo após os imports existentes
+declare var bootstrap: any; // Para manipular os modais do Bootstrap
+
 @Component({
   selector: 'app-cadastrar-usuario',
   templateUrl: './cadastrar-usuario.component.html',
@@ -71,6 +74,9 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   labelConselhoProfissional = '';
   mostrarConselhoProfissional = false;
   mostrarEspecialidade = false;
+
+  // Adicione esta propriedade na classe do componente, junto com as outras propriedades:
+  errorMessage: string = ''; // Para exibição no modal de erro
 
   constructor(
     private fb: FormBuilder,
@@ -402,26 +408,14 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
     // Adicionar o hash da senha aos dados do usuário
     this.tempUsuarioData.password_hash = passwordHash;
     
-    // Enviar os dados do usuário com a senha para a API
-    this.isLoading = true;
-    this.usuarioService.criarUsuario(this.tempUsuarioData)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        this.tempUsuarioData = null; // Limpar os dados temporários
-      }))
-      .subscribe({
-        next: () => {
-          this.notificacaoService.mostrarSucesso('Usuário cadastrado com sucesso');
-          this.usuarioRoutesService.navegarParaLista();
-        },
-        error: (err) => {
-          this.error = 'Erro ao cadastrar usuário';
-          this.notificacaoService.mostrarErro('Erro ao cadastrar usuário: ' + 
-            (err.error?.message || 'Verifique a conexão com o servidor'));
-          // Voltar para o formulário de dados do usuário em caso de erro
-          this.currentStep = 'userForm';
-        }
-      });
+    // Mostrar modal de confirmação
+    const modalElement = document.getElementById('confirmacaoModal');
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error('Modal de confirmação não encontrado no DOM.');
+    }
   }
 
   private prepararDadosUsuario(): Usuario {
@@ -484,5 +478,109 @@ export class CadastrarUsuarioComponent implements OnInit, OnDestroy {
   
   getStatusTextClass(status: string): string {
     return this.userStatusStyle.getTextClass(status);
+  }
+
+  /**
+   * Confirma o cadastro do usuário após confirmação do modal
+   */
+  confirmarCadastro(): void {
+    this.removerBackdrop(); // Remover qualquer backdrop residual
+    this.isLoading = true;
+
+    // Fechar o modal de confirmação
+    const confirmacaoModalElement = document.getElementById('confirmacaoModal');
+    if (confirmacaoModalElement) {
+      const confirmacaoModal = bootstrap.Modal.getInstance(confirmacaoModalElement);
+      confirmacaoModal?.hide();
+    }
+
+    // Enviar os dados do usuário com a senha para a API
+    this.usuarioService.criarUsuario(this.tempUsuarioData)
+      .pipe(finalize(() => {
+        this.isLoading = false;
+      }))
+      .subscribe({
+        next: () => {
+          // Mostrar o modal de sucesso após 500ms
+          setTimeout(() => {
+            this.removerBackdrop(); // Garantir que não há backdrops antes de abrir o próximo modal
+            const modalElement = document.getElementById('sucessoModal');
+            if (modalElement) {
+              const modal = new bootstrap.Modal(modalElement);
+              modal.show();
+            } else {
+              console.error('Modal de sucesso não encontrado no DOM.');
+            }
+          }, 500);
+        },
+        error: (err) => {
+          this.error = 'Erro ao cadastrar usuário';
+          
+          // Preparar a mensagem de erro para o modal
+          if (err.error?.message) {
+            this.errorMessage = err.error.message;
+          } else if (err.error?.error) {
+            this.errorMessage = err.error.error;
+          } else {
+            this.errorMessage = 'Erro ao cadastrar usuário. Verifique a conexão com o servidor.';
+          }
+          
+          // Mostrar o modal de erro
+          this.removerBackdrop();
+          const erroModalElement = document.getElementById('erroModal');
+          if (erroModalElement) {
+            const erroModal = new bootstrap.Modal(erroModalElement);
+            erroModal.show();
+          } else {
+            // Fallback para notificação se o modal não for encontrado
+            this.notificacaoService.mostrarErro(this.errorMessage);
+          }
+        }
+      });
+  }
+
+  /**
+   * Redireciona para a lista de usuários após cadastro bem-sucedido
+   */
+  redirecionarParaUsuarios(): void {
+    const modalElement = document.getElementById('sucessoModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+
+    this.removerBackdrop(); // Garantir que o backdrop seja removido
+    this.tempUsuarioData = null; // Limpar os dados temporários
+    this.usuarioRoutesService.navegarParaLista();
+  }
+
+  /**
+   * Remove qualquer backdrop residual do modal para evitar problemas na UI
+   */
+  private removerBackdrop(): void {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
+    
+    // Também remover a classe modal-open do body para evitar problemas de scroll
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  }
+
+  /**
+   * Fecha o modal de erro e volta para o formulário de usuário
+   */
+  fecharModalErro(): void {
+    const modalElement = document.getElementById('erroModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+
+    this.removerBackdrop();
+    
+    // Voltar para o formulário de dados do usuário em caso de erro
+    this.currentStep = 'userForm';
+    this.tempUsuarioData = null; // Limpar os dados temporários em caso de erro
   }
 }

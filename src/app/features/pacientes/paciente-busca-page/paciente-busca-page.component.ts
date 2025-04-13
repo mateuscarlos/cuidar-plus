@@ -1,23 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { PacienteService } from '../services/paciente.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { StatusPaciente } from '../models/paciente.model';
 import { AdvancedSearchComponent, SearchField, SearchResult } from '../../../shared/components/advanced-search/advanced-search.component';
 import { DynamicPipePipe } from '../../../shared/pipes/dynamic-pipe.pipe';
+import { DateFormatterService } from '../../../core/services/date-formatter.service';
 
 @Component({
   selector: 'app-paciente-busca-page',
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     AdvancedSearchComponent,
     DynamicPipePipe
   ],
   template: `
     <div class="container-fluid py-4">
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Busca Avançada</li>
+        </ol>
+      </nav>
+      
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="mb-0">
           <i class="bi bi-search me-2 text-primary"></i>Busca Avançada de Pacientes
@@ -104,7 +115,15 @@ export class PacienteBuscaPageComponent implements OnInit {
   colunasPaciente = [
     { header: 'Nome', field: 'nome_completo' },
     { header: 'CPF', field: 'cpf', pipe: 'cpf' },
-    { header: 'Data Nascimento', field: 'data_nascimento', pipe: 'date', pipeArgs: ['dd/MM/yyyy'] },
+    { 
+      header: 'Data Nascimento', 
+      field: 'data_nascimento', 
+      formatFn: (value: any, item: any) => {
+        const date = value || item.dataNascimento || item.data_nascimento || item.dt_nascimento;
+        if (!date) return 'N/A';
+        return this.dateFormatter.toDisplayDateOnly(date);
+      }
+    },
     { header: 'Convênio', field: 'convenio_id', formatFn: (value: number) => this.getConvenioNome(value) },
     { header: 'Status', field: 'status', type: 'status' }
   ];
@@ -120,6 +139,7 @@ export class PacienteBuscaPageComponent implements OnInit {
     private pacienteService: PacienteService,
     private convenioService: ConvenioPlanoService,
     private notificacaoService: NotificacaoService,
+    private dateFormatter: DateFormatterService,
     private router: Router
   ) {}
 
@@ -132,7 +152,6 @@ export class PacienteBuscaPageComponent implements OnInit {
     this.convenioService.listarConvenios().subscribe({
       next: (response) => {
         this.convenios = response.filter(c => c.ativo);
-        // Atualizar a lista de opções do campo convênio
         const convenioField = this.camposBusca.find(f => f.name === 'convenio');
         if (convenioField) {
           convenioField.options = this.convenios;
@@ -148,10 +167,9 @@ export class PacienteBuscaPageComponent implements OnInit {
   }
 
   buscarPacientes(filtros: SearchResult): void {
-    this.ultimaConsulta = filtros; // Guarda a última consulta
+    this.ultimaConsulta = filtros;
     this.isLoading = true;
     
-    // Adicionar paginação
     const filtrosComPaginacao = {
       ...filtros,
       page: this.paginaAtual,
@@ -160,37 +178,27 @@ export class PacienteBuscaPageComponent implements OnInit {
     
     this.pacienteService.buscarPacientes(filtrosComPaginacao).subscribe({
       next: (response) => {
-        console.log('Resposta da API de busca:', response); // Log para debug
+        console.log('Resposta da API de busca:', response);
         
-        // Tratamento para diferentes formatos de resposta
         if (Array.isArray(response)) {
-          // Caso 1: API retorna um array diretamente
           this.pacientes = response;
           this.totalPacientes = response.length;
         } else if (response && response.items && Array.isArray(response.items)) {
-          // Caso 2: API retorna objeto com propriedade items (array)
           this.pacientes = response.items;
           this.totalPacientes = response.total || response.items.length;
           this.paginaAtual = response.page || this.paginaAtual;
         } else if (response && typeof response === 'object') {
-          // Caso 3: API retorna outro formato de objeto
-          // Verificar se é um único objeto ou uma coleção de objetos
           if (response.id) {
-            // É um único paciente
             this.pacientes = [response];
             this.totalPacientes = 1;
           } else {
-            // Tentativa de extrair valores relevantes do objeto
             const possibleArrays = Object.values(response).filter(val => Array.isArray(val));
             if (possibleArrays.length > 0) {
-              // Usar o primeiro array encontrado
               this.pacientes = possibleArrays[0] as any[];
               this.totalPacientes = this.pacientes.length;
             } else {
-              // Último recurso: tratar como array de propriedades
               const objKeys = Object.keys(response);
               if (objKeys.length > 0 && !isNaN(Number(objKeys[0]))) {
-                // Parece ser um objeto com índices numéricos
                 this.pacientes = Object.values(response);
                 this.totalPacientes = this.pacientes.length;
               } else {
@@ -208,7 +216,17 @@ export class PacienteBuscaPageComponent implements OnInit {
           this.totalPacientes = 0;
         }
         
-        console.log('Pacientes processados:', this.pacientes); // Log para debug
+        this.pacientes = this.pacientes.map(paciente => {
+          if (!paciente.data_nascimento && 
+             (paciente.dataNascimento || paciente.dt_nascimento || paciente.nascimento)) {
+            paciente.data_nascimento = paciente.dataNascimento || 
+                                      paciente.dt_nascimento || 
+                                      paciente.nascimento;
+          }
+          return paciente;
+        });
+        
+        console.log('Pacientes processados:', this.pacientes);
         this.isLoading = false;
       },
       error: (error) => {
@@ -229,7 +247,6 @@ export class PacienteBuscaPageComponent implements OnInit {
   
   mudarPagina(pagina: number): void {
     this.paginaAtual = pagina;
-    // Reexecuta a busca com a nova página
     if (this.ultimaConsulta) {
       this.buscarPacientes(this.ultimaConsulta);
     }
