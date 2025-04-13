@@ -1,24 +1,27 @@
-<div class="app-container d-flex">
-  <!-- Sidebar -->
-  <div class="sidebar-wrapper" [class.d-none]="!isSidebarVisible">
-    <app-sidebar (toggleSidebar)="toggleSidebar()"></app-sidebar>
-  </div>
-  
-  <!-- Overlay para dispositivos móveis -->
-  <div class="sidebar-overlay" [class.show]="isSidebarVisible && isMobile" (click)="toggleSidebar()"></div>
-  
-  <div class="main-content flex-grow-1">
-    <!-- Header -->
-    <header>
-      <app-header (toggleSidebar)="toggleSidebar()"></app-header>
-    </header>
-    
-    <!-- Main Content -->
-    <main class="p-3 p-md-4">
+<div class="d-flex flex-column vh-100">
+  <!-- Header com altura fixa -->
+  <header class="header">
+    <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+  </header>
+
+  <!-- Container principal que ocupa o espaço restante entre header e footer -->
+  <div class="d-flex flex-grow-1 overflow-hidden">
+    <!-- Sidebar que vai do fim do header até o início do footer -->
+    <div class="sidebar-container" [ngClass]="{'d-none': !isSidebarVisible && isMobile, 'sidebar-mobile': isMobile && isSidebarVisible}">
+      <app-sidebar (toggleSidebar)="toggleSidebar()"></app-sidebar>
+    </div>
+
+    <!-- Overlay para quando o sidebar estiver aberto em dispositivos móveis -->
+    <div class="sidebar-overlay" *ngIf="isSidebarVisible && isMobile" (click)="toggleSidebar()"></div>
+
+    <!-- Área de conteúdo principal rolável -->
+    <main class="content-area">
       <router-outlet></router-outlet>
     </main>
-    
-    <!-- Footer -->
-    <app-footer></app-footer>
   </div>
+
+  <!-- Footer com altura fixa -->
+  <footer class="footer">
+    <app-footer></app-footer>
+  </footer>
 </div>

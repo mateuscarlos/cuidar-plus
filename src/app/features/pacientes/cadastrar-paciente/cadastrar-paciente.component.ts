@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Paciente, StatusPaciente, STATUS_BOOTSTRAP_CLASSES } from '../models/paciente.model';
+import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { Plano } from '../models/plano.model';
 import { Endereco } from '../models/endereco.model';
 import { Convenio } from '../models/convenio.model';
@@ -14,7 +14,10 @@ import { BehaviorSubject, Observable, catchError, finalize, of, tap } from 'rxjs
 import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+
+declare var bootstrap: any; // Para manipular os modais do Bootstrap
 
 /**
  * Componente responsável pelo cadastro de novos pacientes
@@ -22,7 +25,12 @@ import { StatusStyleService } from '../../../core/services/status-style.service'
 @Component({
   selector: 'app-cadastrar-paciente',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [
+    CommonModule, 
+    ReactiveFormsModule, 
+    RouterModule,
+    StatusBadgeComponent
+  ],
   templateUrl: './cadastrar-paciente.component.html',
   styleUrls: ['./cadastrar-paciente.component.scss']
 })
@@ -48,6 +56,8 @@ export class CadastrarPacienteComponent implements OnInit {
   // Streams de dados
   private convenioSelecionadoSubject = new BehaviorSubject<number | null>(null);
   convenioSelecionado$ = this.convenioSelecionadoSubject.asObservable();
+
+  isSubmitting = false;
   
   constructor(
     private fb: FormBuilder,
@@ -88,8 +98,8 @@ export class CadastrarPacienteComponent implements OnInit {
         numero: ['', Validators.required],
         complemento: [''],
         bairro: ['', Validators.required],
-        cidade: ['', Validators.required],
-        estado: ['', Validators.required]
+        localidade: ['', Validators.required],
+        estado: ['', Validators.required],
       }),
       status: [StatusPaciente.ATIVO],
       cid_primario: ['', Validators.required],
@@ -278,8 +288,8 @@ export class CadastrarPacienteComponent implements OnInit {
               endereco: {
                 logradouro: endereco.logradouro,
                 bairro: endereco.bairro,
-                cidade: endereco.localidade,
-                estado: endereco.uf
+                localidade: endereco.localidade,
+                estado: endereco.estado
               }
             });
           } else {
@@ -301,38 +311,24 @@ export class CadastrarPacienteComponent implements OnInit {
    * Submete o formulário para criar um novo paciente
    */
   onSubmit(): void {
-    // Validar o formulário antes de enviar
-    if (!this.validarFormulario()) {
+    if (this.pacienteForm.invalid) {
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
       return;
     }
 
-    // Obter valores do formulário
-    let formValues = { ...this.pacienteForm.value };
+    this.isLoading = true;
 
-    // Sanitizar o CPF antes de enviar
-    if (formValues.cpf) {
-      formValues.cpf = formValues.cpf.replace(/\D/g, '');
-    }
-
-    // Processar datas para o formato esperado pelo backend
-    formValues = this.processarDatasFormulario(formValues);
-
-    // Converter os campos cidade e estado para os campos esperados pelo backend
-    if (formValues.endereco) {
-      const endereco = { ...formValues.endereco } as Endereco;
-      if (endereco.cidade) {
-        endereco.localidade = endereco.cidade;
-        delete (endereco as any).cidade;
-      }
-      if (endereco.estado) {
-        endereco.uf = endereco.estado;
-        delete (endereco as any).estado;
-      }
-      formValues.endereco = endereco;
-    }
-
-    // Enviar dados para o serviço
-    this.criarPaciente(formValues);
+    this.pacienteService.criarPaciente(this.pacienteForm.value)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: () => {
+          this.notificacaoService.mostrarSucesso('Paciente cadastrado com sucesso!');
+          this.router.navigate(['/pacientes']);
+        },
+        error: () => {
+          this.notificacaoService.mostrarErro('Erro ao cadastrar paciente. Tente novamente.');
+        },
+      });
   }
 
   /**
@@ -452,7 +448,11 @@ export class CadastrarPacienteComponent implements OnInit {
    * Verifica se um campo de endereço é inválido
    */
   isEnderecoFieldValid(field: string): boolean {
-    const control = this.pacienteForm.get('endereco')?.get(field);
+    // Mapeamento de nomes de campos da UI para nomes no modelo
+    let formField = field;
+    if (field === 'cidade') formField = 'localidade';
+
+    const control = this.pacienteForm.get('endereco')?.get(formField);
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
@@ -477,5 +477,86 @@ export class CadastrarPacienteComponent implements OnInit {
    */
   getStatusClasses(status: string): string {
     return this.statusStyle.getAllClasses(status);
+  }
+
+  abrirModalConfirmacao(): void {
+    console.log('abrirModalConfirmacao chamado');
+    if (this.pacienteForm.invalid) {
+      console.log('Formulário inválido');
+      Object.keys(this.pacienteForm.controls).forEach(key => {
+        const control = this.pacienteForm.get(key);
+        if (control?.invalid) {
+          console.log(`Campo inválido: ${key}`, control.errors);
+          if (key === 'endereco') {
+            const endereco = control as FormGroup;
+            Object.keys(endereco.controls).forEach(endKey => {
+              const endControl = endereco.get(endKey);
+              if (endControl?.invalid) {
+                console.log(`Campo de endereço inválido: ${endKey}`, endControl.errors);
+              }
+            });
+          }
+        }
+      });
+      this.notificacaoService.mostrarAviso('Por favor, preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
+
+    const modalElement = document.getElementById('confirmacaoModal');
+    if (modalElement) {
+      console.log('Exibindo modal de confirmação');
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    } else {
+      console.error('Modal de confirmação não encontrado no DOM.');
+    }
+  }
+
+  confirmarCadastro(): void {
+    this.removerBackdrop(); // Remover qualquer backdrop residual
+    this.isLoading = true;
+
+    const confirmacaoModalElement = document.getElementById('confirmacaoModal');
+    if (confirmacaoModalElement) {
+      const confirmacaoModal = bootstrap.Modal.getInstance(confirmacaoModalElement);
+      confirmacaoModal?.hide();
+    }
+
+    this.pacienteService.criarPaciente(this.pacienteForm.value).subscribe({
+      next: () => {
+        setTimeout(() => {
+          this.removerBackdrop(); // Garantir que não há backdrops antes de abrir o próximo modal
+          const modalElement = document.getElementById('sucessoModal');
+          if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+          } else {
+            console.error('Modal de sucesso não encontrado no DOM.');
+          }
+        }, 500);
+      },
+      error: () => {
+        this.notificacaoService.mostrarErro('Erro ao cadastrar paciente. Tente novamente.');
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
+  }
+
+  redirecionarParaPacientes(): void {
+    const modalElement = document.getElementById('sucessoModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getInstance(modalElement);
+      modal?.hide();
+    }
+
+    this.removerBackdrop(); // Garantir que o backdrop seja removido
+    this.router.navigate(['/pacientes']);
+  }
+
+  private removerBackdrop(): void {
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach(backdrop => backdrop.remove());
   }
 }

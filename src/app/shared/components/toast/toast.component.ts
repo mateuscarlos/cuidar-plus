@@ -42,12 +42,18 @@ export class ToastComponent implements OnInit, OnDestroy {
   }
 
   removeToast(id: number): void {
-    this.toasts = this.toasts.filter(t => t.id !== id);
+    const toastIndex = this.toasts.findIndex(t => t.id === id);
+    if (toastIndex !== -1) {
+      const toastElement = document.querySelector(`.toast:nth-child(${toastIndex + 1})`);
+      if (toastElement) {
+        toastElement.classList.add('fade-out');
+        setTimeout(() => {
+          this.toasts = this.toasts.filter(t => t.id !== id);
+        }, 300); // Tempo da animação
+      }
+    }
   }
 
-  /**
-   * Retorna a classe CSS com base no tipo de toast
-   */
   getToastClass(type: string): string {
     switch (type) {
       case 'success': return 'bg-success text-white';
@@ -58,9 +64,6 @@ export class ToastComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Retorna o ícone com base no tipo de toast
-   */
   getToastIcon(type: string): string {
     switch (type) {
       case 'success': return 'bi-check-circle-fill';

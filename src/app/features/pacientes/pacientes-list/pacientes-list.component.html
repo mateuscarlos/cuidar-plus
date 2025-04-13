@@ -1,195 +1,215 @@
-<div class="container-fluid py-4">
-    <!-- Cabeçalho da página -->
-    <div class="row mb-4">
-      <div class="col">
-        <h4 class="mb-1">Lista de Pacientes</h4>
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a routerLink="/dashboard">Home</a></li>
-            <li class="breadcrumb-item"><a routerLink="/pacientes">Pacientes</a></li>
-            <li class="breadcrumb-item active">Lista</li>
-          </ol>
-        </nav>
-      </div>
-    </div>
-  
-    <!-- Card principal -->
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white border-0 py-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-          <h5 class="card-title mb-0">
-            <i class="bi bi-people me-2 text-primary"></i>Gerenciamento de Pacientes
-          </h5>
-          <button class="btn btn-primary d-flex align-items-center" (click)="cadastrarNovoPaciente()">
-            <i class="bi bi-person-plus me-2"></i>Novo Paciente
+<div class="container-fluid py-3">
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">
+          <i class="bi bi-people-fill me-2 text-primary"></i>Pacientes
+        </h3>
+        <div>
+          <a [routerLink]="['/pacientes/busca']" class="btn btn-outline-primary me-2">
+            <i class="bi bi-search me-2"></i>Busca Avançada
+          </a>
+          <button class="btn btn-primary" (click)="cadastrarNovoPaciente()">
+            <i class="bi bi-plus-circle me-2"></i>Novo Paciente
           </button>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        <!-- Barra de busca e filtros -->
-        <div class="row mb-4 g-2">
-          <div class="col-md-5">
-            <div class="input-group">
-              <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-              <input 
-                type="text" 
-                class="form-control" 
-                placeholder="Buscar por nome ou CPF..." 
-                [(ngModel)]="searchTerm"
-                (keyup.enter)="onSearch()"
-              >
-              <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
-                Buscar
-              </button>
-            </div>
-          </div>
-          
-          <div class="col-md-3">
-            <select class="form-select" [(ngModel)]="statusFiltro" (change)="onSearch()">
-              <option value="">Todos os status</option>
-              <option value="Ativo">Ativo</option>
-              <option value="Em Avaliação">Em Avaliação</option>
-              <option value="Inativo">Inativo</option>
-              <option value="Alta Administrativa">Alta Administrativa</option>
-              <option value="Alta Médica">Alta Médica</option>
-              <option value="Óbito">Óbito</option>
-            </select>
-          </div>
-          
-          <div class="col-md-4 text-md-end">
-            <button class="btn btn-outline-secondary" (click)="limparFiltros()">
-              <i class="bi bi-x-circle me-2"></i>Limpar Filtros
-            </button>
-            <button class="btn btn-outline-primary ms-2" (click)="carregarPacientes()">
-              <i class="bi bi-arrow-clockwise me-2"></i>Atualizar
-            </button>
-          </div>
-        </div>
-  
-        <!-- Indicador de carregamento -->
-        <div *ngIf="isLoading" class="text-center py-5">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Carregando...</span>
-          </div>
-          <p class="mt-2">Carregando lista de pacientes...</p>
-        </div>
-  
-        <!-- Mensagem de erro -->
-        <div *ngIf="!isLoading && error" class="alert alert-danger">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-        </div>
-  
-        <!-- Lista de pacientes -->
-        <div *ngIf="!isLoading && !error">
-          <!-- Tabela de pacientes -->
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th class="sortable" (click)="toggleSort('nome_completo')">
-                    Nome
-                    <i *ngIf="sortBy === 'nome_completo'" 
-                       [ngClass]="sortDirection === 'asc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up'"
-                       class="bi ms-1"></i>
-                  </th>
-                  <th>CPF</th>
-                  <th class="sortable" (click)="toggleSort('data_nascimento')">
-                    Data Nasc.
-                    <i *ngIf="sortBy === 'data_nascimento'" 
-                       [ngClass]="sortDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
-                       class="bi ms-1"></i>
-                  </th>
-                  <th>Status</th>
-                  <th class="sortable" (click)="toggleSort('updated_at')">
-                    Atualizado em
-                    <i *ngIf="sortBy === 'updated_at'" 
-                       [ngClass]="sortDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
-                       class="bi ms-1"></i>
-                  </th>
-                  <th class="text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let paciente of filteredPacientes" 
-                    class="cursor-pointer"
-                    (click)="visualizarPaciente(paciente.id || 0)">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <app-paciente-avatar 
-                        [nome]="paciente.nome_completo" 
-                        size="sm"
-                        class="me-2"
-                      ></app-paciente-avatar>
-                      <div>
-                        <div class="fw-medium">{{ paciente.nome_completo }}</div>
-                        <div class="small text-muted">ID: {{ paciente.id }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>{{ paciente.cpf }}</td>
-                  <td>{{ formatarData(paciente.data_nascimento) }}</td>
-                  <td>
-                    <app-status-badge [status]="paciente.status"></app-status-badge>
-                  </td>
-                  <td>{{ formatarData(paciente.updated_at) }}</td>
-                  <td class="text-center">
-                    <button 
-                      class="btn btn-sm btn-outline-primary me-2" 
-                      (click)="editarPaciente(paciente.id || 0, $event)"
-                      title="Editar Paciente">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button 
-                      class="btn btn-sm btn-primary" 
-                      (click)="visualizarPaciente(paciente.id || 0)"
-                      title="Ver Detalhes">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                  </td>
-                </tr>
-                
-                <!-- Mensagem de nenhum resultado -->
-                <tr *ngIf="filteredPacientes.length === 0">
-                  <td colspan="6" class="text-center py-4">
-                    <div class="text-muted">
-                      <i class="bi bi-inbox-fill fs-3 d-block mb-2"></i>
-                      <p>Nenhum paciente encontrado.</p>
-                      <button class="btn btn-sm btn-outline-secondary" (click)="limparFiltros()">
-                        Limpar filtros
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Paginação -->
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted small">
-              Mostrando {{ filteredPacientes.length }} de {{ totalPacientes }} pacientes
-            </div>
-            
-            <nav aria-label="Paginação de pacientes">
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" [class.disabled]="currentPage === 1">
-                  <button class="page-link" (click)="paginaAnterior()" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo;</span>
-                  </button>
-                </li>
-                <li class="page-item disabled">
-                  <span class="page-link">{{ currentPage }} de {{ totalPages }}</span>
-                </li>
-                <li class="page-item" [class.disabled]="currentPage === totalPages">
-                  <button class="page-link" (click)="proximaPagina()" aria-label="Próxima">
-                    <span aria-hidden="true">&raquo;</span>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Filtros simples -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-funnel me-2 text-primary"></i>Filtros Rápidos
+        </h5>
+        <button *ngIf="searchTerm || statusFiltro" 
+                class="btn btn-sm btn-outline-secondary" 
+                (click)="limparFiltros()">
+          <i class="bi bi-x-circle me-1"></i>Limpar Filtros
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-search text-primary"></i></span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Buscar por Nome, CPF ou ID" 
+              [(ngModel)]="searchTerm"
+              (input)="aplicarFiltrosLocais()">
+            <button 
+              *ngIf="searchTerm" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="searchTerm = ''; aplicarFiltrosLocais()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-tag text-primary"></i></span>
+            <select class="form-select" [(ngModel)]="statusFiltro" (change)="aplicarFiltrosLocais()">
+              <option value="">Todos os status</option>
+              <option *ngFor="let status of getStatusOptions()" [value]="status">{{ status }}</option>
+            </select>
+            <button 
+              *ngIf="statusFiltro" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="statusFiltro = ''; aplicarFiltrosLocais()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <a [routerLink]="['/pacientes/busca']" class="btn btn-primary w-100">
+            <i class="bi bi-search-heart me-2"></i>Busca Avançada
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exibição de erro -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+  </div>
+
+  <!-- Card da tabela -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th class="sortable" (click)="toggleSort('nome_completo')">
+                Nome
+                <i *ngIf="sortBy === 'nome_completo'" 
+                   [ngClass]="sortDirection === 'asc' ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up'"
+                   class="bi ms-1"></i>
+              </th>
+              <th>CPF</th>
+              <th class="sortable" (click)="toggleSort('data_nascimento')">
+                Data Nasc.
+                <i *ngIf="sortBy === 'data_nascimento'" 
+                   [ngClass]="sortDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                   class="bi ms-1"></i>
+              </th>
+              <th>Status</th>
+              <th class="sortable" (click)="toggleSort('updated_at')">
+                Atualizado em
+                <i *ngIf="sortBy === 'updated_at'" 
+                   [ngClass]="sortDirection === 'asc' ? 'bi-sort-up' : 'bi-sort-down'"
+                   class="bi ms-1"></i>
+              </th>
+              <th class="text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loading state -->
+            <tr *ngIf="isLoading">
+              <td colspan="6" class="text-center p-5">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2 text-muted">Carregando pacientes...</p>
+              </td>
+            </tr>
+            
+            <!-- Empty state -->
+            <tr *ngIf="!isLoading && filteredPacientes.length === 0">
+              <td colspan="6" class="text-center p-5">
+                <div class="empty-state">
+                  <i class="bi bi-search text-muted display-4"></i>
+                  <p class="mt-3 mb-1 fw-bold">Nenhum paciente encontrado</p>
+                  <p class="text-muted small" *ngIf="pacientes.length === 0">
+                    Cadastre novos pacientes para visualizá-los aqui.
+                  </p>
+                  <p class="text-muted small" *ngIf="pacientes.length > 0">
+                    Nenhum paciente satisfaz todos os critérios de busca. Tente ajustar os filtros.
+                  </p>
+                </div>
+              </td>
+            </tr>
+            
+            <!-- Patients list -->
+            <tr *ngFor="let paciente of filteredPacientes" 
+                class="cursor-pointer"
+                (click)="visualizarPaciente(paciente.id || 0)">
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="avatar avatar-sm rounded-circle bg-light border me-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-person text-primary"></i>
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ paciente.nome_completo }}</div>
+                    <small class="text-muted">ID: {{ paciente.id }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ paciente.cpf }}</td>
+              <td>{{ formatarData(paciente.data_nascimento) }}</td>
+              <td>
+                <app-status-badge [status]="paciente.status"></app-status-badge>
+              </td>
+              <td>{{ formatarData(paciente.updated_at) }}</td>
+              <td class="text-center">
+                <div class="btn-group">
+                  <button 
+                    class="btn btn-sm btn-primary" 
+                    (click)="visualizarPaciente(paciente.id || 0); $event.stopPropagation();" 
+                    aria-label="Visualizar paciente">
+                    <i class="bi bi-eye me-1"></i>Visualizar
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary"
+                          (click)="editarPaciente(paciente.id || 0, $event)"
+                          data-bs-toggle="tooltip"
+                          title="Editar paciente">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status info com paginação -->
+  <div class="mt-3 d-flex justify-content-between align-items-center">
+    <div class="d-flex gap-2 flex-wrap">
+      <small class="text-muted">
+        {{ filteredPacientes.length > 0 ? 'Exibindo ' + filteredPacientes.length + ' resultados' : 'Nenhum resultado encontrado' }}
+      </small>
+      <small class="text-muted" *ngIf="pacientes.length !== filteredPacientes.length && pacientes.length > 0">
+        (filtrados de <strong>{{ pacientes.length }}</strong> pacientes)
+      </small>
+    </div>
+    
+    <!-- Paginação -->
+    <nav aria-label="Paginação de pacientes" *ngIf="totalPages > 1">
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <button class="page-link" (click)="paginaAnterior()" aria-label="Anterior">
+            <span aria-hidden="true">&laquo;</span>
+          </button>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link">{{ currentPage }} de {{ totalPages }}</span>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <button class="page-link" (click)="proximaPagina()" aria-label="Próxima">
+            <span aria-hidden="true">&raquo;</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>

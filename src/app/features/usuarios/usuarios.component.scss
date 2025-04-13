@@ -1,0 +1,126 @@
+.icon-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+  color: var(--bs-primary, #0d6efd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+
+  i {
+    font-size: 2rem;
+  }
+}
+
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+}
+
+.card-title {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.card-text {
+  color: var(--bs-secondary-color);
+  margin-bottom: 1.5rem;
+  min-height: 3rem;
+}
+
+.stats-row {
+  .card-stats {
+    transition: transform 0.2s;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .icon-container {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    
+    i {
+      font-size: 1.5rem;
+    }
+  }
+  
+  .stat-content {
+    flex: 1;
+  }
+  
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    line-height: 1.2;
+  }
+}
+
+.action-cards {
+  .action-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    
+    &:hover {
+      transform: translateY(-7px);
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+  }
+  
+  .icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+    color: var(--bs-primary, #0d6efd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    i {
+      font-size: 2rem;
+    }
+  }
+  
+  .card-title {
+    font-weight: 600;
+  }
+  
+  .card-text {
+    color: var(--bs-secondary-color);
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .row {
+    margin-bottom: 1rem;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  .card-text {
+    min-height: auto;
+  }
+
+  .stats-row {
+    .stat-value {
+      font-size: 1.5rem;
+    }
+  }
+}

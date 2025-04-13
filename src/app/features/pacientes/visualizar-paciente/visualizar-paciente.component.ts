@@ -11,7 +11,7 @@ import { Endereco } from '../models/endereco.model';
 import { ResultadoBusca } from '../models/busca-paciente.model';
 import { PacienteService } from '../services/paciente.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
-import { StatusStyleService } from '../../../core/services/status-style.service';
+import { StatusStyleService } from '../../../../styles/status-style.service';
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { InfoCardComponent } from '../../../shared/components/info-card/info-card.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
@@ -68,7 +68,9 @@ export class VisualizarPacienteComponent implements OnInit {
     
     // Verificar os parâmetros de rota
     this.route.params.subscribe(params => {
+      console.log('Params recebidos:', params);
       if (params['id']) {
+        console.log('Carregando paciente com ID:', params['id']);
         this.carregarPacientePorId(params['id']);
       } else {
         // Verificar parâmetros de consulta (se não houver parâmetros de rota)
@@ -102,42 +104,22 @@ export class VisualizarPacienteComponent implements OnInit {
    */
   carregarPacientePorId(id: string): void {
     this.isLoading = true;
-    this.error = null;
-    
-    this.pacienteService.obterPacientePorId(id)
-      .pipe(
-        tap(paciente => {
-          if (paciente) {
-            // Garantir que o campo nome esteja sempre preenchido
-            if (!paciente.nome && paciente.nome_completo) {
-              paciente.nome = paciente.nome_completo;
-            }
-            
-            this.paciente = paciente;
-            this.modoVisualizacao = true;
-            
-            // Carregar informações adicionais se houver convênio
-            if (paciente.convenio_id) {
-              this.carregarInformacoesConvenio(paciente);
-            }
-          } else {
-            this.error = 'Paciente não encontrado';
-            this.notificacaoService.mostrarAviso('Paciente não encontrado.');
-            this.modoVisualizacao = false;
-          }
-        }),
-        catchError(erro => {
-          this.error = 'Erro ao carregar dados do paciente';
-          this.modoVisualizacao = false;
-          this.notificacaoService.mostrarErro('Erro ao carregar dados do paciente.');
-          console.error('Erro ao carregar paciente:', erro);
-          return of(null);
-        }),
-        finalize(() => {
-          this.isLoading = false;
-        })
-      )
-      .subscribe();
+    this.pacienteService.obterPacientePorId(id).subscribe({
+      next: (paciente) => {
+        this.paciente = paciente;
+        this.modoVisualizacao = true;
+        if (paciente) {
+          this.carregarInformacoesConvenio(paciente);
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar dados do paciente:', err);
+        this.notificacaoService.mostrarErro('Erro ao carregar paciente. Tente novamente.');
+        this.isLoading = false;
+        this.error = 'Não foi possível carregar os dados do paciente';
+      }
+    });
   }
   
   /**
@@ -238,16 +220,14 @@ export class VisualizarPacienteComponent implements OnInit {
    * Navega de volta para a tela de busca
    */
   voltarParaBusca(): void {
-    this.modoVisualizacao = false;
-    this.paciente = null;
-    this.resultadosBusca = [];
-  }
+    this.router.navigate(['/pacientes/busca']);
+}
 
   /**
    * Navega de volta para a lista de pacientes
    */
   voltarParaLista(): void {
-    this.router.navigate(['/pacientes']);
+    this.router.navigate(['/pacientes/lista']);
   }
   
   /**

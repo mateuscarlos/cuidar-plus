@@ -1,15 +1,87 @@
 <div class="container-fluid py-3">
-  <div class="d-flex justify-content-between mb-3">
-    <h2>Usuários</h2>
-    <button class="btn btn-primary" (click)="navegarParaCadastro()">
-      <i class="bi bi-plus-circle me-2"></i>Novo Usuário
-    </button>
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Usuários</h4>
+        <div>
+          <a [routerLink]="['/usuarios/busca']" class="btn btn-outline-primary me-2">
+            <i class="bi bi-search me-2"></i>Busca Avançada
+          </a>
+          <a [routerLink]="['/usuarios/cadastrar']" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Novo Usuário
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- Filtros simples -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="bi bi-funnel me-2 text-primary"></i>Filtros Rápidos
+        </h5>
+        <button *ngIf="searchTerm || statusFiltro" 
+                class="btn btn-sm btn-outline-secondary" 
+                (click)="limparFiltros()">
+          <i class="bi bi-x-circle me-1"></i>Limpar Filtros
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-search text-primary"></i></span>
+            <input 
+              type="text" 
+              class="form-control" 
+              placeholder="Buscar por Nome, Email, CPF ou ID" 
+              [(ngModel)]="searchTerm"
+              (input)="aplicarFiltros()">
+            <button 
+              *ngIf="searchTerm" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="searchTerm = ''; aplicarFiltros()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-light"><i class="bi bi-tag text-primary"></i></span>
+            <select class="form-select" [(ngModel)]="statusFiltro" (change)="aplicarFiltros()">
+              <option value="">Todos os status</option>
+              <option *ngFor="let statusOption of userStatusOptions" [value]="statusOption.value">
+                {{ statusOption.label }}
+              </option>
+            </select>
+            <button 
+              *ngIf="statusFiltro" 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              (click)="statusFiltro = ''; aplicarFiltros()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <a [routerLink]="['/usuarios/busca']" class="btn btn-primary w-100">
+            <i class="bi bi-search-heart me-2"></i>Busca Avançada
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exibição de erro -->
   <div class="alert alert-danger" *ngIf="error">
-    {{ error }}
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
   </div>
 
+  <!-- Card da tabela -->
   <div class="card shadow-sm">
     <div class="card-body p-0">
       <div class="table-responsive">
@@ -17,8 +89,7 @@
           <thead class="bg-light">
             <tr>
               <th>Nome</th>
-              <th>E-mail</th>
-              
+              <th>Email</th>
               <th>Setor</th>
               <th>Função</th>
               <th>Status</th>
@@ -26,8 +97,9 @@
             </tr>
           </thead>
           <tbody>
+            <!-- Loading state -->
             <tr *ngIf="isLoading">
-              <td colspan="7" class="text-center p-5">
+              <td colspan="6" class="text-center p-5">
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Carregando...</span>
                 </div>
@@ -35,18 +107,27 @@
               </td>
             </tr>
             
-            <tr *ngIf="!isLoading && usuarios.length === 0">
-              <td colspan="7" class="text-center p-5">
-                <i class="bi bi-people text-muted display-4"></i>
-                <p class="mt-3 mb-1">Nenhum usuário encontrado</p>
-                <p class="text-muted small">Cadastre novos usuários para visualizá-los aqui.</p>
+            <!-- Empty state -->
+            <tr *ngIf="!isLoading && usuariosFiltrados.length === 0">
+              <td colspan="6" class="text-center p-5">
+                <div class="empty-state">
+                  <i class="bi bi-search text-muted display-4"></i>
+                  <p class="mt-3 mb-1 fw-bold">Nenhum usuário encontrado</p>
+                  <p class="text-muted small" *ngIf="usuarios.length === 0">
+                    Cadastre novos usuários para visualizá-los aqui.
+                  </p>
+                  <p class="text-muted small" *ngIf="usuarios.length > 0">
+                    Nenhum usuário satisfaz todos os critérios de busca. Tente ajustar os filtros.
+                  </p>
+                </div>
               </td>
             </tr>
             
-            <tr *ngFor="let usuario of usuarios" 
+            <!-- Users list -->
+            <tr *ngFor="let usuario of usuariosFiltrados" 
                 [class.table-light]="!isUsuarioAtivo(usuario)" 
-                style="cursor: pointer;" 
-                (click)="navegarParaVisualizacao((usuario.id || '').toString())">
+                class="cursor-pointer"
+                (click)="navegarParaVisualizacao(usuario)">
               <td>
                 <div class="d-flex align-items-center">
                   <div class="avatar avatar-sm rounded-circle bg-light border me-2 d-flex align-items-center justify-content-center">
@@ -54,22 +135,16 @@
                   </div>
                   <div>
                     <div class="fw-semibold">{{ usuario.nome }}</div>
-                    <small class="text-muted">ID: {{ usuario.id }}</small>
+                    <small class="text-muted">{{ usuario.cpf ?? '' | mask: '000.000.000-00' }}</small>
                   </div>
                 </div>
               </td>
               <td>{{ usuario.email }}</td>
-              
-              
-              <!-- Exibir o nome do setor ao invés do ID -->
               <td>{{ usuario.setorNome }}</td>
-              
-              <!-- Exibir o nome da função ao invés do ID -->
               <td>{{ usuario.funcaoNome }}</td>
-              
               <td>
                 <div class="position-relative">
-                  <span class="badge me-2" [ngClass]="getStatusClass(usuario)"
+                  <span class="badge" [ngClass]="getStatusClass(usuario)"
                         data-bs-toggle="tooltip" 
                         [attr.title]="getStatusTooltip(usuario)">
                     <i [class]="getStatusIcon(usuario) + ' me-1'"></i>
@@ -79,9 +154,18 @@
               </td>
               <td class="text-center">
                 <div class="btn-group">
-                  <button class="btn btn-sm btn-outline-primary" 
-                          (click)="navegarParaVisualizacao((usuario.id || '').toString()); $event.stopPropagation();">
-                    <i class="bi bi-eye"></i>
+                  <button 
+                    class="btn btn-sm btn-primary" 
+                    (click)="navegarParaVisualizacao(usuario); $event.stopPropagation();" 
+                    aria-label="Visualizar usuário">
+                    <i class="bi bi-eye me-1"></i>Visualizar
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary"
+                          [routerLink]="['/usuarios/editar', usuario.id]"
+                          (click)="$event.stopPropagation()"
+                          data-bs-toggle="tooltip"
+                          title="Editar usuário">
+                    <i class="bi bi-pencil"></i>
                   </button>
                 </div>
               </td>
@@ -89,6 +173,18 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+  
+  <!-- Status info -->
+  <div class="mt-3">
+    <div class="d-flex gap-2 flex-wrap justify-content-end">
+      <small class="text-muted">
+        {{ usuariosFiltrados.length > 0 ? 'Exibindo ' + usuariosFiltrados.length + ' resultados' : 'Nenhum resultado encontrado' }}
+      </small>
+      <small class="text-muted" *ngIf="usuarios.length !== usuariosFiltrados.length && usuarios.length > 0">
+        (filtrados de <strong>{{ usuarios.length }}</strong> usuários)
+      </small>
     </div>
   </div>
 </div>
