@@ -74,6 +74,8 @@ export class UsuariosListComponent implements OnInit, OnDestroy {
   // Controle para destruir Observables na saída do componente
   private destroy$ = new Subject<void>();
 
+  mensagem: string = '';
+
   constructor(
     private usuarioService: UsuarioService,
     private userStatusStyle: UserStatusStyleService,

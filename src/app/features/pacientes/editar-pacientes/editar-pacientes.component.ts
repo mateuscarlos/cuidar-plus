@@ -13,13 +13,15 @@ import { CepService } from '../../../core/services/cep.service';
 import { ConvenioPlanoService } from '../services/convenio-plano.service';
 import { DateFormatterService } from '../../../core/services/date-formatter.service';
 import { StatusStyleService } from '../../../../styles/status-style.service';
-import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
+/* import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component'; */
 import { CustomValidators } from '../../../shared/validators/custom-validators';
 import { ESTADOS_CIVIS, GENEROS, ACOMODACOES } from '../../../core/mocks/constantes.mock';
 import { BehaviorSubject, catchError, finalize, of, tap } from 'rxjs';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 declare var bootstrap: any;
+
+
 
 /**
  * Componente responsável pela edição de pacientes existentes
@@ -30,7 +32,7 @@ declare var bootstrap: any;
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
-    BuscaPacienteComponent,
+    /* BuscaPacienteComponent, */
     RouterModule,
     StatusBadgeComponent
   ],
@@ -60,6 +62,8 @@ export class EditarPacientesComponent implements OnInit {
   // Streams de dados
   private convenioSelecionadoSubject = new BehaviorSubject<number | null>(null);
   convenioSelecionado$ = this.convenioSelecionadoSubject.asObservable();
+
+  error: string | null = null;
   
   constructor(
     private fb: FormBuilder,
