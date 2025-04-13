@@ -7,6 +7,7 @@ import { NotificacaoService } from '../../../shared/services/notificacao.service
 import { PacienteService } from '../services/paciente.service';
 import { Paciente } from '../models/paciente.model';
 import { of } from 'rxjs';
+import { MOCK_PACIENTE_ATIVO } from '../../../core/mocks/pacientes.mock';
 
 describe('EditarPacientesComponent', () => {
   let component: EditarPacientesComponent;
@@ -16,7 +17,7 @@ describe('EditarPacientesComponent', () => {
 
   beforeEach(async () => {
     const notificacaoSpy = jasmine.createSpyObj('NotificacaoService', ['mostrarAviso', 'mostrarErro', 'mostrarSucesso']);
-    const pacienteSpy = jasmine.createSpyObj('PacienteService', ['atualizarPaciente']);
+    const pacienteSpy = jasmine.createSpyObj('PacienteService', ['atualizarPaciente', 'obterPacientePorId']);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -157,33 +158,12 @@ describe('EditarPacientesComponent', () => {
   });
 
   it('deve carregar os dados do paciente ao inicializar', () => {
-    const mockPaciente: Paciente = {
-      nome_completo: 'João Silva',
-      cpf: '12345678901',
-      data_nascimento: '2000-01-01',
-      telefone: '11999999999',
-      genero: 'Masculino',
-      email: 'joao@example.com',
-      id: 1,
-      estado_civil: 'Solteiro',
-      nacionalidade: 'Brasileira',
-      profissao: 'Engenheiro',
-      status: 'Ativo',
-      endereco: {
-        cep: '12345678',
-        logradouro: 'Rua A',
-        numero: '123',
-        bairro: 'Centro',
-        localidade: 'São Paulo',
-        uf: 'SP'
-      }
-    };
+    pacienteService.obterPacientePorId.and.returnValue(of(MOCK_PACIENTE_ATIVO));
     
-    // Simulate loading patient data into form
-    component.pacienteForm.patchValue(mockPaciente);
+    component.carregarPacientePorId('12345'); // Ajustar ID conforme o mock
     
-    expect(component.pacienteForm.value.nome_completo).toEqual(mockPaciente.nome_completo);
-    expect(component.pacienteForm.value.cpf).toEqual(mockPaciente.cpf);
+    expect(component.pacienteForm.value.nome_completo).toEqual(MOCK_PACIENTE_ATIVO.nome_completo);
+    expect(component.pacienteForm.value.cpf).toEqual(MOCK_PACIENTE_ATIVO.cpf);
   });
 
   it('deve limpar o formulário ao chamar resetarFormulario', () => {
@@ -211,6 +191,20 @@ describe('EditarPacientesComponent', () => {
     const cpfControl = component.pacienteForm.get('cpf');
     cpfControl?.setValue('123'); // CPF inválido
     expect(cpfControl?.valid).toBeFalse();
+  });
+
+  it('deve atualizar paciente corretamente', () => {
+    // Setup mocks
+    pacienteService.atualizarPaciente.and.returnValue(of(MOCK_PACIENTE_ATIVO));
+    
+    // Carregar formulário com dados do mock
+    component.pacienteForm.patchValue(MOCK_PACIENTE_ATIVO);
+    
+    // Testar submissão
+    component.onSubmit();
+    
+    expect(pacienteService.atualizarPaciente).toHaveBeenCalled();
+    expect(notificacaoService.mostrarSucesso).toHaveBeenCalledWith('Paciente atualizado com sucesso!');
   });
   
 });

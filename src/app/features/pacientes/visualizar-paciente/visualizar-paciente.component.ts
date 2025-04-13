@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormattedDateComponent } from '../../../shared/components/formatted-date/formatted-date.component';
 import { DateFormatPipe } from '../../../shared/pipes/date-format.pipe';
-/* import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component'; */
+import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
 import { Plano } from '../models/plano.model';
 import { Convenio } from '../models/convenio.model';
@@ -25,7 +25,7 @@ import { ResultadoBusca as BuscaPacienteResultadoBusca } from '../models/busca-p
   imports: [
     CommonModule,
     RouterModule,
-    /* BuscaPacienteComponent, */
+    BuscaPacienteComponent,
     InfoCardComponent,
     StatusBadgeComponent,
     PacienteAvatarComponent,

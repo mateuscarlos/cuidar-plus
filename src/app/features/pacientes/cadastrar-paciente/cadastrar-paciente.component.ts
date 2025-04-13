@@ -56,6 +56,8 @@ export class CadastrarPacienteComponent implements OnInit {
   // Streams de dados
   private convenioSelecionadoSubject = new BehaviorSubject<number | null>(null);
   convenioSelecionado$ = this.convenioSelecionadoSubject.asObservable();
+
+  isSubmitting = false;
   
   constructor(
     private fb: FormBuilder,

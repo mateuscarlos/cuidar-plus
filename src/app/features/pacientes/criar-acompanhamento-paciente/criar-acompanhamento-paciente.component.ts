@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-/* import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component'; */
+import { BuscaPacienteComponent } from '../busca-paciente/busca-paciente.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { 
   TipoAtendimento,
@@ -31,7 +31,7 @@ import { DateFormatterService } from '../../../core/services/date-formatter.serv
   imports: [
     CommonModule, 
     ReactiveFormsModule, 
-    /* BuscaPacienteComponent, */
+    BuscaPacienteComponent,
     RouterModule,
     StatusBadgeComponent
   ],

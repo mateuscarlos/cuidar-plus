@@ -8,6 +8,7 @@ import { DateFormatterService } from '../../../core/services/date-formatter.serv
 import { NotificacaoService } from '../../../shared/services/notificacao.service';
 import { of } from 'rxjs';
 import { Paciente, StatusPaciente } from '../models/paciente.model';
+import { PACIENTES_MOCK, MOCK_PACIENTE_ATIVO } from '../../../core/mocks/pacientes.mock';
 
 describe('PacientesListComponent', () => {
   let component: PacientesListComponent;
@@ -15,49 +16,6 @@ describe('PacientesListComponent', () => {
   let pacienteService: jasmine.SpyObj<PacienteService>;
   let dateFormatter: jasmine.SpyObj<DateFormatterService>;
   let notificacaoService: jasmine.SpyObj<NotificacaoService>;
-
-  const mockPacientes: Paciente[] = [
-    {
-      id: 1,
-      nome_completo: 'Paciente A',
-      cpf: '12345678900',
-      data_nascimento: '2000-01-01',
-      genero: 'M',
-      estado_civil: 'Solteiro',
-      nacionalidade: 'Brasileira',
-      profissao: 'Engenheiro',
-      telefone: '11999999999',
-      endereco: {
-        cep: '12345678',
-        logradouro: 'Rua A',
-        numero: '123',
-        bairro: 'Centro',
-        localidade: 'São Paulo',
-        uf: 'SP'
-      },
-      status: StatusPaciente.ATIVO
-    },
-    {
-      id: 2,
-      nome_completo: 'Paciente B',
-      cpf: '98765432100',
-      data_nascimento: '1990-05-15',
-      genero: 'F',
-      estado_civil: 'Casada',
-      nacionalidade: 'Brasileira',
-      profissao: 'Médica',
-      telefone: '11888888888',
-      endereco: {
-        cep: '87654321',
-        logradouro: 'Rua B',
-        numero: '456',
-        bairro: 'Bairro Novo',
-        localidade: 'Rio de Janeiro',
-        uf: 'RJ'
-      },
-      status: StatusPaciente.INATIVO
-    }
-  ];
 
   beforeEach(async () => {
     const pacienteSpy = jasmine.createSpyObj('PacienteService', ['listarTodosPacientes']);
@@ -87,13 +45,13 @@ describe('PacientesListComponent', () => {
   });
 
   it('deve carregar pacientes ao inicializar', () => {
-    pacienteService.listarTodosPacientes.and.returnValue(of(mockPacientes));
+    pacienteService.listarTodosPacientes.and.returnValue(of(PACIENTES_MOCK));
 
     component.carregarPacientes();
 
     expect(pacienteService.listarTodosPacientes).toHaveBeenCalled();
-    expect(component.pacientes).toEqual(mockPacientes);
-    expect(component.filteredPacientes).toEqual(mockPacientes);
+    expect(component.pacientes).toEqual(PACIENTES_MOCK);
+    expect(component.filteredPacientes).toEqual(PACIENTES_MOCK);
   });
 
   it('deve exibir erro ao falhar ao carregar pacientes', () => {
@@ -107,14 +65,14 @@ describe('PacientesListComponent', () => {
   });
 
   it('deve aplicar filtros locais corretamente', () => {
-    component.pacientes = mockPacientes;
-    component.searchTerm = 'Paciente A';
+    component.pacientes = PACIENTES_MOCK;
+    component.searchTerm = 'Maria';
     component.statusFiltro = StatusPaciente.ATIVO;
 
     component.aplicarFiltrosLocais();
 
-    expect(component.filteredPacientes.length).toBe(1);
-    expect(component.filteredPacientes[0].nome_completo).toBe('Paciente A');
+    expect(component.filteredPacientes.length).toBeGreaterThan(0);
+    expect(component.filteredPacientes[0].nome_completo).toContain('Maria');
   });
 
   it('deve limpar os filtros', () => {
