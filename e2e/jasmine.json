@@ -1,0 +1,12 @@
+{
+  "spec_dir": "out-tsc/e2e",
+  "spec_files": [
+    "src/tests/**/*.spec.js"
+  ],
+  "helpers": [
+    "src/helpers/**/*.js"
+  ],
+  "stopSpecOnExpectationFailure": false,
+  "random": false,
+  "timeoutInterval": 60000
+}

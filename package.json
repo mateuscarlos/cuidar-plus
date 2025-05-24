@@ -13,7 +13,11 @@
     "docker:compose": "docker-compose up -d",
     "docker:compose:dev": "docker-compose -f docker-compose.dev.yml up",
     "docker:compose:down": "docker-compose down",
-    "docker:compose:down:dev": "docker-compose -f docker-compose.dev.yml down"
+    "docker:compose:down:dev": "docker-compose -f docker-compose.dev.yml down",
+    "e2e": "rimraf out-tsc/e2e && tsc -p e2e/tsconfig.e2e.json && jasmine --config=e2e/jasmine.json",
+    "e2e:watch": "tsc -w -p e2e/tsconfig.e2e.json",
+    "pretest:e2e": "webdriver-manager update --standalone false --gecko false",
+    "e2e:ci": "start-server-and-test start http://localhost:4200 e2e"
   },
   "private": true,
   "dependencies": {

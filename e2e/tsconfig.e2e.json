@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2018",
+    "module": "commonjs",
+    "types": [
+      "jasmine",
+      "node",
+      "selenium-webdriver"
+    ],
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    "outDir": "../out-tsc/e2e"
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
