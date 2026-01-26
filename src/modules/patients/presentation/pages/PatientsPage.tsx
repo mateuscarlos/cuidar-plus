@@ -7,16 +7,22 @@
 import { useState } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
+import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Plus } from 'lucide-react';
-import { PatientList, PatientFilters } from '../components';
+import { PatientList, PatientFilters, PatientForm } from '../components';
 import { usePatients } from '../hooks';
 import { PatientStatus, PatientPriority, PatientFilters as IPatientFilters } from '../../domain';
+import { PatientFormData } from '../forms/PatientFormSchema';
+import { useToast } from '@/shared/hooks/use-toast';
 
 export function PatientsPage() {
   const [filters, setFilters] = useState<IPatientFilters>({
     page: 1,
     pageSize: 20,
   });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
@@ -46,8 +52,23 @@ export function PatientsPage() {
   };
 
   const handleCreatePatient = () => {
-    // TODO: Abrir modal ou navegar para página de criação
-    console.log('Criar novo paciente');
+    setIsFormOpen(true);
+  };
+
+  const handleSubmitPatient = (data: PatientFormData) => {
+    // TODO: Implementar chamada ao backend quando estiver pronto
+    console.log('Dados do paciente:', data);
+    
+    toast({
+      title: 'Paciente cadastrado com sucesso!',
+      description: `${data.name} foi adicionado ao sistema.`,
+    });
+    
+    setIsFormOpen(false);
+  };
+
+  const handleCancelForm = () => {
+    setIsFormOpen(false);
   };
 
   return (
@@ -88,6 +109,26 @@ export function PatientsPage() {
             <CardTitle>Lista de Pacientes</CardTitle>
             {data?.pagination && (
               <span className="text-sm text-muted-foreground">
+
+      {/* Modal do Formulário de Cadastro */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] p-0">
+          <DialogHeader className="px-6 pt-6">
+            <DialogTitle>Cadastro de Paciente</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do paciente. Campos marcados com * são obrigatórios.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-100px)] px-6">
+            <div className="pb-6">
+              <PatientForm 
+                onSubmit={handleSubmitPatient} 
+                onCancel={handleCancelForm}
+              />
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
                 {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
               </span>
             )}

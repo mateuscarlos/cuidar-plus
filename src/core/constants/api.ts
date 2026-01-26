@@ -36,4 +36,16 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
   },
+  MEDICATIONS: {
+    BASE: '/medications',
+    BY_ID: (id: string) => `/medications/${id}`,
+    BY_PATIENT: (patientId: string) => `/medications/patient/${patientId}`,
+    SCHEDULE: (patientId: string) => `/medications/patient/${patientId}/schedule`,
+  },
+  APPOINTMENTS: {
+    BASE: '/appointments',
+    BY_ID: (id: string) => `/appointments/${id}`,
+    BY_PATIENT: (patientId: string) => `/appointments/patient/${patientId}`,
+    UPCOMING: '/appointments/upcoming',
+  },
 } as const;

@@ -9,10 +9,13 @@ import { BaseEntity } from '@/core/types';
  * Status do Paciente
  */
 export enum PatientStatus {
+  EVALUATION = 'Avaliação',
   ACTIVE = 'Ativo',
-  DISCHARGED = 'Alta',
-  PENDING = 'Pendente',
-  TRANSFERRED = 'Transferido',
+  ADMINISTRATIVE_DISCHARGE = 'Alta Administrativa',
+  DEATH_DISCHARGE = 'Alta Óbito',
+  IMPROVEMENT_DISCHARGE = 'Alta Melhora',
+  HOSPITAL_DISCHARGE = 'Alta Hospitalar',
+  CANCELED = 'Cancelado',
 }
 
 /**
@@ -108,28 +111,4 @@ export interface Patient extends BaseEntity {
   
   // Última Visita
   lastVisit?: Date | string;
-}
-
-/**
- * DTO para criação de paciente
- */
-export type CreatePatientDTO = Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'medicalRecordNumber'>;
-
-/**
- * DTO para atualização de paciente
- */
-export type UpdatePatientDTO = Partial<Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'cpf' | 'medicalRecordNumber'>>;
-
-/**
- * Filtros de busca de pacientes
- */
-export interface PatientFilters {
-  search?: string;
-  status?: PatientStatus;
-  priority?: PatientPriority;
-  attendingPhysician?: string;
-  admissionDateFrom?: Date | string;
-  admissionDateTo?: Date | string;
-  page?: number;
-  pageSize?: number;
 }

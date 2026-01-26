@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Users, AlertCircle, Package, Activity } from "lucide-react";
+import { useAuth } from "@/core/hooks/useAuth";
 
 const StatCard = ({ title, value, description, icon: Icon, trend }: any) => (
   <Card>
@@ -19,14 +20,18 @@ const StatCard = ({ title, value, description, icon: Icon, trend }: any) => (
 );
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+          Bem vindo, {user?.name || 'Usuário'}
+        </h2>
         <p className="text-muted-foreground">Visão geral da operação de Homecare.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total de Pacientes"
           value="128"
@@ -44,12 +49,6 @@ const Dashboard = () => {
           value="7"
           description="Itens com estoque baixo"
           icon={AlertCircle}
-        />
-        <StatCard
-          title="Insumos Entregues"
-          value="1,203"
-          description="+12% em relação ao mês anterior"
-          icon={Package}
         />
       </div>
 

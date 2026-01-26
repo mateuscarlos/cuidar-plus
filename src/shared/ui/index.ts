@@ -50,3 +50,4 @@ export * from './slider';
 export * from './sonner';
 export * from './toggle';
 export * from './toggle-group';
+export * from './confirmation-dialog';

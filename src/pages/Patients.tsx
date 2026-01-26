@@ -1,9 +1,39 @@
+import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/shared/ui/input";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { PatientForm } from "@/modules/patients/presentation/components/PatientForm";
+import { PatientFormData } from "@/modules/patients/presentation/forms/PatientFormSchema";
+import { useToast } from "@/shared/hooks/use-toast";
 
 const Patients = () => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmitPatient = (data: PatientFormData) => {
+    // TODO: Implementar chamada ao backend quando estiver pronto
+    console.log('Dados do paciente:', data);
+    
+    toast({
+      title: 'Paciente cadastrado com sucesso!',
+      description: `${data.name} foi adicionado ao sistema.`,
+    });
+    
+    setIsFormOpen(false);
+  };
+
+  const handleCancelForm = () => {
+    setIsFormOpen(false);
+  };
+
+  const handleOpenForm = () => {
+    console.log('Abrindo formulário de cadastro de paciente...');
+    setIsFormOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -11,9 +41,31 @@ const Patients = () => {
           <h2 className="text-3xl font-bold tracking-tight text-gray-900">Pacientes</h2>
           <p className="text-muted-foreground">Gerenciamento de admissões e prontuários.</p>
         </div>
-        <Button className="gap-2">
+        
+        <Button className="gap-2" onClick={handleOpenForm}>
           <Plus className="h-4 w-4" /> Novo Paciente
         </Button>
+      </div>
+
+      {/* Sheet do Formulário */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-hidden p-0">
+            <SheetHeader className="px-6 pt-6">
+              <SheetTitle>Cadastro de Paciente</SheetTitle>
+              <SheetDescription>
+                Preencha os dados do paciente. Campos marcados com * são obrigatórios.
+              </SheetDescription>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-120px)] px-6">
+              <div className="py-4">
+                <PatientForm 
+                  onSubmit={handleSubmitPatient} 
+                  onCancel={handleCancelForm}
+                />
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       </div>
 
       <Card>

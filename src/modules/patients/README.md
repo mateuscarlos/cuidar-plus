@@ -4,10 +4,11 @@ Este módulo implementa o gerenciamento completo de pacientes seguindo **Clean A
 
 ## 📁 Estrutura
 
-```
+```text
 patients/
 ├── domain/                    # Camada de Domínio (Regras de Negócio)
-│   ├── Patient.entity.ts     # Entidade Patient + DTOs
+│   ├── Patient.entity.ts     # Entidade Patient + Enums
+│   ├── Patient.dto.ts        # DTOs e Filtros
 │   ├── Patient.rules.ts      # Validadores e Value Objects
 │   └── index.ts
 ├── data/                      # Camada de Dados (API)
@@ -19,6 +20,10 @@ patients/
 │   │   ├── PatientCard.tsx
 │   │   ├── PatientList.tsx
 │   │   ├── PatientFilters.tsx
+│   │   ├── PatientForm.tsx
+│   │   └── index.ts
+│   ├── forms/                # Schemas de Validação
+│   │   ├── PatientFormSchema.ts
 │   │   └── index.ts
 │   ├── hooks/                # React Query hooks
 │   │   ├── usePatients.ts
@@ -37,10 +42,13 @@ patients/
 **Responsabilidade**: Regras de negócio, entidades, tipos
 
 **Arquivos**:
-- `Patient.entity.ts`: Entidade principal + DTOs + Filtros
+
+- `Patient.entity.ts`: Entidade principal + Enums + Interfaces
+- `Patient.dto.ts`: DTOs (CreatePatientDTO, UpdatePatientDTO, PatientFilters)
 - `Patient.rules.ts`: Validadores, Value Objects, Helpers
 
 **O que contém**:
+
 ```typescript
 // Entidades
 interface Patient extends BaseEntity { ... }
@@ -52,6 +60,7 @@ enum PatientPriority { LOW, MEDIUM, HIGH, URGENT }
 // DTOs
 type CreatePatientDTO = Omit<Patient, 'id' | 'createdAt' | ...>
 type UpdatePatientDTO = Partial<...>
+interface PatientFilters { ... }
 
 // Validadores
 class PatientValidator {
@@ -75,10 +84,12 @@ function getPriorityColor(priority: PatientPriority)
 **Responsabilidade**: Comunicação com APIs externas
 
 **Arquivos**:
+
 - `patient.service.ts`: Chamadas à API
 - `patient.mock.ts`: Dados mockados para desenvolvimento
 
 **O que contém**:
+
 ```typescript
 class PatientService {
   static fetchPatients(filters): Promise<PaginatedResponse<Patient>>
@@ -96,7 +107,26 @@ class PatientService {
 
 **Responsabilidade**: UI, interação com usuário, estado React
 
-#### 3.1 Hooks
+#### 3.1 Forms
+
+**Arquivos**:
+
+- `PatientFormSchema.ts`: Schemas Zod para validação de formulários
+
+**O que contém**:
+
+```typescript
+// Schemas de validação (Zod)
+export const patientFormSchema = z.object({ ... })
+export type PatientFormData = z.infer<typeof patientFormSchema>
+
+// Tipos auxiliares de UI
+export interface ViaCepResponse { ... }
+```
+
+**Regra**: Schemas de validação ficam na camada de apresentação, não no domain.
+
+#### 3.2 Hooks
 
 ```typescript
 // usePatients.ts
@@ -109,33 +139,45 @@ export function useDischargePatient(): UseMutationResult
 ```
 
 **Features**:
+
 - ✅ React Query configurado
 - ✅ Cache automático (5 min)
 - ✅ Invalidação de cache
 - ✅ Toast de sucesso/erro
 - ✅ Suporta dados mockados (ENV.ENABLE_MOCK_DATA)
 
-#### 3.2 Components
+#### 3.3 Components
 
 **PatientCard**:
+
 - Exibe informações resumidas do paciente
 - Badge de status e prioridade
 - Botão de ver detalhes
 
 **PatientList**:
+
 - Grid responsivo de cards
 - Estados: loading, error, empty, success
 - Skeletons durante carregamento
 
 **PatientFilters**:
+
 - Busca por nome, prontuário ou CPF
 - Filtro por status
 - Filtro por prioridade
 - Toggle de visibilidade
 
-#### 3.3 Pages
+**PatientForm**:
+
+- Formulário completo de cadastro
+- Validação com Zod
+- Integração com ViaCEP
+- Máscaras de input (CPF, CEP, Phone)
+
+#### 3.4 Pages
 
 **PatientsPage**:
+
 - Página principal do módulo
 - Gerencia estado de filtros
 - Integra todos os componentes
