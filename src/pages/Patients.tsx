@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 
 const Patients = () => {
   return (

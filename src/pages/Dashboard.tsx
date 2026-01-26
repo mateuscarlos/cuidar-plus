@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Users, AlertCircle, Package, Activity } from "lucide-react";
 
 const StatCard = ({ title, value, description, icon: Icon, trend }: any) => (

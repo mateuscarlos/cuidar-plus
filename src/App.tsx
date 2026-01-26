@@ -1,17 +1,20 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/shared/ui/toaster";
+import { Toaster as Sonner } from "@/shared/ui/sonner";
+import { TooltipProvider } from "@/shared/ui/tooltip";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { queryClient } from "@/core/lib/query-client";
+import { validateEnv } from "@/core/config/env.config";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
-import Patients from "./pages/Patients";
-import Inventory from "./pages/Inventory";
-import Reports from "./pages/Reports";
-import UsersPage from "./pages/Users";
+import { PatientsPage } from "@/modules/patients/presentation/pages";
+import { InventoryPage } from "@/modules/inventory/presentation/pages";
+import { ReportsPage } from "@/modules/reports/presentation/pages";
+import { UsersPage } from "@/modules/users/presentation/pages";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Validar variáveis de ambiente na inicialização
+validateEnv();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,9 +25,9 @@ const App = () => (
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/patients" element={<Patients />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/reports" element={<Reports />} />
+            <Route path="/patients" element={<PatientsPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/users" element={<UsersPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

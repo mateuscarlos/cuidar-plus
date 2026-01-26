@@ -11,9 +11,9 @@ import {
   Stethoscope,
   LogOut
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { Button } from "@/shared/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
+import { cn } from "@/shared/utils/cn";
 
 const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => void }) => {
   const location = useLocation();
