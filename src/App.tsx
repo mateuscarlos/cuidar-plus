@@ -11,6 +11,8 @@ import { PatientsPage } from "@/modules/patients/presentation/pages";
 import { InventoryPage } from "@/modules/inventory/presentation/pages";
 import { ReportsPage } from "@/modules/reports/presentation/pages";
 import { UsersPage } from "@/modules/users/presentation/pages";
+import InsurersPage from "./pages/Insurers";
+import ProvidersPage from "./pages/Providers";
 import NotFound from "./pages/NotFound";
 
 // Validar variáveis de ambiente na inicialização
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/users" element={<UsersPage />} />
+            <Route path="/insurers" element={<InsurersPage />} />
+            <Route path="/providers" element={<ProvidersPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

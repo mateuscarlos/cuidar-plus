@@ -37,6 +37,20 @@ export const ROUTES = {
     PROFILE: '/users/profile',
   },
   
+  INSURERS: {
+    LIST: '/insurers',
+    CREATE: '/insurers/new',
+    DETAIL: (id: string) => `/insurers/${id}`,
+    EDIT: (id: string) => `/insurers/${id}/edit`,
+  },
+  
+  PROVIDERS: {
+    LIST: '/providers',
+    CREATE: '/providers/new',
+    DETAIL: (id: string) => `/providers/${id}`,
+    EDIT: (id: string) => `/providers/${id}/edit`,
+  },
+  
   // Autenticação
   AUTH: {
     LOGIN: '/login',
