@@ -5,11 +5,12 @@
 
 import { Card, CardContent } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
-import { Button } from '@/shared/ui/button';
+import { buttonVariants } from '@/shared/ui/button';
 import { User, Calendar, Activity, Phone } from 'lucide-react';
 import { Patient } from '../../domain';
 import { getStatusColor, getPriorityColor, PatientValidator } from '../../domain/Patient.rules';
 import { formatDate, formatPhone } from '@/core/lib/formatters';
+import { cn } from '@/shared/utils/cn';
 
 interface PatientCardProps {
   patient: Patient;
@@ -19,8 +20,22 @@ interface PatientCardProps {
 export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
   const age = PatientValidator.calculateAge(patient.birthDate);
   
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onViewDetails(patient.id);
+    }
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onViewDetails(patient.id)}>
+    <Card
+      className="hover:shadow-md transition-shadow cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+      onClick={() => onViewDetails(patient.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label={`Ver detalhes de ${patient.name}`}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-start gap-3">
@@ -86,17 +101,13 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
           )}
         </div>
 
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="w-full mt-4"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetails(patient.id);
-          }}
+        {/* Visual-only button to avoid nested interactive controls */}
+        <div
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full mt-4")}
+          aria-hidden="true"
         >
           Ver Detalhes
-        </Button>
+        </div>
       </CardContent>
     </Card>
   );
