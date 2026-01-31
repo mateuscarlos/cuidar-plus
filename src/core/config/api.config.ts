@@ -5,6 +5,7 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { ENV } from './env.config';
+import { sanitizeData } from '../lib/security';
 
 // Criar instância do Axios
 export const apiClient: AxiosInstance = axios.create({
@@ -32,7 +33,7 @@ apiClient.interceptors.request.use(
       console.log('🚀 API Request:', {
         method: config.method?.toUpperCase(),
         url: config.url,
-        data: config.data,
+        data: sanitizeData(config.data),
       });
     }
 
@@ -55,7 +56,7 @@ apiClient.interceptors.response.use(
       console.log('✅ API Response:', {
         status: response.status,
         url: response.config.url,
-        data: response.data,
+        data: sanitizeData(response.data),
       });
     }
 
