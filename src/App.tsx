@@ -6,12 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { queryClient } from "@/core/lib/query-client";
 import { validateEnv } from "@/core/config/env.config";
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
-import { PatientsPage } from "@/modules/patients/presentation/pages";
-import { InventoryPage } from "@/modules/inventory/presentation/pages";
-import { ReportsPage } from "@/modules/reports/presentation/pages";
-import { UsersPage } from "@/modules/users/presentation/pages";
-import NotFound from "./pages/NotFound";
+import { lazy } from "react";
+
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const PatientsPage = lazy(() => import("@/modules/patients/presentation/pages").then(m => ({ default: m.PatientsPage })));
+const InventoryPage = lazy(() => import("@/modules/inventory/presentation/pages").then(m => ({ default: m.InventoryPage })));
+const ReportsPage = lazy(() => import("@/modules/reports/presentation/pages").then(m => ({ default: m.ReportsPage })));
+const UsersPage = lazy(() => import("@/modules/users/presentation/pages").then(m => ({ default: m.UsersPage })));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Validar variáveis de ambiente na inicialização
 validateEnv();
