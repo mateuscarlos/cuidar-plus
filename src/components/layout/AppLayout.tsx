@@ -165,7 +165,7 @@ const AppLayout = () => {
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<div className="h-full w-full flex items-center justify-center"><LoadingSpinner /></div>}>
             <Outlet />
           </Suspense>
         </main>

@@ -1,16 +1,15 @@
+import { Loader2 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 interface LoadingSpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
-  message?: string;
+  size?: number;
 }
 
-export function LoadingSpinner({ className, message = "Carregando...", ...props }: LoadingSpinnerProps) {
+export function LoadingSpinner({ className, size = 48, ...props }: LoadingSpinnerProps) {
   return (
-    <div className={cn("flex items-center justify-center h-full min-h-[200px]", className)} {...props}>
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-muted-foreground">{message}</p>
-      </div>
+    <div className={cn("flex flex-col items-center justify-center", className)} {...props}>
+      <Loader2 className="animate-spin text-primary" size={size} />
+      <span className="sr-only">Carregando...</span>
     </div>
   );
 }
