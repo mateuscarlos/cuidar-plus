@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
+import { LoadingSpinner } from "@/shared/ui/loading-spinner";
 import { 
   LayoutDashboard, 
   Users, 
@@ -164,7 +165,9 @@ const AppLayout = () => {
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Outlet />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

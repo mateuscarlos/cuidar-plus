@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/shared/ui/toaster";
 import { Toaster as Sonner } from "@/shared/ui/sonner";
 import { TooltipProvider } from "@/shared/ui/tooltip";
@@ -6,14 +7,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { queryClient } from "@/core/lib/query-client";
 import { validateEnv } from "@/core/config/env.config";
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
-import { PatientsPage } from "@/modules/patients/presentation/pages";
-import { InventoryPage } from "@/modules/inventory/presentation/pages";
-import { ReportsPage } from "@/modules/reports/presentation/pages";
-import { UsersPage } from "@/modules/users/presentation/pages";
-import InsurersPage from "./pages/Insurers";
-import ProvidersPage from "./pages/Providers";
-import NotFound from "./pages/NotFound";
+
+// Lazy loading pages for performance optimization
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const PatientsPage = React.lazy(() => import("@/modules/patients/presentation/pages").then(module => ({ default: module.PatientsPage })));
+const InventoryPage = React.lazy(() => import("@/modules/inventory/presentation/pages").then(module => ({ default: module.InventoryPage })));
+const ReportsPage = React.lazy(() => import("@/modules/reports/presentation/pages").then(module => ({ default: module.ReportsPage })));
+const UsersPage = React.lazy(() => import("@/modules/users/presentation/pages").then(module => ({ default: module.UsersPage })));
+const InsurersPage = React.lazy(() => import("./pages/Insurers"));
+const ProvidersPage = React.lazy(() => import("./pages/Providers"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 // Validar variáveis de ambiente na inicialização
 validateEnv();

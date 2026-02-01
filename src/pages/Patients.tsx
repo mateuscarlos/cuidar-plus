@@ -66,7 +66,6 @@ const Patients = () => {
             </ScrollArea>
           </SheetContent>
         </Sheet>
-      </div>
 
       <Card>
         <CardHeader className="pb-3">
