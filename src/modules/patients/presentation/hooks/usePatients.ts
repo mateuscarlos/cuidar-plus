@@ -21,9 +21,6 @@ export function usePatients(filters: PatientFilters = {}) {
     queryFn: async () => {
       // Se mock está habilitado, retorna dados mockados
       if (ENV.ENABLE_MOCK_DATA) {
-        // Simular delay de rede
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
         // Filtrar dados mockados
         let filtered = [...mockPatients];
         
@@ -64,7 +61,6 @@ export function usePatient(id: string) {
     queryKey: QUERY_KEYS.PATIENTS.detail(id),
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 300));
         const patient = mockPatients.find(p => p.id === id);
         if (!patient) throw new Error('Paciente não encontrado');
         return patient;
@@ -192,7 +188,6 @@ export function usePatientStats() {
     queryKey: ['patients', 'stats'],
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 300));
         return {
           total: mockPatients.length,
           active: mockPatients.filter(p => p.status === 'Ativo').length,
