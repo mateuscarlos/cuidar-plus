@@ -8,6 +8,11 @@ import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/shared/ui/tooltip';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -44,36 +49,62 @@ export function PatientFilters({
     <div className="space-y-4">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Search
+            className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500"
+            aria-hidden="true"
+          />
           <Input
             type="search"
+            aria-label="Buscar pacientes"
             placeholder="Buscar por nome, prontuário ou CPF..."
-            className="pl-9 pr-9"
+            className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
           {search && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1 h-7 w-7 p-0"
-              onClick={handleClearSearch}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-7 w-7 p-0"
+                  onClick={handleClearSearch}
+                  aria-label="Limpar busca"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Limpar busca</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowFilters(!showFilters)}
+              aria-expanded={showFilters}
+              aria-controls="advanced-filters-panel"
+              aria-label="Alternar filtros avançados"
+            >
+              <Filter className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Filtros avançados</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {showFilters && (
-        <div className="grid gap-4 md:grid-cols-2 p-4 border rounded-lg bg-muted/50">
+        <div
+          id="advanced-filters-panel"
+          className="grid gap-4 md:grid-cols-2 p-4 border rounded-lg bg-muted/50"
+        >
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
             <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
