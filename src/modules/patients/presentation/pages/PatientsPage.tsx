@@ -26,6 +26,15 @@ export function PatientsPage() {
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
+  const hasActiveFilters = !!(filters.search || filters.status || filters.priority);
+
+  const handleClearFilters = () => {
+    setFilters({
+      page: 1,
+      pageSize: 20,
+    });
+  };
+
   const handleSearchChange = (search: string) => {
     setFilters(prev => ({ ...prev, search: search || undefined, page: 1 }));
   };
@@ -95,6 +104,9 @@ export function PatientsPage() {
         </CardHeader>
         <CardContent>
           <PatientFilters
+            search={filters.search}
+            status={filters.status}
+            priority={filters.priority}
             onSearchChange={handleSearchChange}
             onStatusChange={handleStatusChange}
             onPriorityChange={handlePriorityChange}
@@ -141,6 +153,8 @@ export function PatientsPage() {
             isError={isError}
             error={error}
             onViewDetails={handleViewDetails}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
           />
         </CardContent>
       </Card>
