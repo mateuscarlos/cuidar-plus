@@ -10,13 +10,14 @@ import { User, Calendar, Activity, Phone } from 'lucide-react';
 import { Patient } from '../../domain';
 import { getStatusColor, getPriorityColor, PatientValidator } from '../../domain/Patient.rules';
 import { formatDate, formatPhone } from '@/core/lib/formatters';
+import { memo } from 'react';
 
 interface PatientCardProps {
   patient: Patient;
   onViewDetails: (id: string) => void;
 }
 
-export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
+export const PatientCard = memo(function PatientCard({ patient, onViewDetails }: PatientCardProps) {
   const age = PatientValidator.calculateAge(patient.birthDate);
   
   return (
@@ -100,4 +101,4 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
