@@ -3,13 +3,13 @@ import { sanitizeData } from '../src/core/lib/security';
 
 const mockData = {
   username: 'user123',
-  password: 'mock-password-value',
-  token: 'mock-jwt-token-value',
+  password: 'REDACTED_PASSWORD',
+  token: 'REDACTED_TOKEN_VALUE',
   profile: {
     firstName: 'John',
     lastName: 'Doe',
-    cpf: '123.456.789-00',
-    rg: '12.345.678-9',
+    cpf: '000.000.000-00',
+    rg: '00.000.000-0',
     address: {
       street: '123 Main St',
       city: 'Anytown'
@@ -19,7 +19,7 @@ const mockData = {
     company: 'should not be masked (contains pan)',
     span: 'should not be masked (contains pan)',
     argon: 'should not be masked (contains rg)',
-    authorization: 'Bearer mock-auth-token', // Exact match sensitive
+    authorization: 'Bearer REDACTED_AUTH', // Exact match sensitive
     author: 'should not be masked (contains auth)', // But 'auth' is not in substrings, 'token' is
     authToken: 'should be masked (contains token)',
   },
@@ -30,15 +30,15 @@ const mockData = {
   paymentMethods: [
     {
       type: 'creditCard',
-      cardNumber: '4111 1111 1111 1111',
-      cvv: '123',
-      expiry: '12/25',
-      pan: '123456789' // Exact match sensitive
+      cardNumber: '0000 0000 0000 0000',
+      cvv: '000',
+      expiry: '12/99',
+      pan: '000000000' // Exact match sensitive
     }
   ],
   auth: {
-    accessToken: 'access-token-123',
-    refreshToken: 'refresh-token-456'
+    accessToken: 'REDACTED_ACCESS_TOKEN',
+    refreshToken: 'REDACTED_REFRESH_TOKEN'
   }
 };
 
