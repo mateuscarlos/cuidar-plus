@@ -3,8 +3,8 @@ import { sanitizeData } from '../src/core/lib/security';
 
 const mockData = {
   username: 'user123',
-  password: 'supersecretpassword',
-  token: 'eyJhGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+  password: 'mock-password-value',
+  token: 'mock-jwt-token-value',
   profile: {
     firstName: 'John',
     lastName: 'Doe',
@@ -19,7 +19,7 @@ const mockData = {
     company: 'should not be masked (contains pan)',
     span: 'should not be masked (contains pan)',
     argon: 'should not be masked (contains rg)',
-    authorization: 'Bearer token', // Exact match sensitive
+    authorization: 'Bearer mock-auth-token', // Exact match sensitive
     author: 'should not be masked (contains auth)', // But 'auth' is not in substrings, 'token' is
     authToken: 'should be masked (contains token)',
   },
