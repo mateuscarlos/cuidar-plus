@@ -5,7 +5,9 @@
 
 export const ENV = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1',
+  // Em dev, usa proxy do Vite (URL relativa)
+  // Em prod, usa URL completa do backend
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '10000'),
   
   // App Configuration
