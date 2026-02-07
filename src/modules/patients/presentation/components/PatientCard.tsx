@@ -3,6 +3,7 @@
  * Exibe informações resumidas de um paciente em formato de card
  */
 
+import { memo } from 'react';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -16,7 +17,7 @@ interface PatientCardProps {
   onViewDetails: (id: string) => void;
 }
 
-export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
+export const PatientCard = memo(function PatientCard({ patient, onViewDetails }: PatientCardProps) {
   const age = PatientValidator.calculateAge(patient.birthDate);
   
   return (
@@ -100,4 +101,4 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
