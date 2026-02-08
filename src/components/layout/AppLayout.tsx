@@ -136,6 +136,13 @@ const AppLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        Pular para o conteúdo principal
+      </a>
+
       {/* Desktop Sidebar */}
       <aside className="hidden md:block w-64 h-full">
         <Sidebar className="h-full" />
@@ -164,7 +171,7 @@ const AppLayout = () => {
           </Sheet>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 md:p-8">
           <Suspense fallback={<div className="h-full w-full flex items-center justify-center"><LoadingSpinner /></div>}>
             <Outlet />
           </Suspense>
