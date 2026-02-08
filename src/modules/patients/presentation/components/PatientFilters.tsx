@@ -22,26 +22,25 @@ import {
 import { PatientStatus, PatientPriority } from '../../domain';
 
 interface PatientFiltersProps {
+  searchValue: string;
+  statusValue: PatientStatus | 'all';
+  priorityValue: PatientPriority | 'all';
   onSearchChange: (search: string) => void;
   onStatusChange: (status: PatientStatus | 'all') => void;
   onPriorityChange: (priority: PatientPriority | 'all') => void;
 }
 
 export function PatientFilters({
+  searchValue,
+  statusValue,
+  priorityValue,
   onSearchChange,
   onStatusChange,
   onPriorityChange,
 }: PatientFiltersProps) {
-  const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    onSearchChange(value);
-  };
-
   const handleClearSearch = () => {
-    setSearch('');
     onSearchChange('');
   };
 
@@ -58,10 +57,10 @@ export function PatientFilters({
             aria-label="Buscar pacientes"
             placeholder="Buscar por nome, prontuário ou CPF..."
             className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
-          {search && (
+          {searchValue && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -107,7 +106,10 @@ export function PatientFilters({
         >
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
-            <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
+            <Select
+              value={statusValue}
+              onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
@@ -123,7 +125,10 @@ export function PatientFilters({
 
           <div>
             <label className="text-sm font-medium mb-2 block">Prioridade</label>
-            <Select onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}>
+            <Select
+              value={priorityValue}
+              onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as prioridades" />
               </SelectTrigger>
