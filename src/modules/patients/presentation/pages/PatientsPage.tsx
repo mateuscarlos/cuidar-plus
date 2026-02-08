@@ -4,7 +4,7 @@
  * Arquitetura modular: separação de domínio, dados e apresentação
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
@@ -26,36 +26,36 @@ export function PatientsPage() {
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
-  const handleSearchChange = (search: string) => {
+  const handleSearchChange = useCallback((search: string) => {
     setFilters(prev => ({ ...prev, search: search || undefined, page: 1 }));
-  };
+  }, []);
 
-  const handleStatusChange = (status: PatientStatus | 'all') => {
+  const handleStatusChange = useCallback((status: PatientStatus | 'all') => {
     setFilters(prev => ({ 
       ...prev, 
       status: status === 'all' ? undefined : status,
       page: 1 
     }));
-  };
+  }, []);
 
-  const handlePriorityChange = (priority: PatientPriority | 'all') => {
+  const handlePriorityChange = useCallback((priority: PatientPriority | 'all') => {
     setFilters(prev => ({ 
       ...prev, 
       priority: priority === 'all' ? undefined : priority,
       page: 1 
     }));
-  };
+  }, []);
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = useCallback((id: string) => {
     // TODO: Navegar para página de detalhes ou abrir modal
     console.log('Ver detalhes do paciente:', id);
-  };
+  }, []);
 
-  const handleCreatePatient = () => {
+  const handleCreatePatient = useCallback(() => {
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleSubmitPatient = (data: PatientFormData) => {
+  const handleSubmitPatient = useCallback((data: PatientFormData) => {
     // TODO: Implementar chamada ao backend quando estiver pronto
     console.log('Dados do paciente:', data);
     
@@ -65,11 +65,11 @@ export function PatientsPage() {
     });
     
     setIsFormOpen(false);
-  };
+  }, [toast]);
 
-  const handleCancelForm = () => {
+  const handleCancelForm = useCallback(() => {
     setIsFormOpen(false);
-  };
+  }, []);
 
   return (
     <div className="space-y-6">
