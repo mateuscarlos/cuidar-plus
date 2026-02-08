@@ -8,6 +8,7 @@ import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { memo } from 'react';
 
 interface PatientListProps {
   patients: Patient[];
@@ -17,7 +18,7 @@ interface PatientListProps {
   onViewDetails: (id: string) => void;
 }
 
-export function PatientList({ 
+export const PatientList = memo(function PatientList({
   patients, 
   isLoading, 
   isError, 
@@ -76,4 +77,4 @@ export function PatientList({
       ))}
     </div>
   );
-}
+});
