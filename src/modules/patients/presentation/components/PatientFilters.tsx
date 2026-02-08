@@ -3,7 +3,7 @@
  * Barra de filtros e busca de pacientes
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
@@ -22,18 +22,30 @@ import {
 import { PatientStatus, PatientPriority } from '../../domain';
 
 interface PatientFiltersProps {
+  currentSearch?: string;
+  currentStatus?: PatientStatus;
+  currentPriority?: PatientPriority;
   onSearchChange: (search: string) => void;
   onStatusChange: (status: PatientStatus | 'all') => void;
   onPriorityChange: (priority: PatientPriority | 'all') => void;
 }
 
 export function PatientFilters({
+  currentSearch = '',
+  currentStatus,
+  currentPriority,
   onSearchChange,
   onStatusChange,
   onPriorityChange,
 }: PatientFiltersProps) {
-  const [search, setSearch] = useState('');
+  // Local state for search to avoid UI lag while typing, though we sync with parent
+  const [search, setSearch] = useState(currentSearch);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Update local state when prop changes (e.g. when cleared by parent)
+  useEffect(() => {
+    setSearch(currentSearch);
+  }, [currentSearch]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -90,6 +102,7 @@ export function PatientFilters({
               aria-expanded={showFilters}
               aria-controls="advanced-filters-panel"
               aria-label="Alternar filtros avançados"
+              className={showFilters || currentStatus || currentPriority ? "bg-accent text-accent-foreground" : ""}
             >
               <Filter className="h-4 w-4" />
             </Button>
@@ -107,23 +120,30 @@ export function PatientFilters({
         >
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
-            <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
+            <Select
+              value={currentStatus || 'all'}
+              onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value={PatientStatus.EVALUATION}>Avaliação</SelectItem>
                 <SelectItem value={PatientStatus.ACTIVE}>Ativo</SelectItem>
-                <SelectItem value={PatientStatus.PENDING}>Pendente</SelectItem>
-                <SelectItem value={PatientStatus.DISCHARGED}>Alta</SelectItem>
-                <SelectItem value={PatientStatus.TRANSFERRED}>Transferido</SelectItem>
+                <SelectItem value={PatientStatus.HOSPITAL_DISCHARGE}>Alta Hospitalar</SelectItem>
+                <SelectItem value={PatientStatus.ADMINISTRATIVE_DISCHARGE}>Alta Administrativa</SelectItem>
+                <SelectItem value={PatientStatus.CANCELED}>Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
             <label className="text-sm font-medium mb-2 block">Prioridade</label>
-            <Select onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}>
+            <Select
+              value={currentPriority || 'all'}
+              onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as prioridades" />
               </SelectTrigger>
