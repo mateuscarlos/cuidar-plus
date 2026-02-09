@@ -46,6 +46,15 @@ export function PatientsPage() {
     }));
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      page: 1,
+      pageSize: 20,
+    });
+  };
+
+  const hasActiveFilters = !!(filters.search || filters.status || filters.priority);
+
   const handleViewDetails = (id: string) => {
     // TODO: Navegar para página de detalhes ou abrir modal
     console.log('Ver detalhes do paciente:', id);
@@ -95,6 +104,9 @@ export function PatientsPage() {
         </CardHeader>
         <CardContent>
           <PatientFilters
+            searchValue={filters.search}
+            statusValue={filters.status || 'all'}
+            priorityValue={filters.priority || 'all'}
             onSearchChange={handleSearchChange}
             onStatusChange={handleStatusChange}
             onPriorityChange={handlePriorityChange}
@@ -140,7 +152,9 @@ export function PatientsPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
+            hasActiveFilters={hasActiveFilters}
             onViewDetails={handleViewDetails}
+            onClearFilters={handleClearFilters}
           />
         </CardContent>
       </Card>

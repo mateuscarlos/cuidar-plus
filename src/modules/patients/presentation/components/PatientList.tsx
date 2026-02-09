@@ -8,13 +8,16 @@ import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Button } from '@/shared/ui/button';
 
 interface PatientListProps {
   patients: Patient[];
   isLoading: boolean;
   isError: boolean;
   error?: Error | null;
+  hasActiveFilters?: boolean;
   onViewDetails: (id: string) => void;
+  onClearFilters?: () => void;
 }
 
 export function PatientList({ 
@@ -22,7 +25,9 @@ export function PatientList({
   isLoading, 
   isError, 
   error,
-  onViewDetails 
+  hasActiveFilters,
+  onViewDetails,
+  onClearFilters
 }: PatientListProps) {
   // Loading State
   if (isLoading) {
@@ -56,10 +61,19 @@ export function PatientList({
         <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Nenhum paciente encontrado</h3>
-        <p className="text-muted-foreground">
-          Ajuste os filtros ou cadastre um novo paciente
+        <h3 className="text-lg font-semibold mb-2">
+          {hasActiveFilters ? 'Nenhum paciente encontrado com os filtros atuais' : 'Nenhum paciente encontrado'}
+        </h3>
+        <p className="text-muted-foreground mb-4">
+          {hasActiveFilters
+            ? 'Tente ajustar os filtros ou limpar a busca'
+            : 'Cadastre um novo paciente para começar'}
         </p>
+        {hasActiveFilters && onClearFilters && (
+          <Button variant="outline" onClick={onClearFilters}>
+            Limpar Filtros
+          </Button>
+        )}
       </div>
     );
   }
