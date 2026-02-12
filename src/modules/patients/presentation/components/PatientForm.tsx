@@ -6,7 +6,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { Loader2, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 import { PatientFormData, patientFormSchema } from '../forms/PatientFormSchema';
 import { PatientStatus } from '@/modules/patients/domain/Patient.entity';
@@ -220,13 +220,9 @@ export function PatientForm({ onSubmit, onCancel }: PatientFormProps) {
                     variant="outline"
                     size="icon"
                     onClick={handleFetchAddress}
-                    disabled={loadingCep}
+                    isLoading={loadingCep}
                   >
-                    {loadingCep ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
+                    {!loadingCep && <Search className="h-4 w-4" />}
                   </Button>
                 </div>
                 {errors.zipCode && (
@@ -567,16 +563,9 @@ export function PatientForm({ onSubmit, onCancel }: PatientFormProps) {
           <Button
             type="button"
             onClick={handleConfirmSave}
-            disabled={isSubmitting}
+            isLoading={isSubmitting}
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              'Salvar'
-            )}
+            {isSubmitting ? 'Salvando...' : 'Salvar'}
           </Button>
         </div>
       </form>
