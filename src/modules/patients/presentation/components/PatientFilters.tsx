@@ -3,7 +3,7 @@
  * Barra de filtros e busca de pacientes
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
@@ -34,6 +34,7 @@ export function PatientFilters({
 }: PatientFiltersProps) {
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -43,6 +44,7 @@ export function PatientFilters({
   const handleClearSearch = () => {
     setSearch('');
     onSearchChange('');
+    inputRef.current?.focus();
   };
 
   return (
@@ -54,6 +56,7 @@ export function PatientFilters({
             aria-hidden="true"
           />
           <Input
+            ref={inputRef}
             type="search"
             aria-label="Buscar pacientes"
             placeholder="Buscar por nome, prontuário ou CPF..."
@@ -106,9 +109,11 @@ export function PatientFilters({
           className="grid gap-4 md:grid-cols-2 p-4 border rounded-lg bg-muted/50"
         >
           <div>
-            <label className="text-sm font-medium mb-2 block">Status</label>
+            <label htmlFor="status-filter" className="text-sm font-medium mb-2 block">
+              Status
+            </label>
             <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
-              <SelectTrigger>
+              <SelectTrigger id="status-filter">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
@@ -122,9 +127,11 @@ export function PatientFilters({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Prioridade</label>
+            <label htmlFor="priority-filter" className="text-sm font-medium mb-2 block">
+              Prioridade
+            </label>
             <Select onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}>
-              <SelectTrigger>
+              <SelectTrigger id="priority-filter">
                 <SelectValue placeholder="Todas as prioridades" />
               </SelectTrigger>
               <SelectContent>
