@@ -5,3 +5,7 @@
 ## 2025-02-18 - Nested Suspense for Layouts
 **Learning:** Placing a `Suspense` boundary inside the Layout component (wrapping `Outlet`) instead of just at the top level allows the sidebar/header to remain visible while the page content loads.
 **Action:** Identify Layout components and wrap their `Outlet` in `Suspense` to avoid "white screen" flashes during navigation.
+
+## 2025-02-18 - Memoization of List Items with Callback Props
+**Learning:** List components (like `PatientList`) re-render all children when parent state changes (e.g. modal open) if children (`PatientCard`) are not memoized AND if callback props (`onViewDetails`) are not stable. Both `React.memo` on the child and `useCallback` on the parent handler are required to prevent this.
+**Action:** When optimizing lists, always check that handlers passed to memoized children are wrapped in `useCallback`.
