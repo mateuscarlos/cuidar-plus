@@ -3,6 +3,7 @@
  * Lista de pacientes com estados de loading e empty
  */
 
+import { memo } from 'react';
 import { PatientCard } from './PatientCard';
 import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -17,7 +18,7 @@ interface PatientListProps {
   onViewDetails: (id: string) => void;
 }
 
-export function PatientList({ 
+export const PatientList = memo(function PatientList({
   patients, 
   isLoading, 
   isError, 
@@ -76,4 +77,4 @@ export function PatientList({
       ))}
     </div>
   );
-}
+});
