@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { User, Calendar, Activity, Phone } from 'lucide-react';
+import { memo } from 'react';
 import { Patient } from '../../domain';
 import { getStatusColor, getPriorityColor, PatientValidator } from '../../domain/Patient.rules';
 import { formatDate, formatPhone } from '@/core/lib/formatters';
@@ -16,7 +17,7 @@ interface PatientCardProps {
   onViewDetails: (id: string) => void;
 }
 
-export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
+export const PatientCard = memo(function PatientCard({ patient, onViewDetails }: PatientCardProps) {
   const age = PatientValidator.calculateAge(patient.birthDate);
   
   return (
@@ -100,4 +101,4 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
