@@ -26,6 +26,15 @@ export function PatientsPage() {
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
+  const hasActiveFilters = !!(filters.search || filters.status || filters.priority);
+
+  const handleClearFilters = () => {
+    setFilters({
+      page: 1,
+      pageSize: 20,
+    });
+  };
+
   const handleSearchChange = (search: string) => {
     setFilters(prev => ({ ...prev, search: search || undefined, page: 1 }));
   };
@@ -98,6 +107,9 @@ export function PatientsPage() {
             onSearchChange={handleSearchChange}
             onStatusChange={handleStatusChange}
             onPriorityChange={handlePriorityChange}
+            search={filters.search}
+            status={filters.status}
+            priority={filters.priority}
           />
         </CardContent>
       </Card>
@@ -109,7 +121,23 @@ export function PatientsPage() {
             <CardTitle>Lista de Pacientes</CardTitle>
             {data?.pagination && (
               <span className="text-sm text-muted-foreground">
-
+                {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <PatientList
+            patients={data?.data || []}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            onViewDetails={handleViewDetails}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
+          />
+        </CardContent>
+      </Card>
       {/* Modal do Formulário de Cadastro */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] p-0">
@@ -129,21 +157,6 @@ export function PatientsPage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-                {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <PatientList
-            patients={data?.data || []}
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            onViewDetails={handleViewDetails}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }
