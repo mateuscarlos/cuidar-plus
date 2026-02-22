@@ -4,8 +4,10 @@
 
 import { useState } from 'react';
 import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Plus, Package, AlertTriangle, TrendingDown } from 'lucide-react';
+import { Plus, Package, AlertTriangle, TrendingDown, Search, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { useInventoryItems } from '../hooks';
 import { InventoryFilters, ItemStatus } from '../../domain';
 import { Badge } from '@/shared/ui/badge';
@@ -14,7 +16,18 @@ import { formatCurrency } from '@/core/lib/formatters';
 
 export function InventoryPage() {
   const [filters, setFilters] = useState<InventoryFilters>({ page: 1, pageSize: 20 });
+  const [searchTerm, setSearchTerm] = useState('');
   const { data, isLoading } = useInventoryItems(filters);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setFilters(prev => ({ ...prev, search: value || undefined, page: 1 }));
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setFilters(prev => ({ ...prev, search: undefined, page: 1 }));
+  };
 
   const stats = {
     total: data?.data.length || 0,
@@ -94,20 +107,52 @@ export function InventoryPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
           <CardTitle>Lista de Itens</CardTitle>
+          <div className="relative w-full max-w-sm">
+            <Search
+              className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500"
+              aria-hidden="true"
+            />
+            <Input
+              type="search"
+              placeholder="Buscar item..."
+              className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
+              value={searchTerm}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              aria-label="Buscar item"
+            />
+            {searchTerm && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1 h-7 w-7 p-0"
+                    onClick={handleClearSearch}
+                    aria-label="Limpar busca"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Limpar busca</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left">Código</th>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">Categoria</th>
-                  <th className="px-4 py-3 text-right">Quantidade</th>
-                  <th className="px-4 py-3 text-right">Valor Unit.</th>
-                  <th className="px-4 py-3 text-left">Status</th>
+                  <th scope="col" className="px-4 py-3 text-left">Código</th>
+                  <th scope="col" className="px-4 py-3 text-left">Nome</th>
+                  <th scope="col" className="px-4 py-3 text-left">Categoria</th>
+                  <th scope="col" className="px-4 py-3 text-right">Quantidade</th>
+                  <th scope="col" className="px-4 py-3 text-right">Valor Unit.</th>
+                  <th scope="col" className="px-4 py-3 text-left">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
