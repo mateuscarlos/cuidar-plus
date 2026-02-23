@@ -5,3 +5,7 @@
 ## 2025-02-18 - Nested Suspense for Layouts
 **Learning:** Placing a `Suspense` boundary inside the Layout component (wrapping `Outlet`) instead of just at the top level allows the sidebar/header to remain visible while the page content loads.
 **Action:** Identify Layout components and wrap their `Outlet` in `Suspense` to avoid "white screen" flashes during navigation.
+
+## 2025-02-19 - Mock Data Stability & Memoization
+**Learning:** The project's mock data implementation (`usePatients` hook) returns shallow copies of arrays but preserves object references. This allows `React.memo` to be effective on list items even after filter updates, contrary to typical API behavior where objects are recreated.
+**Action:** Verify data reference stability in mock implementations before assuming `memo` will fail due to prop changes.
