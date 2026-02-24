@@ -8,14 +8,14 @@ describe('sanitizeData', () => {
   });
 
   it('should sanitize simple object with sensitive keys', () => {
-    const input = { name: 'John', password: 'secretpassword123' };
-    const expected = { name: 'John', password: 'sec***123' };
+    const input = { name: 'John', password: 'mock-password-value' };
+    const expected = { name: 'John', password: 'moc***lue' };
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should sanitize nested object with sensitive keys', () => {
-    const input = { user: { name: 'Alice', token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9' } };
-    const expected = { user: { name: 'Alice', token: 'eyJ***CJ9' } };
+    const input = { user: { name: 'Alice', token: 'mock-token-value-123' } };
+    const expected = { user: { name: 'Alice', token: 'moc***123' } };
     expect(sanitizeData(input)).toEqual(expected);
   });
 
@@ -58,8 +58,8 @@ describe('sanitizeData', () => {
   });
 
   it('should handle deep nesting', () => {
-      const input = { a: { b: { c: { secret: 'verysecret' } } } };
-      const expected = { a: { b: { c: { secret: '***' } } } }; // length 10 -> '***'
+      const input = { a: { b: { c: { secret: 'very-secret-value' } } } };
+      const expected = { a: { b: { c: { secret: 'ver***lue' } } } };
       expect(sanitizeData(input)).toEqual(expected);
   });
 });
