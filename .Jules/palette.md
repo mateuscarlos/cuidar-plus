@@ -7,3 +7,7 @@
 ## 2025-01-26 - Icon-Only Button Accessibility
 **Learning:** Icon-only buttons are invisible to screen readers without labels. Tooltips alone are insufficient for AT users.
 **Action:** Pair `Tooltip` (for sighted users) with `aria-label` (for AT users) on every icon button.
+
+## 2025-01-26 - Table Accessibility and Loading
+**Learning:** Tables often miss `scope="col"` on headers, making column association difficult for screen readers. Raw text loading states cause layout shifts.
+**Action:** Use `scope="col"` on `TableHead` and wrap `Skeleton` in `TableCell` (inside `TableRow`) for a layout-stable loading state.

@@ -11,6 +11,15 @@ import { InventoryFilters, ItemStatus } from '../../domain';
 import { Badge } from '@/shared/ui/badge';
 import { getItemStatusColor } from '../../domain/InventoryItem.rules';
 import { formatCurrency } from '@/core/lib/formatters';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/shared/ui/table';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 export function InventoryPage() {
   const [filters, setFilters] = useState<InventoryFilters>({ page: 1, pageSize: 20 });
@@ -99,40 +108,49 @@ export function InventoryPage() {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
-                <tr>
-                  <th className="px-4 py-3 text-left">Código</th>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">Categoria</th>
-                  <th className="px-4 py-3 text-right">Quantidade</th>
-                  <th className="px-4 py-3 text-right">Valor Unit.</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50 hover:bg-gray-50">
+                  <TableHead className="w-[100px]" scope="col">Código</TableHead>
+                  <TableHead scope="col">Nome</TableHead>
+                  <TableHead scope="col">Categoria</TableHead>
+                  <TableHead className="text-right" scope="col">Quantidade</TableHead>
+                  <TableHead className="text-right" scope="col">Valor Unit.</TableHead>
+                  <TableHead scope="col">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {isLoading ? (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center">Carregando...</td></tr>
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-4 w-[40px] ml-auto" /></TableCell>
+                      <TableCell className="text-right"><Skeleton className="h-4 w-[80px] ml-auto" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                    </TableRow>
+                  ))
                 ) : data?.data.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{item.code}</td>
-                    <td className="px-4 py-3 font-medium">{item.name}</td>
-                    <td className="px-4 py-3">{item.category}</td>
-                    <td className="px-4 py-3 text-right">
+                  <TableRow key={item.id} className="hover:bg-gray-50">
+                    <TableCell className="font-mono text-xs">{item.code}</TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className="text-right">
                       <span className={item.quantity <= item.minQuantity ? 'text-red-600 font-semibold' : ''}>
                         {item.quantity} {item.unit}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">{formatCurrency(item.costPrice)}</td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.costPrice)}</TableCell>
+                    <TableCell>
                       <Badge className={getItemStatusColor(item.status)} variant="secondary">
                         {item.status}
                       </Badge>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
