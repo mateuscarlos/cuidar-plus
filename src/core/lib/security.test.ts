@@ -20,16 +20,16 @@ describe('sanitizeData', () => {
   });
 
   it('should sanitize array of objects', () => {
-    const input = [{ id: 1, secretKey: '1234567890' }, { id: 2, secretKey: 'abcdefghij' }];
+    const input = [{ id: 1, secretKey: 'mock-key-1' }, { id: 2, secretKey: 'mock-key-2' }];
     // length 10 -> masked completely '***'
     const expected = [{ id: 1, secretKey: '***' }, { id: 2, secretKey: '***' }];
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should handle mixed case keys', () => {
-    const input = { UserPassword: 'mypassword', apiKEY: 'key123' };
-    // length 10 -> '***'
-    // length 6 -> '***'
+    const input = { UserPassword: 'mock-pass', apiKEY: 'mock-key' };
+    // length 9 -> '***'
+    // length 8 -> '***'
     const expected = { UserPassword: '***', apiKEY: '***' };
     expect(sanitizeData(input)).toEqual(expected);
   });
