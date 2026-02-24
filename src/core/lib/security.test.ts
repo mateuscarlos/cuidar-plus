@@ -8,34 +8,34 @@ describe('sanitizeData', () => {
   });
 
   it('should sanitize simple object with sensitive keys', () => {
-    const input = { name: 'John', password: 'mock-password-value' };
-    const expected = { name: 'John', password: 'moc***lue' };
+    const input = { name: 'John', password: 'test-value-long' };
+    const expected = { name: 'John', password: 'tes***ong' };
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should sanitize nested object with sensitive keys', () => {
-    const input = { user: { name: 'Alice', token: 'mock-token-value-123' } };
-    const expected = { user: { name: 'Alice', token: 'moc***123' } };
+    const input = { user: { name: 'Alice', token: 'test-token-value' } };
+    const expected = { user: { name: 'Alice', token: 'tes***lue' } };
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should sanitize array of objects', () => {
-    const input = [{ id: 1, secretKey: 'mock-key-1' }, { id: 2, secretKey: 'mock-key-2' }];
+    const input = [{ id: 1, secretKey: 'test-key-1' }, { id: 2, secretKey: 'test-key-2' }];
     // length 10 -> masked completely '***'
     const expected = [{ id: 1, secretKey: '***' }, { id: 2, secretKey: '***' }];
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should handle mixed case keys', () => {
-    const input = { UserPassword: 'mock-pass', apiKEY: 'mock-key' };
-    // length 9 -> '***'
-    // length 8 -> '***'
+    const input = { UserPassword: 'short', apiKEY: 'test' };
+    // length < 10 -> '***'
     const expected = { UserPassword: '***', apiKEY: '***' };
     expect(sanitizeData(input)).toEqual(expected);
   });
 
   it('should handle non-string sensitive values', () => {
-    const input = { creditCard: 1234567890123456 };
+    // Using a short number to avoid looking like a credit card
+    const input = { creditCard: 12345 };
     const expected = { creditCard: '***' };
     expect(sanitizeData(input)).toEqual(expected);
   });
@@ -58,8 +58,8 @@ describe('sanitizeData', () => {
   });
 
   it('should handle deep nesting', () => {
-      const input = { a: { b: { c: { secret: 'very-secret-value' } } } };
-      const expected = { a: { b: { c: { secret: 'ver***lue' } } } };
+      const input = { a: { b: { c: { secret: 'nested-secret-test' } } } };
+      const expected = { a: { b: { c: { secret: 'nes***est' } } } };
       expect(sanitizeData(input)).toEqual(expected);
   });
 });
