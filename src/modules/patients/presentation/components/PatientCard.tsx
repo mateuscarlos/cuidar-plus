@@ -20,7 +20,12 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
   const age = PatientValidator.calculateAge(patient.birthDate);
   
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onViewDetails(patient.id)}>
+    <Card
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onViewDetails(patient.id)}
+      role="article"
+      aria-label={`Cartão do paciente ${patient.name}`}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-start gap-3">
@@ -94,6 +99,7 @@ export function PatientCard({ patient, onViewDetails }: PatientCardProps) {
             e.stopPropagation();
             onViewDetails(patient.id);
           }}
+          aria-label={`Ver detalhes do paciente ${patient.name}`}
         >
           Ver Detalhes
         </Button>
