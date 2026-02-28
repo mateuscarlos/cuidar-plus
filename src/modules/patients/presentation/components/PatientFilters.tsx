@@ -3,7 +3,7 @@
  * Barra de filtros e busca de pacientes
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
@@ -34,15 +34,24 @@ export function PatientFilters({
 }: PatientFiltersProps) {
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const isMounted = useRef(false);
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    onSearchChange(value);
-  };
+  // Debounce search input to prevent excessive API calls
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      onSearchChange(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, onSearchChange]);
 
   const handleClearSearch = () => {
     setSearch('');
-    onSearchChange('');
   };
 
   return (
@@ -59,7 +68,7 @@ export function PatientFilters({
             placeholder="Buscar por nome, prontuário ou CPF..."
             className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
             <Tooltip>
