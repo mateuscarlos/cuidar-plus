@@ -8,6 +8,7 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { PatientForm } from "@/modules/patients/presentation/components/PatientForm";
 import { PatientFormData } from "@/modules/patients/presentation/forms/PatientFormSchema";
 import { useToast } from "@/shared/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 
 const Patients = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -80,9 +81,18 @@ const Patients = () => {
                   className="pl-9 w-[200px] lg:w-[300px]"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Filtrar pacientes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
