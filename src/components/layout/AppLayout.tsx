@@ -20,6 +20,7 @@ import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { cn } from "@/shared/utils/cn";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => void }) => {
   const location = useLocation();
@@ -153,11 +154,18 @@ const AppLayout = () => {
           </div>
           
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Abrir menu">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Abrir menu</p>
+              </TooltipContent>
+            </Tooltip>
             <SheetContent side="left" className="p-0 w-64">
               <Sidebar onClose={() => setIsMobileOpen(false)} />
             </SheetContent>
