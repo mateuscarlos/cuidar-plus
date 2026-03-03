@@ -3,6 +3,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/shared/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { PatientForm } from "@/modules/patients/presentation/components/PatientForm";
@@ -80,9 +81,16 @@ const Patients = () => {
                   className="pl-9 w-[200px] lg:w-[300px]"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Filtrar pacientes</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </CardHeader>
