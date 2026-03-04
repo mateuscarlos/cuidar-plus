@@ -39,7 +39,7 @@ const UsersPage = () => {
                   <Shield className="h-4 w-4" />
                   {user.type}
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Configurar usuário">
                   <UserCog className="h-4 w-4" />
                 </Button>
               </div>
