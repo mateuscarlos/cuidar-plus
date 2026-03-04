@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
 import { Input } from "@/shared/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { PatientForm } from "@/modules/patients/presentation/components/PatientForm";
 import { PatientFormData } from "@/modules/patients/presentation/forms/PatientFormSchema";
@@ -73,16 +74,26 @@ const Patients = () => {
             <CardTitle>Lista de Pacientes</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" aria-hidden="true" />
                 <Input
                   type="search"
                   placeholder="Buscar paciente..."
                   className="pl-9 w-[200px] lg:w-[300px]"
+                  aria-label="Buscar paciente"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Filtrar pacientes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
