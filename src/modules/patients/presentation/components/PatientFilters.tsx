@@ -3,7 +3,7 @@
  * Barra de filtros e busca de pacientes
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
@@ -35,11 +35,22 @@ export function PatientFilters({
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // ⚡ Bolt: Debounce search input to prevent excessive API calls
+  // Reduces the number of requests while the user is actively typing.
+  // We use a 500ms delay before triggering the parent's onSearchChange.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, onSearchChange]);
+
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    onSearchChange(value);
   };
 
+  // ⚡ Bolt: Clear search should bypass the debounce and trigger immediately
   const handleClearSearch = () => {
     setSearch('');
     onSearchChange('');
