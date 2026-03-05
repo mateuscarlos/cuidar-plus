@@ -154,7 +154,7 @@ const AppLayout = () => {
           
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Abrir menu principal">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
