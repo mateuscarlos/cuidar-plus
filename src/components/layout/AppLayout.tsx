@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { cn } from "@/shared/utils/cn";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/ui/collapsible";
 
@@ -153,11 +154,18 @@ const AppLayout = () => {
           </div>
           
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
+            <Tooltip>
+              <SheetTrigger asChild>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Abrir menu de navegação">
+                    <Menu className="h-6 w-6" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+              </SheetTrigger>
+              <TooltipContent>
+                <p>Menu de navegação</p>
+              </TooltipContent>
+            </Tooltip>
             <SheetContent side="left" className="p-0 w-64">
               <Sidebar onClose={() => setIsMobileOpen(false)} />
             </SheetContent>
