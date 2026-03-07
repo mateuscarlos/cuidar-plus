@@ -3,7 +3,7 @@
  * Barra de filtros e busca de pacientes
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/shared/ui/input';
 import { Button } from '@/shared/ui/button';
 import { Search, Filter, X } from 'lucide-react';
@@ -37,8 +37,15 @@ export function PatientFilters({
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
-    onSearchChange(value);
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, onSearchChange]);
 
   const handleClearSearch = () => {
     setSearch('');
