@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Plus, Search, Filter } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
 import { Input } from "@/shared/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/shared/ui/sheet";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -43,7 +44,7 @@ const Patients = () => {
         </div>
         
         <Button className="gap-2" onClick={handleOpenForm}>
-          <Plus className="h-4 w-4" /> Novo Paciente
+          <Plus className="h-4 w-4" aria-hidden="true" /> Novo Paciente
         </Button>
       </div>
 
@@ -73,16 +74,26 @@ const Patients = () => {
             <CardTitle>Lista de Pacientes</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" aria-hidden="true" />
                 <Input
                   type="search"
                   placeholder="Buscar paciente..."
-                  className="pl-9 w-[200px] lg:w-[300px]"
+                  className="pl-9 w-[200px] lg:w-[300px] [&::-webkit-search-cancel-button]:hidden"
+                  aria-label="Buscar paciente"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                      <Filter className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Filtrar pacientes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
@@ -91,11 +102,11 @@ const Patients = () => {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 text-gray-600 font-medium border-b">
                 <tr>
-                  <th className="px-4 py-3">Nome</th>
-                  <th className="px-4 py-3">Diagnóstico</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Última Visita</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
+                  <th className="px-4 py-3" scope="col">Nome</th>
+                  <th className="px-4 py-3" scope="col">Diagnóstico</th>
+                  <th className="px-4 py-3" scope="col">Status</th>
+                  <th className="px-4 py-3" scope="col">Última Visita</th>
+                  <th className="px-4 py-3 text-right" scope="col">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -114,7 +125,7 @@ const Patients = () => {
                     </td>
                     <td className="px-4 py-3 text-gray-500">{patient.last}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700">
+                      <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700" aria-label={`Ver detalhes de ${patient.name}`}>
                         Detalhes
                       </Button>
                     </td>
