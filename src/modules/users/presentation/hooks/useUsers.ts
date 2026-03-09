@@ -18,24 +18,26 @@ export function useUsers(filters: UserFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockUsers];
+        const searchStr = filters.search?.toLowerCase();
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
-        
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
-        }
+        // Performance Optimization: Consolidate multiple .filter() calls into a single pass
+        // This prevents intermediate array allocations and reduces O(N*M) to O(N)
+        const filtered = mockUsers.filter(u => {
+          if (searchStr && !(
+            u.name.toLowerCase().includes(searchStr) ||
+            u.email.toLowerCase().includes(searchStr) ||
+            u.cpf.includes(searchStr)
+          )) {
+            return false;
+          }
+          if (filters.role && u.role !== filters.role) {
+            return false;
+          }
+          if (filters.status && u.status !== filters.status) {
+            return false;
+          }
+          return true;
+        });
         
         return {
           data: filtered,
