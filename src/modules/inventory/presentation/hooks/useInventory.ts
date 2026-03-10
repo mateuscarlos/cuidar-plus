@@ -18,27 +18,26 @@ export function useInventoryItems(filters: InventoryFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockInventoryItems];
-        
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(i => 
+        // ⚡ Bolt: Consolidated multiple .filter() calls into a single pass to reduce intermediate array allocations and O(K*N) iterations
+        const search = filters.search?.toLowerCase();
+        const filtered = mockInventoryItems.filter(i => {
+          if (search && !(
             i.name.toLowerCase().includes(search) ||
             i.code.toLowerCase().includes(search)
-          );
-        }
-        
-        if (filters.category) {
-          filtered = filtered.filter(i => i.category === filters.category);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(i => i.status === filters.status);
-        }
-        
-        if (filters.lowStock) {
-          filtered = filtered.filter(i => i.quantity <= i.minQuantity);
-        }
+          )) {
+            return false;
+          }
+          if (filters.category && i.category !== filters.category) {
+            return false;
+          }
+          if (filters.status && i.status !== filters.status) {
+            return false;
+          }
+          if (filters.lowStock && i.quantity > i.minQuantity) {
+            return false;
+          }
+          return true;
+        });
         
         return {
           data: filtered,

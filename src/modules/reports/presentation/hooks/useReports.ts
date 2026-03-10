@@ -18,15 +18,16 @@ export function useReports(filters: ReportFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockReports];
-        
-        if (filters.type) {
-          filtered = filtered.filter(r => r.type === filters.type);
-        }
-        
-        if (filters.period) {
-          filtered = filtered.filter(r => r.period === filters.period);
-        }
+        // ⚡ Bolt: Consolidated multiple .filter() calls into a single pass to reduce intermediate array allocations and O(K*N) iterations
+        const filtered = mockReports.filter(r => {
+          if (filters.type && r.type !== filters.type) {
+            return false;
+          }
+          if (filters.period && r.period !== filters.period) {
+            return false;
+          }
+          return true;
+        });
         
         return {
           data: filtered,
