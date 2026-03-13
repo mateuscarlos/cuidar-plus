@@ -73,15 +73,16 @@ const Patients = () => {
             <CardTitle>Lista de Pacientes</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" aria-hidden="true" />
                 <Input
                   type="search"
                   placeholder="Buscar paciente..."
+                  aria-label="Buscar paciente..."
                   className="pl-9 w-[200px] lg:w-[300px]"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
+              <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                <Filter className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -91,11 +92,11 @@ const Patients = () => {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 text-gray-600 font-medium border-b">
                 <tr>
-                  <th className="px-4 py-3">Nome</th>
-                  <th className="px-4 py-3">Diagnóstico</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Última Visita</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
+                  <th className="px-4 py-3" scope="col">Nome</th>
+                  <th className="px-4 py-3" scope="col">Diagnóstico</th>
+                  <th className="px-4 py-3" scope="col">Status</th>
+                  <th className="px-4 py-3" scope="col">Última Visita</th>
+                  <th className="px-4 py-3 text-right" scope="col">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
