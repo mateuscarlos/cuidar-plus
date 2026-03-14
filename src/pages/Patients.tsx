@@ -80,8 +80,8 @@ const Patients = () => {
                   className="pl-9 w-[200px] lg:w-[300px]"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
+              <Button variant="outline" size="icon" aria-label="Filtrar pacientes">
+                <Filter className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
