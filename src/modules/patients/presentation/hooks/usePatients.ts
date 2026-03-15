@@ -24,21 +24,25 @@ export function usePatients(filters: PatientFilters = {}) {
         // Simular delay de rede
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Filtrar dados mockados
-        let filtered = [...mockPatients];
+        // Otimização de performance: consolidação de filtros em uma única passagem
+        // e uso de RegExp pré-compilada para busca insensível a maiúsculas/minúsculas.
+        // Isso reduz a alocação de memória e o tempo de processamento.
+        const hasSearch = !!filters.search;
+        const searchRegex = hasSearch ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(p => 
-            p.name.toLowerCase().includes(search) ||
-            p.medicalRecordNumber.toLowerCase().includes(search) ||
-            p.cpf.includes(search)
-          );
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(p => p.status === filters.status);
-        }
+        const filtered = mockPatients.filter(p => {
+          if (filters.status && p.status !== filters.status) return false;
+
+          if (hasSearch && searchRegex) {
+            return (
+              searchRegex.test(p.name) ||
+              searchRegex.test(p.medicalRecordNumber) ||
+              searchRegex.test(p.cpf)
+            );
+          }
+
+          return true;
+        });
         
         return {
           data: filtered,
