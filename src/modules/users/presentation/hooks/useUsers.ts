@@ -18,24 +18,23 @@ export function useUsers(filters: UserFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockUsers];
+        // Optimização: Compilar regex fora do loop e realizar filtro em passagem única
+        const searchRegex = filters.search ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
-        
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
-        }
+        const filtered = mockUsers.filter(u => {
+          if (filters.status && u.status !== filters.status) return false;
+          if (filters.role && u.role !== filters.role) return false;
+
+          if (searchRegex) {
+            return (
+              searchRegex.test(u.name) ||
+              searchRegex.test(u.email) ||
+              searchRegex.test(u.cpf)
+            );
+          }
+
+          return true;
+        });
         
         return {
           data: filtered,

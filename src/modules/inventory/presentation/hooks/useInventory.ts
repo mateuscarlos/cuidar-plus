@@ -18,27 +18,20 @@ export function useInventoryItems(filters: InventoryFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockInventoryItems];
+        // Optimização: Compilar regex fora do loop e realizar filtro em passagem única
+        const searchRegex = filters.search ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(i => 
-            i.name.toLowerCase().includes(search) ||
-            i.code.toLowerCase().includes(search)
-          );
-        }
-        
-        if (filters.category) {
-          filtered = filtered.filter(i => i.category === filters.category);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(i => i.status === filters.status);
-        }
-        
-        if (filters.lowStock) {
-          filtered = filtered.filter(i => i.quantity <= i.minQuantity);
-        }
+        const filtered = mockInventoryItems.filter(i => {
+          if (filters.status && i.status !== filters.status) return false;
+          if (filters.category && i.category !== filters.category) return false;
+          if (filters.lowStock && i.quantity > i.minQuantity) return false;
+
+          if (searchRegex) {
+            return searchRegex.test(i.name) || searchRegex.test(i.code);
+          }
+
+          return true;
+        });
         
         return {
           data: filtered,
