@@ -29,11 +29,14 @@ apiClient.interceptors.request.use(
 
     // Log em desenvolvimento
     if (ENV.ENABLE_DEBUG) {
-      console.log('🚀 API Request:', {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        data: config.data,
-      });
+      // Lazy import para não inflar bundle se não usar debug (opcional, aqui é estático por ser client side utils)
+      import('../lib/security').then(({ sanitizeData }) => {
+        console.log('🚀 API Request:', {
+          method: config.method?.toUpperCase(),
+          url: config.url,
+          data: sanitizeData(config.data),
+        });
+      }).catch(err => console.error('Error importing security module:', err));
     }
 
     return config;
@@ -52,11 +55,13 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log em desenvolvimento
     if (ENV.ENABLE_DEBUG) {
-      console.log('✅ API Response:', {
-        status: response.status,
-        url: response.config.url,
-        data: response.data,
-      });
+      import('../lib/security').then(({ sanitizeData }) => {
+        console.log('✅ API Response:', {
+          status: response.status,
+          url: response.config.url,
+          data: sanitizeData(response.data),
+        });
+      }).catch(err => console.error('Error importing security module:', err));
     }
 
     return response;
