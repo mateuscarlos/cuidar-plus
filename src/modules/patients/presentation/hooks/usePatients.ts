@@ -25,19 +25,26 @@ export function usePatients(filters: PatientFilters = {}) {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Filtrar dados mockados
-        let filtered = [...mockPatients];
+        let filtered = mockPatients;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(p => 
-            p.name.toLowerCase().includes(search) ||
-            p.medicalRecordNumber.toLowerCase().includes(search) ||
-            p.cpf.includes(search)
-          );
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(p => p.status === filters.status);
+        if (filters.search || filters.status) {
+          const searchRegex = filters.search
+            ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+            : null;
+
+          filtered = mockPatients.filter(p => {
+            if (filters.status && p.status !== filters.status) return false;
+
+            if (searchRegex && !(
+              searchRegex.test(p.name) ||
+              searchRegex.test(p.medicalRecordNumber) ||
+              searchRegex.test(p.cpf)
+            )) {
+              return false;
+            }
+
+            return true;
+          });
         }
         
         return {
