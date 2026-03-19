@@ -20,24 +20,27 @@ export function useInventoryItems(filters: InventoryFilters = {}) {
         
         let filtered = [...mockInventoryItems];
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(i => 
-            i.name.toLowerCase().includes(search) ||
-            i.code.toLowerCase().includes(search)
-          );
-        }
+        // ⚡ Bolt Performance Optimization: Single-pass filter with RegExp
+        // Consolidates 4 separate .filter() passes into 1
+        // Pre-compiling RegExp is significantly faster than repeated .toLowerCase().includes()
+        const hasFilters = filters.search || filters.category || filters.status || filters.lowStock;
         
-        if (filters.category) {
-          filtered = filtered.filter(i => i.category === filters.category);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(i => i.status === filters.status);
-        }
-        
-        if (filters.lowStock) {
-          filtered = filtered.filter(i => i.quantity <= i.minQuantity);
+        if (hasFilters) {
+          const searchRegex = filters.search
+            ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+            : null;
+
+          filtered = filtered.filter(i => {
+            if (filters.category && i.category !== filters.category) return false;
+            if (filters.status && i.status !== filters.status) return false;
+            if (filters.lowStock && i.quantity > i.minQuantity) return false;
+
+            if (searchRegex) {
+              return searchRegex.test(i.name) || searchRegex.test(i.code);
+            }
+
+            return true;
+          });
         }
         
         return {
