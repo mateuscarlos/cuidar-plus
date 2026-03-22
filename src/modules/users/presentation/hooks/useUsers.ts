@@ -18,23 +18,27 @@ export function useUsers(filters: UserFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockUsers];
+        let filtered = mockUsers;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
-        
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
+        // ⚡ Bolt Performance Optimization: Single-pass filtering with pre-compiled RegExp
+        // Reduces array allocations and O(N) operations in search strings
+        if (Object.keys(filters).length > 0) {
+          const searchRegex = filters.search ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
+
+          filtered = mockUsers.filter(u => {
+            if (filters.role && u.role !== filters.role) return false;
+            if (filters.status && u.status !== filters.status) return false;
+
+            if (searchRegex) {
+              return (
+                searchRegex.test(u.name) ||
+                searchRegex.test(u.email) ||
+                searchRegex.test(u.cpf)
+              );
+            }
+
+            return true;
+          });
         }
         
         return {
