@@ -2,7 +2,7 @@
  * Inventory Page
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Plus, Package, AlertTriangle, TrendingDown } from 'lucide-react';
@@ -16,12 +16,18 @@ export function InventoryPage() {
   const [filters, setFilters] = useState<InventoryFilters>({ page: 1, pageSize: 20 });
   const { data, isLoading } = useInventoryItems(filters);
 
-  const stats = {
-    total: data?.data.length || 0,
-    lowStock: data?.data.filter(i => i.status === ItemStatus.LOW_STOCK).length || 0,
-    outOfStock: data?.data.filter(i => i.status === ItemStatus.OUT_OF_STOCK).length || 0,
-    expired: data?.data.filter(i => i.status === ItemStatus.EXPIRED).length || 0,
-  };
+  // ⚡ Bolt: Optimize stats calculation by replacing multiple O(N) filter passes
+  // with a single O(N) reduce pass, and memoizing the result to prevent recalculation on re-renders.
+  const stats = useMemo(() => {
+    if (!data?.data) return { total: 0, lowStock: 0, outOfStock: 0, expired: 0 };
+    return data.data.reduce((acc, item) => {
+      acc.total++;
+      if (item.status === ItemStatus.LOW_STOCK) acc.lowStock++;
+      else if (item.status === ItemStatus.OUT_OF_STOCK) acc.outOfStock++;
+      else if (item.status === ItemStatus.EXPIRED) acc.expired++;
+      return acc;
+    }, { total: 0, lowStock: 0, outOfStock: 0, expired: 0 });
+  }, [data?.data]);
 
   return (
     <div className="space-y-6">
