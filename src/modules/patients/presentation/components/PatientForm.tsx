@@ -219,6 +219,7 @@ export function PatientForm({ onSubmit, onCancel }: PatientFormProps) {
                     type="button"
                     variant="outline"
                     size="icon"
+                    aria-label="Buscar endereço pelo CEP"
                     onClick={handleFetchAddress}
                     disabled={loadingCep}
                   >
