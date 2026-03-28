@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
@@ -66,6 +66,23 @@ const InsurersPage = () => {
     }
   };
 
+  // ⚡ Bolt Performance Optimization:
+  // Pre-calculate aggregated stats in a single O(N) pass using useMemo.
+  // This avoids redundant .filter().length and .reduce() calls on every re-render.
+  const stats = useMemo(() => {
+    return insurers.reduce(
+      (acc, insurer) => {
+        acc.total += 1;
+        if (insurer.status === 'ACTIVE') {
+          acc.active += 1;
+        }
+        acc.totalPlans += insurer.plans?.length || 0;
+        return acc;
+      },
+      { total: 0, active: 0, totalPlans: 0 }
+    );
+  }, [insurers]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -98,7 +115,7 @@ const InsurersPage = () => {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{insurers.length}</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
             <p className="text-xs text-muted-foreground">Cadastradas no sistema</p>
           </CardContent>
         </Card>
@@ -109,9 +126,7 @@ const InsurersPage = () => {
             <Building2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {insurers.filter(i => i.status === 'ACTIVE').length}
-            </div>
+            <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">Com contratos ativos</p>
           </CardContent>
         </Card>
@@ -122,9 +137,7 @@ const InsurersPage = () => {
             <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {insurers.reduce((acc, insurer) => acc + insurer.plans.length, 0)}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalPlans}</div>
             <p className="text-xs text-muted-foreground">Planos disponíveis</p>
           </CardContent>
         </Card>
