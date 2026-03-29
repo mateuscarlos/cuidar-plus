@@ -2,7 +2,7 @@
  * Users Page
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Plus, Users as UsersIcon, UserCheck, UserX } from 'lucide-react';
@@ -17,11 +17,18 @@ export function UsersPage() {
   const [filters, setFilters] = useState<UserFilters>({ page: 1, pageSize: 20 });
   const { data, isLoading } = useUsers(filters);
 
-  const stats = {
-    total: data?.data.length || 0,
-    active: data?.data.filter(u => u.status === UserStatus.ACTIVE).length || 0,
-    inactive: data?.data.filter(u => u.status === UserStatus.INACTIVE).length || 0,
-  };
+  // ⚡ Bolt: Replace multiple O(N) filter passes with a single O(N) reduce, memoized to prevent recalculation on re-renders
+  const stats = useMemo(() => {
+    const users = data?.data || [];
+    return users.reduce(
+      (acc, u) => {
+        if (u.status === UserStatus.ACTIVE) acc.active++;
+        else if (u.status === UserStatus.INACTIVE) acc.inactive++;
+        return acc;
+      },
+      { total: users.length, active: 0, inactive: 0 }
+    );
+  }, [data?.data]);
 
   return (
     <div className="space-y-6">

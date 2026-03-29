@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
@@ -9,6 +9,19 @@ import { ProviderService } from "@/modules/providers/data/provider.service";
 const ProvidersPage = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ⚡ Bolt: Compute stats once via useMemo to avoid recalculating on re-renders, using a single O(N) reduce pass
+  const stats = useMemo(() => {
+    return providers.reduce(
+      (acc, provider) => {
+        if (provider.status === 'ACTIVE') acc.active++;
+        if (provider.hasEmergency) acc.withEmergency++;
+        acc.totalServices += provider.services.length;
+        return acc;
+      },
+      { active: 0, withEmergency: 0, totalServices: 0 }
+    );
+  }, [providers]);
 
   useEffect(() => {
     loadProviders();
@@ -135,9 +148,7 @@ const ProvidersPage = () => {
             <Building className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {providers.filter(p => p.status === 'ACTIVE').length}
-            </div>
+            <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">Em operação</p>
           </CardContent>
         </Card>
@@ -148,9 +159,7 @@ const ProvidersPage = () => {
             <Clock className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {providers.filter(p => p.hasEmergency).length}
-            </div>
+            <div className="text-2xl font-bold">{stats.withEmergency}</div>
             <p className="text-xs text-muted-foreground">Atendimento 24h</p>
           </CardContent>
         </Card>
@@ -161,9 +170,7 @@ const ProvidersPage = () => {
             <Star className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {providers.reduce((acc, p) => acc + p.services.length, 0)}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalServices}</div>
             <p className="text-xs text-muted-foreground">Disponíveis</p>
           </CardContent>
         </Card>

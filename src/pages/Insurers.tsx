@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
@@ -9,6 +9,18 @@ import { InsurerService } from "@/modules/insurers/data/insurer.service";
 const InsurersPage = () => {
   const [insurers, setInsurers] = useState<Insurer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ⚡ Bolt: Compute stats once via useMemo to avoid recalculating on re-renders, using a single O(N) reduce pass
+  const stats = useMemo(() => {
+    return insurers.reduce(
+      (acc, insurer) => {
+        if (insurer.status === 'ACTIVE') acc.active++;
+        acc.totalPlans += insurer.plans.length;
+        return acc;
+      },
+      { active: 0, totalPlans: 0 }
+    );
+  }, [insurers]);
 
   useEffect(() => {
     loadInsurers();
@@ -109,9 +121,7 @@ const InsurersPage = () => {
             <Building2 className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {insurers.filter(i => i.status === 'ACTIVE').length}
-            </div>
+            <div className="text-2xl font-bold">{stats.active}</div>
             <p className="text-xs text-muted-foreground">Com contratos ativos</p>
           </CardContent>
         </Card>
@@ -122,9 +132,7 @@ const InsurersPage = () => {
             <FileText className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {insurers.reduce((acc, insurer) => acc + insurer.plans.length, 0)}
-            </div>
+            <div className="text-2xl font-bold">{stats.totalPlans}</div>
             <p className="text-xs text-muted-foreground">Planos disponíveis</p>
           </CardContent>
         </Card>

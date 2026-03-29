@@ -193,12 +193,16 @@ export function usePatientStats() {
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 300));
-        return {
-          total: mockPatients.length,
-          active: mockPatients.filter(p => p.status === 'Ativo').length,
-          discharged: mockPatients.filter(p => p.status === 'Alta').length,
-          pending: mockPatients.filter(p => p.status === 'Pendente').length,
-        };
+        // ⚡ Bolt: Replace multiple O(N) filter passes with a single O(N) reduce
+        return mockPatients.reduce(
+          (acc, p) => {
+            if (p.status === 'Ativo') acc.active++;
+            else if (p.status === 'Alta') acc.discharged++;
+            else if (p.status === 'Pendente') acc.pending++;
+            return acc;
+          },
+          { total: mockPatients.length, active: 0, discharged: 0, pending: 0 }
+        );
       }
       return PatientService.getPatientStats();
     },
