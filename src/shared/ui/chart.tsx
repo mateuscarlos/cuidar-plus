@@ -78,20 +78,28 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+          .map(([theme, prefix]) => {
+            // eslint-disable-next-line no-useless-escape
+            const sanitize = (val: string) => String(val).replace(/[<>;}\[\]"']/g, "");
+            const safeId = sanitize(id);
+
+            return `
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+
+    if (!color) return null;
+    const safeKey = sanitize(key);
+    const safeColor = sanitize(color);
+    return `  --color-${safeKey}: ${safeColor};`;
   })
   .join("\n")}
 }
-`,
-          )
+`;
+          })
           .join("\n"),
       }}
     />
