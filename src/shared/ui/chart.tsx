@@ -86,7 +86,11 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    // Sanitize dynamic props to prevent XSS/CSS injection
+    const sanitize = (val: string) => val.replace(/[<>;}\\[\]"'\\]/g, "");
+    const safeKey = sanitize(key);
+    const safeColor = color ? sanitize(color) : color;
+    return safeColor ? `  --color-${safeKey}: ${safeColor};` : null;
   })
   .join("\n")}
 }
