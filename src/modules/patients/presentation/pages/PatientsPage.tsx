@@ -102,14 +102,6 @@ export function PatientsPage() {
         </CardContent>
       </Card>
 
-      {/* Patient List */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>Lista de Pacientes</CardTitle>
-            {data?.pagination && (
-              <span className="text-sm text-muted-foreground">
-
       {/* Modal do Formulário de Cadastro */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] p-0">
@@ -129,6 +121,14 @@ export function PatientsPage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      {/* Patient List */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle>Lista de Pacientes</CardTitle>
+            {data?.pagination && (
+              <span className="text-sm text-muted-foreground">
                 {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
               </span>
             )}
