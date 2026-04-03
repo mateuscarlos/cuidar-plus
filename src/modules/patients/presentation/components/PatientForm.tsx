@@ -15,6 +15,7 @@ import { maskCPF, maskCEP, maskPhone, unmaskCPF, unmaskCEP, unmaskPhone } from '
 import { ConfirmationDialog } from '@/shared/ui/confirmation-dialog';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Textarea } from '@/shared/ui/textarea';
@@ -215,19 +216,27 @@ export function PatientForm({ onSubmit, onCancel }: PatientFormProps) {
                       setValue('zipCode', unmaskCEP(masked));
                     }}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleFetchAddress}
-                    disabled={loadingCep}
-                  >
-                    {loadingCep ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleFetchAddress}
+                        disabled={loadingCep}
+                        aria-label="Buscar endereço por CEP"
+                      >
+                        {loadingCep ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Search className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Buscar endereço</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 {errors.zipCode && (
                   <p className="text-sm text-destructive">{errors.zipCode.message}</p>
