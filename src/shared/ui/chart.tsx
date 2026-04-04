@@ -92,7 +92,9 @@ ${colorConfig
 }
 `,
           )
-          .join("\n"),
+          .join("\n")
+          .replace(/</g, "\\3C ")
+          .replace(/>/g, "\\3E "),
       }}
     />
   );
