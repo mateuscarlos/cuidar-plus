@@ -1,4 +1,4 @@
-## 2026-02-01 - Committed Environment Secrets
-**Vulnerability:** The `.env` file containing environment variables (potentially secrets) was tracked in the git repository.
-**Learning:** Initial project setup or template generation failed to include `.env` in `.gitignore`, leading to accidental tracking of local configuration.
-**Prevention:** Always verify `.gitignore` includes sensitive file patterns (`.env`, `*.pem`, etc.) before the first commit. Use pre-commit hooks to scan for secrets.
+## 2024-04-05 - Fix XSS in Shadcn ChartStyle component
+**Vulnerability:** The `ChartStyle` component in Shadcn UI injects dynamic CSS variables into a `<style>` tag via `dangerouslySetInnerHTML`. Because it does not escape `<` and `>`, an attacker could potentially inject a closing `</style>` tag followed by malicious HTML/JS if the input data (themes/colors) is derived from untrusted sources.
+**Learning:** React's built-in XSS protection is bypassed when using `dangerouslySetInnerHTML`. When injecting into a `<style>` context, you can't strip all non-alphanumeric characters without breaking valid CSS (like `/` or `#`). Instead, `<` and `>` should be safely escaped to their CSS hex equivalents (`\3C ` and `\3E `), which the CSS parser understands but prevents HTML parsing breakout.
+**Prevention:** Always validate and escape untrusted input even when inside non-script contexts like `<style>`. When using `dangerouslySetInnerHTML` for styles, replace `<` and `>` with `\3C ` and `\3E `.
