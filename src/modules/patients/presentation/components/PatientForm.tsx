@@ -16,6 +16,7 @@ import { ConfirmationDialog } from '@/shared/ui/confirmation-dialog';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { Textarea } from '@/shared/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -215,19 +216,27 @@ export function PatientForm({ onSubmit, onCancel }: PatientFormProps) {
                       setValue('zipCode', unmaskCEP(masked));
                     }}
                   />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleFetchAddress}
-                    disabled={loadingCep}
-                  >
-                    {loadingCep ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleFetchAddress}
+                        disabled={loadingCep}
+                        aria-label="Buscar CEP"
+                      >
+                        {loadingCep ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Buscar CEP</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 {errors.zipCode && (
                   <p className="text-sm text-destructive">{errors.zipCode.message}</p>
