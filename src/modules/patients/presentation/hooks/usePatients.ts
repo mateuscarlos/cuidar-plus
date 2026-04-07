@@ -24,21 +24,14 @@ export function usePatients(filters: PatientFilters = {}) {
         // Simular delay de rede
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Filtrar dados mockados
-        let filtered = [...mockPatients];
+        // ⚡ Bolt: Optimize filtering with single pass and pre-compiled regex
+        const searchRegex = filters.search ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(p => 
-            p.name.toLowerCase().includes(search) ||
-            p.medicalRecordNumber.toLowerCase().includes(search) ||
-            p.cpf.includes(search)
-          );
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(p => p.status === filters.status);
-        }
+        const filtered = mockPatients.filter(p => {
+          if (filters.status && p.status !== filters.status) return false;
+          if (searchRegex && !(searchRegex.test(p.name) || searchRegex.test(p.medicalRecordNumber) || searchRegex.test(p.cpf))) return false;
+          return true;
+        });
         
         return {
           data: filtered,
@@ -193,12 +186,14 @@ export function usePatientStats() {
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 300));
-        return {
-          total: mockPatients.length,
-          active: mockPatients.filter(p => p.status === 'Ativo').length,
-          discharged: mockPatients.filter(p => p.status === 'Alta').length,
-          pending: mockPatients.filter(p => p.status === 'Pendente').length,
-        };
+        // ⚡ Bolt: Calculate stats in a single pass O(N) instead of O(MN)
+        return mockPatients.reduce((acc, p) => {
+          acc.total++;
+          if (p.status === 'Ativo') acc.active++;
+          else if (p.status === 'Alta') acc.discharged++;
+          else if (p.status === 'Pendente') acc.pending++;
+          return acc;
+        }, { total: 0, active: 0, discharged: 0, pending: 0 });
       }
       return PatientService.getPatientStats();
     },
