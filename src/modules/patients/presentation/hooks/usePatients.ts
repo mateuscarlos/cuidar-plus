@@ -193,12 +193,18 @@ export function usePatientStats() {
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 300));
-        return {
-          total: mockPatients.length,
-          active: mockPatients.filter(p => p.status === 'Ativo').length,
-          discharged: mockPatients.filter(p => p.status === 'Alta').length,
-          pending: mockPatients.filter(p => p.status === 'Pendente').length,
-        };
+        // O(N) single-pass reduction to replace 3 separate O(N) filter passes.
+        // Avoids intermediate array allocations and reduces CPU overhead.
+        return mockPatients.reduce(
+          (acc, p) => {
+            acc.total++;
+            if (p.status === 'Ativo') acc.active++;
+            else if (p.status === 'Alta') acc.discharged++;
+            else if (p.status === 'Pendente') acc.pending++;
+            return acc;
+          },
+          { total: 0, active: 0, discharged: 0, pending: 0 }
+        );
       }
       return PatientService.getPatientStats();
     },
