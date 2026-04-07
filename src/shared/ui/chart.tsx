@@ -92,7 +92,10 @@ ${colorConfig
 }
 `,
           )
-          .join("\n"),
+          .join("\n")
+          // Prevent XSS in style tags
+          .replaceAll("<", "\\3C ")
+          .replaceAll(">", "\\3E "),
       }}
     />
   );
