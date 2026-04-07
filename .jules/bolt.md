@@ -5,3 +5,6 @@
 ## 2025-02-18 - Nested Suspense for Layouts
 **Learning:** Placing a `Suspense` boundary inside the Layout component (wrapping `Outlet`) instead of just at the top level allows the sidebar/header to remain visible while the page content loads.
 **Action:** Identify Layout components and wrap their `Outlet` in `Suspense` to avoid "white screen" flashes during navigation.
+## 2026-03-28 - Stop micro-optimizing mock data
+**Learning:** Optimizing array filtering logic inside mock data blocks (e.g., `if (ENV.ENABLE_MOCK_DATA)`) provides no real-world performance benefit and wastes effort, as this code is never run in production.
+**Action:** Always ensure performance optimizations target the actual production code paths, not local development mocks or test helpers. Review the surrounding context of the code being optimized.
