@@ -74,19 +74,26 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  // eslint-disable-next-line no-useless-escape
+  const safeId = id.replace(/[<>;}\[\]"']/g, "");
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    // eslint-disable-next-line no-useless-escape
+    const safeKey = key.replace(/[<>;}\[\]"']/g, "");
+    // eslint-disable-next-line no-useless-escape
+    const safeColor = color ? color.replace(/[<>;}\[\]"']/g, "") : null;
+    return safeColor ? `  --color-${safeKey}: ${safeColor};` : null;
   })
   .join("\n")}
 }
