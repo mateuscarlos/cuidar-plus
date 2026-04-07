@@ -86,7 +86,11 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+
+    // Sanitize color to prevent XSS in dangerouslySetInnerHTML
+    // Escape < and > to their CSS unicode equivalents to prevent script injection
+    const sanitizedColor = color?.replace(/</g, '\\3C ')?.replace(/>/g, '\\3E ');
+    return sanitizedColor ? `  --color-${key}: ${sanitizedColor};` : null;
   })
   .join("\n")}
 }
