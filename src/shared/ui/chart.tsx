@@ -92,7 +92,10 @@ ${colorConfig
 }
 `,
           )
-          .join("\n"),
+          .join("\n")
+          // Prevent XSS by safely escaping < and > in the generated CSS string
+          .replace(/</g, "\\3C ")
+          .replace(/>/g, "\\3E "),
       }}
     />
   );
