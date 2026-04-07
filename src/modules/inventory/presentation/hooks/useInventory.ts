@@ -18,26 +18,27 @@ export function useInventoryItems(filters: InventoryFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockInventoryItems];
+        let filtered = mockInventoryItems;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(i => 
-            i.name.toLowerCase().includes(search) ||
-            i.code.toLowerCase().includes(search)
-          );
-        }
-        
-        if (filters.category) {
-          filtered = filtered.filter(i => i.category === filters.category);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(i => i.status === filters.status);
-        }
-        
-        if (filters.lowStock) {
-          filtered = filtered.filter(i => i.quantity <= i.minQuantity);
+        // ⚡ Bolt Performance Optimization: Single-pass filtering with pre-compiled RegExp
+        // Reduces array allocations and O(N) operations in search strings
+        if (Object.keys(filters).length > 0) {
+          const searchRegex = filters.search ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
+
+          filtered = mockInventoryItems.filter(i => {
+            if (filters.category && i.category !== filters.category) return false;
+            if (filters.status && i.status !== filters.status) return false;
+            if (filters.lowStock && i.quantity > i.minQuantity) return false;
+
+            if (searchRegex) {
+              return (
+                searchRegex.test(i.name) ||
+                searchRegex.test(i.code)
+              );
+            }
+
+            return true;
+          });
         }
         
         return {
