@@ -4,7 +4,7 @@
  * Arquitetura modular: separação de domínio, dados e apresentação
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
@@ -46,10 +46,11 @@ export function PatientsPage() {
     }));
   };
 
-  const handleViewDetails = (id: string) => {
+  // Memoized to prevent unnecessary re-renders of PatientList and PatientCard
+  const handleViewDetails = useCallback((id: string) => {
     // TODO: Navegar para página de detalhes ou abrir modal
     console.log('Ver detalhes do paciente:', id);
-  };
+  }, []);
 
   const handleCreatePatient = () => {
     setIsFormOpen(true);
@@ -109,6 +110,21 @@ export function PatientsPage() {
             <CardTitle>Lista de Pacientes</CardTitle>
             {data?.pagination && (
               <span className="text-sm text-muted-foreground">
+                {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <PatientList
+            patients={data?.data || []}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            onViewDetails={handleViewDetails}
+          />
+        </CardContent>
+      </Card>
 
       {/* Modal do Formulário de Cadastro */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -129,21 +145,6 @@ export function PatientsPage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-                {data.pagination.total} paciente{data.pagination.total !== 1 ? 's' : ''} encontrado{data.pagination.total !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <PatientList
-            patients={data?.data || []}
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            onViewDetails={handleViewDetails}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }
