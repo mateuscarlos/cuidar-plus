@@ -74,19 +74,23 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  const sanitizeForStyle = (val: unknown) =>
+    // eslint-disable-next-line no-useless-escape
+    String(val).replace(/[<>;}\[\]"']/g, "");
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${sanitizeForStyle(id)}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color ? `  --color-${sanitizeForStyle(key)}: ${sanitizeForStyle(color)};` : null;
   })
   .join("\n")}
 }
