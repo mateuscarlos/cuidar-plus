@@ -22,26 +22,25 @@ import {
 import { PatientStatus, PatientPriority } from '../../domain';
 
 interface PatientFiltersProps {
+  search?: string;
+  status?: PatientStatus;
+  priority?: PatientPriority;
   onSearchChange: (search: string) => void;
   onStatusChange: (status: PatientStatus | 'all') => void;
   onPriorityChange: (priority: PatientPriority | 'all') => void;
 }
 
 export function PatientFilters({
+  search = '',
+  status,
+  priority,
   onSearchChange,
   onStatusChange,
   onPriorityChange,
 }: PatientFiltersProps) {
-  const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    onSearchChange(value);
-  };
-
   const handleClearSearch = () => {
-    setSearch('');
     onSearchChange('');
   };
 
@@ -59,7 +58,7 @@ export function PatientFilters({
             placeholder="Buscar por nome, prontuário ou CPF..."
             className="pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
           {search && (
             <Tooltip>
@@ -107,7 +106,10 @@ export function PatientFilters({
         >
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
-            <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
+            <Select
+              value={status || 'all'}
+              onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
@@ -123,7 +125,10 @@ export function PatientFilters({
 
           <div>
             <label className="text-sm font-medium mb-2 block">Prioridade</label>
-            <Select onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}>
+            <Select
+              value={priority || 'all'}
+              onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as prioridades" />
               </SelectTrigger>
