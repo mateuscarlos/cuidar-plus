@@ -5,3 +5,7 @@
 ## 2025-02-18 - Nested Suspense for Layouts
 **Learning:** Placing a `Suspense` boundary inside the Layout component (wrapping `Outlet`) instead of just at the top level allows the sidebar/header to remain visible while the page content loads.
 **Action:** Identify Layout components and wrap their `Outlet` in `Suspense` to avoid "white screen" flashes during navigation.
+
+## 2025-02-18 - React.memo requires disciplined useCallback
+**Learning:** `React.memo` on child components (like `PatientCard`) is ineffective if the parent component (`PatientsPage`) passes unstable callbacks (handlers recreated on every render). This led to 100% re-renders despite memoization.
+**Action:** When optimizing a list item with `memo`, ALWAYS verify and stabilize all props (especially functions) passed from the parent using `useCallback`.
