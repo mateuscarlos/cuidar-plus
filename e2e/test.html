@@ -1,0 +1,27 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Chart Test</title>
+        <script>
+            function sanitizeForStyle(value) {
+                if (!value) return "";
+                return value.replace(/[<>;}\[\]"']/g, "");
+            }
+
+            const maliciousId = 'chart-id"><script>alert(1)</script>';
+            const maliciousKey = 'key;} body { background: red; }';
+            const maliciousColor = 'red;</style><script>document.body.innerHTML="<h1>XSS VULNERABILITY</h1>"</script><style>';
+        </script>
+    </head>
+    <body>
+        <div id="output"></div>
+        <script>
+            document.getElementById('output').innerHTML =
+                'Id: ' + sanitizeForStyle(maliciousId) + '<br>' +
+                'Key: ' + sanitizeForStyle(maliciousKey) + '<br>' +
+                'Color: ' + sanitizeForStyle(maliciousColor);
+        </script>
+    </body>
+    </html>
