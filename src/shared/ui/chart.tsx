@@ -65,6 +65,12 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
+const sanitizeForStyle = (str: string) => {
+  if (typeof str !== "string") return str;
+  // eslint-disable-next-line no-useless-escape
+  return str.replace(/[<>;}\[\]"']/g, "");
+};
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color,
@@ -86,7 +92,7 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color ? `  --color-${key}: ${sanitizeForStyle(color)};` : null;
   })
   .join("\n")}
 }
