@@ -6,8 +6,9 @@
 import { PatientCard } from './PatientCard';
 import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, SearchX, UserPlus, FilterX } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Button } from '@/shared/ui/button';
 
 interface PatientListProps {
   patients: Patient[];
@@ -15,6 +16,9 @@ interface PatientListProps {
   isError: boolean;
   error?: Error | null;
   onViewDetails: (id: string) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
+  onCreatePatient?: () => void;
 }
 
 export function PatientList({ 
@@ -22,7 +26,10 @@ export function PatientList({
   isLoading, 
   isError, 
   error,
-  onViewDetails 
+  onViewDetails,
+  hasActiveFilters,
+  onClearFilters,
+  onCreatePatient
 }: PatientListProps) {
   // Loading State
   if (isLoading) {
@@ -51,15 +58,41 @@ export function PatientList({
 
   // Empty State
   if (patients.length === 0) {
+    if (hasActiveFilters) {
+      return (
+        <div className="text-center py-12">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+            <SearchX className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Nenhum paciente encontrado</h3>
+          <p className="text-muted-foreground mb-6">
+            Não encontramos nenhum paciente com os filtros selecionados.
+          </p>
+          {onClearFilters && (
+            <Button onClick={onClearFilters} variant="outline" className="gap-2">
+              <FilterX className="w-4 h-4" />
+              Limpar Filtros
+            </Button>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="text-center py-12">
         <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <AlertCircle className="w-8 h-8 text-muted-foreground" />
+          <UserPlus className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold mb-2">Nenhum paciente encontrado</h3>
-        <p className="text-muted-foreground">
-          Ajuste os filtros ou cadastre um novo paciente
+        <h3 className="text-lg font-semibold mb-2">Nenhum paciente cadastrado</h3>
+        <p className="text-muted-foreground mb-6">
+          Comece cadastrando um novo paciente no sistema.
         </p>
+        {onCreatePatient && (
+          <Button onClick={onCreatePatient} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            Cadastrar Paciente
+          </Button>
+        )}
       </div>
     );
   }

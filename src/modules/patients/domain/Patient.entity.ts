@@ -11,6 +11,9 @@ import { BaseEntity } from '@/core/types';
 export enum PatientStatus {
   EVALUATION = 'Avaliação',
   ACTIVE = 'Ativo',
+  PENDING = 'Pendente',
+  DISCHARGED = 'Alta',
+  TRANSFERRED = 'Transferido',
   ADMINISTRATIVE_DISCHARGE = 'Alta Administrativa',
   DEATH_DISCHARGE = 'Alta Óbito',
   IMPROVEMENT_DISCHARGE = 'Alta Melhora',

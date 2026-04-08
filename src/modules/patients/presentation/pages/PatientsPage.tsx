@@ -71,6 +71,12 @@ export function PatientsPage() {
     setIsFormOpen(false);
   };
 
+  const handleClearFilters = () => {
+    setFilters({ page: 1, pageSize: 20 });
+  };
+
+  const hasActiveFilters = !!(filters.search || filters.status || filters.priority);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,6 +101,9 @@ export function PatientsPage() {
         </CardHeader>
         <CardContent>
           <PatientFilters
+            search={filters.search}
+            status={filters.status}
+            priority={filters.priority}
             onSearchChange={handleSearchChange}
             onStatusChange={handleStatusChange}
             onPriorityChange={handlePriorityChange}
@@ -140,7 +149,10 @@ export function PatientsPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
+            hasActiveFilters={hasActiveFilters}
             onViewDetails={handleViewDetails}
+            onClearFilters={handleClearFilters}
+            onCreatePatient={handleCreatePatient}
           />
         </CardContent>
       </Card>
