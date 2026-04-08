@@ -74,19 +74,27 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null;
   }
 
+  // Sanitize values to prevent XSS in dangerouslySetInnerHTML
+  // eslint-disable-next-line no-useless-escape
+  const sanitizeForStyle = (val: unknown) => String(val).replace(/[<>;}\[\]"']/g, "");
+
+  const safeId = sanitizeForStyle(id);
+
   return (
     <style
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart=${safeId}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    const safeKey = sanitizeForStyle(key);
+    const safeColor = color ? sanitizeForStyle(color) : null;
+    return safeColor ? `  --color-${safeKey}: ${safeColor};` : null;
   })
   .join("\n")}
 }
