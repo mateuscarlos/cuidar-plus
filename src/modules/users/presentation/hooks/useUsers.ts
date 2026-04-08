@@ -18,24 +18,26 @@ export function useUsers(filters: UserFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockUsers];
+        // Otimização de performance: consolidação de filtros em uma única passagem
+        // e uso de RegExp pré-compilada para busca insensível a maiúsculas/minúsculas.
+        // Isso reduz a alocação de memória e o tempo de processamento.
+        const hasSearch = !!filters.search;
+        const searchRegex = hasSearch ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
-        
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
-        }
+        const filtered = mockUsers.filter(u => {
+          if (filters.role && u.role !== filters.role) return false;
+          if (filters.status && u.status !== filters.status) return false;
+
+          if (hasSearch && searchRegex) {
+            return (
+              searchRegex.test(u.name) ||
+              searchRegex.test(u.email) ||
+              searchRegex.test(u.cpf)
+            );
+          }
+
+          return true;
+        });
         
         return {
           data: filtered,
