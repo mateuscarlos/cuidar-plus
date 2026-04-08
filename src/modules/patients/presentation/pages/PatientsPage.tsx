@@ -4,7 +4,7 @@
  * Arquitetura modular: separação de domínio, dados e apresentação
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
@@ -26,9 +26,10 @@ export function PatientsPage() {
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
-  const handleSearchChange = (search: string) => {
+  // Memoize handler to prevent infinite re-render loop in PatientFilters debounce effect
+  const handleSearchChange = useCallback((search: string) => {
     setFilters(prev => ({ ...prev, search: search || undefined, page: 1 }));
-  };
+  }, []);
 
   const handleStatusChange = (status: PatientStatus | 'all') => {
     setFilters(prev => ({ 
