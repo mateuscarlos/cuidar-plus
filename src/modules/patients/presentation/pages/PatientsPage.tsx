@@ -4,7 +4,7 @@
  * Arquitetura modular: separação de domínio, dados e apresentação
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
@@ -46,10 +46,10 @@ export function PatientsPage() {
     }));
   };
 
-  const handleViewDetails = (id: string) => {
+  const handleViewDetails = useCallback((id: string) => {
     // TODO: Navegar para página de detalhes ou abrir modal
     console.log('Ver detalhes do paciente:', id);
-  };
+  }, []);
 
   const handleCreatePatient = () => {
     setIsFormOpen(true);
