@@ -25,23 +25,26 @@ interface PatientFiltersProps {
   onSearchChange: (search: string) => void;
   onStatusChange: (status: PatientStatus | 'all') => void;
   onPriorityChange: (priority: PatientPriority | 'all') => void;
+  search?: string;
+  status?: PatientStatus;
+  priority?: PatientPriority;
 }
 
 export function PatientFilters({
   onSearchChange,
   onStatusChange,
   onPriorityChange,
+  search = '',
+  status,
+  priority,
 }: PatientFiltersProps) {
-  const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   const handleSearchChange = (value: string) => {
-    setSearch(value);
     onSearchChange(value);
   };
 
   const handleClearSearch = () => {
-    setSearch('');
     onSearchChange('');
   };
 
@@ -107,7 +110,10 @@ export function PatientFilters({
         >
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
-            <Select onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}>
+            <Select
+              value={status || 'all'}
+              onValueChange={(value) => onStatusChange(value as PatientStatus | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
@@ -123,7 +129,10 @@ export function PatientFilters({
 
           <div>
             <label className="text-sm font-medium mb-2 block">Prioridade</label>
-            <Select onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}>
+            <Select
+              value={priority || 'all'}
+              onValueChange={(value) => onPriorityChange(value as PatientPriority | 'all')}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Todas as prioridades" />
               </SelectTrigger>
