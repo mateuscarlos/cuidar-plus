@@ -26,27 +26,23 @@ export function PatientsPage() {
 
   const { data, isLoading, isError, error } = usePatients(filters);
 
-  // ⚡ Bolt Optimization: Memoize callback
-  // Prevents handleSearchChange from being recreated on every render of PatientsPage,
-  // which would otherwise cause PatientFilters' useEffect to re-run unnecessarily.
   const handleSearchChange = useCallback((search: string) => {
     setFilters(prev => ({ ...prev, search: search || undefined, page: 1 }));
   }, []);
 
-  // ⚡ Bolt Optimization: Memoize callback
   const handleStatusChange = useCallback((status: PatientStatus | 'all') => {
-    setFilters(prev => ({ 
-      ...prev, 
+    setFilters(prev => ({
+      ...prev,
       status: status === 'all' ? undefined : status,
-      page: 1 
+      page: 1
     }));
   }, []);
 
   const handlePriorityChange = useCallback((priority: PatientPriority | 'all') => {
-    setFilters(prev => ({ 
-      ...prev, 
+    setFilters(prev => ({
+      ...prev,
       priority: priority === 'all' ? undefined : priority,
-      page: 1 
+      page: 1
     }));
   }, []);
 
@@ -62,12 +58,12 @@ export function PatientsPage() {
   const handleSubmitPatient = (data: PatientFormData) => {
     // TODO: Implementar chamada ao backend quando estiver pronto
     console.log('Dados do paciente:', data);
-    
+
     toast({
       title: 'Paciente cadastrado com sucesso!',
       description: `${data.name} foi adicionado ao sistema.`,
     });
-    
+
     setIsFormOpen(false);
   };
 
@@ -125,8 +121,8 @@ export function PatientsPage() {
           </DialogHeader>
           <ScrollArea className="max-h-[calc(90vh-100px)] px-6">
             <div className="pb-6">
-              <PatientForm 
-                onSubmit={handleSubmitPatient} 
+              <PatientForm
+                onSubmit={handleSubmitPatient}
                 onCancel={handleCancelForm}
               />
             </div>

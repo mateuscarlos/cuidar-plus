@@ -35,8 +35,6 @@ export function PatientFilters({
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // ⚡ Bolt Optimization: Debounce search input by 500ms
-  // Reduces unnecessary re-renders and potential API calls while the user is actively typing.
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearchChange(search);
@@ -51,6 +49,7 @@ export function PatientFilters({
 
   const handleClearSearch = () => {
     setSearch('');
+    onSearchChange('');
   };
 
   return (
