@@ -8,6 +8,7 @@ import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
+import { Card, CardContent } from '@/shared/ui/card';
 
 interface PatientListProps {
   patients: Patient[];
@@ -15,6 +16,49 @@ interface PatientListProps {
   isError: boolean;
   error?: Error | null;
   onViewDetails: (id: string) => void;
+}
+
+function PatientCardSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-start gap-3">
+            <Skeleton className="w-12 h-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+          </div>
+          <div className="flex gap-1 flex-col items-end">
+            <Skeleton className="h-5 w-16 rounded-full" />
+            <Skeleton className="h-5 w-14 rounded-full" />
+          </div>
+        </div>
+
+        <div className="mb-3 p-2 bg-muted/50 rounded-md">
+           <Skeleton className="h-4 w-full" />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+             <Skeleton className="h-4 w-28" />
+          </div>
+        </div>
+
+        <Skeleton className="h-9 w-full mt-4" />
+      </CardContent>
+    </Card>
+  );
 }
 
 export function PatientList({ 
@@ -29,9 +73,7 @@ export function PatientList({
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="space-y-3">
-            <Skeleton className="h-48 w-full" />
-          </div>
+          <PatientCardSkeleton key={i} />
         ))}
       </div>
     );
