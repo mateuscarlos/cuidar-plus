@@ -20,21 +20,28 @@ export function useUsers(filters: UserFilters = {}) {
         
         let filtered = [...mockUsers];
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
+        // ⚡ Bolt Performance Optimization: Single-pass filter with RegExp
+        // Consolidates 3 separate .filter() passes into 1
+        // Pre-compiling RegExp is significantly faster than repeated .toLowerCase().includes()
+        const hasFilters = filters.search || filters.role || filters.status;
         
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
+        if (hasFilters) {
+          const searchRegex = filters.search
+            ? new RegExp(filters.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+            : null;
+
+          filtered = filtered.filter(u => {
+            if (filters.role && u.role !== filters.role) return false;
+            if (filters.status && u.status !== filters.status) return false;
+
+            if (searchRegex) {
+              return searchRegex.test(u.name) ||
+                     searchRegex.test(u.email) ||
+                     searchRegex.test(u.cpf);
+            }
+
+            return true;
+          });
         }
         
         return {
