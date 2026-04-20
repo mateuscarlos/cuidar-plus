@@ -16,6 +16,43 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 /**
+ * Helper para sanitizar dados sensíveis nos logs
+ */
+function sanitizeData(data: unknown): unknown {
+  if (!data || typeof data !== 'object') return data;
+
+  if (Array.isArray(data)) {
+    return data.map(sanitizeData);
+  }
+
+  const SENSITIVE_KEYS = [
+    'password',
+    'token',
+    'secret',
+    'authorization',
+    'credential'
+  ];
+
+  // Shallow copy to avoid mutating original data
+  const sanitized = { ...(data as Record<string, unknown>) };
+
+  for (const key of Object.keys(sanitized)) {
+    const lowerKey = key.toLowerCase();
+
+    // Check if key contains any sensitive keyword
+    const isSensitive = SENSITIVE_KEYS.some(k => lowerKey.includes(k));
+
+    if (isSensitive) {
+      sanitized[key] = '[PROTECTED]';
+    } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      sanitized[key] = sanitizeData(sanitized[key]);
+    }
+  }
+
+  return sanitized;
+}
+
+/**
  * Request Interceptor
  * Adiciona token de autenticação e logging
  */
@@ -32,7 +69,8 @@ apiClient.interceptors.request.use(
       console.log('🚀 API Request:', {
         method: config.method?.toUpperCase(),
         url: config.url,
-        data: config.data,
+        data: sanitizeData(config.data),
+        headers: sanitizeData(config.headers),
       });
     }
 
@@ -55,7 +93,7 @@ apiClient.interceptors.response.use(
       console.log('✅ API Response:', {
         status: response.status,
         url: response.config.url,
-        data: response.data,
+        data: sanitizeData(response.data),
       });
     }
 
