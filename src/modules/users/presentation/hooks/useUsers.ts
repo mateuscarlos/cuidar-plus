@@ -16,8 +16,6 @@ export function useUsers(filters: UserFilters = {}) {
     queryKey: QUERY_KEYS.USERS.list(filters),
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
         let filtered = [...mockUsers];
         
         if (filters.search) {
