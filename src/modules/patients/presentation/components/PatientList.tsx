@@ -6,7 +6,8 @@
 import { PatientCard } from './PatientCard';
 import { Patient } from '../../domain';
 import { Skeleton } from '@/shared/ui/skeleton';
-import { AlertCircle } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { AlertCircle, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/shared/ui/alert';
 
 interface PatientListProps {
@@ -15,6 +16,8 @@ interface PatientListProps {
   isError: boolean;
   error?: Error | null;
   onViewDetails: (id: string) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export function PatientList({ 
@@ -22,7 +25,9 @@ export function PatientList({
   isLoading, 
   isError, 
   error,
-  onViewDetails 
+  onViewDetails,
+  hasActiveFilters,
+  onClearFilters
 }: PatientListProps) {
   // Loading State
   if (isLoading) {
@@ -52,14 +57,23 @@ export function PatientList({
   // Empty State
   if (patients.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 flex flex-col items-center">
         <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-semibold mb-2">Nenhum paciente encontrado</h3>
-        <p className="text-muted-foreground">
-          Ajuste os filtros ou cadastre um novo paciente
+        <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+          {hasActiveFilters
+            ? 'Não encontramos pacientes com os filtros selecionados. Tente ajustar a busca.'
+            : 'Não há pacientes cadastrados no momento.'}
         </p>
+
+        {hasActiveFilters && onClearFilters && (
+          <Button onClick={onClearFilters} variant="outline" className="gap-2">
+            <X className="h-4 w-4" />
+            Limpar Filtros
+          </Button>
+        )}
       </div>
     );
   }
