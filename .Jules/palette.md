@@ -7,3 +7,7 @@
 ## 2025-01-26 - Icon-Only Button Accessibility
 **Learning:** Icon-only buttons are invisible to screen readers without labels. Tooltips alone are insufficient for AT users.
 **Action:** Pair `Tooltip` (for sighted users) with `aria-label` (for AT users) on every icon button.
+
+## 2025-01-26 - Debounce for Instant Search
+**Learning:** Real-time search inputs without debounce cause excessive API calls and "skeleton flashing" even with local mock data, degrading perceived performance.
+**Action:** Implement a generic `useDebounce` hook for all search inputs to smooth out interactions and reduce server load.
