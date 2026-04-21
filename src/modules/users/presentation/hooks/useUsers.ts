@@ -18,24 +18,28 @@ export function useUsers(filters: UserFilters = {}) {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 400));
         
-        let filtered = [...mockUsers];
+        const search = filters.search ? filters.search.toLowerCase() : null;
         
-        if (filters.search) {
-          const search = filters.search.toLowerCase();
-          filtered = filtered.filter(u => 
-            u.name.toLowerCase().includes(search) ||
-            u.email.toLowerCase().includes(search) ||
-            u.cpf.includes(search)
-          );
-        }
-        
-        if (filters.role) {
-          filtered = filtered.filter(u => u.role === filters.role);
-        }
-        
-        if (filters.status) {
-          filtered = filtered.filter(u => u.status === filters.status);
-        }
+        const filtered = mockUsers.filter(u => {
+          if (search) {
+            const matchesSearch =
+              u.name.toLowerCase().includes(search) ||
+              u.email.toLowerCase().includes(search) ||
+              u.cpf.includes(search);
+
+            if (!matchesSearch) return false;
+          }
+
+          if (filters.role && u.role !== filters.role) {
+            return false;
+          }
+
+          if (filters.status && u.status !== filters.status) {
+            return false;
+          }
+
+          return true;
+        });
         
         return {
           data: filtered,
