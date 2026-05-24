@@ -1,13 +1,12 @@
 import { useState, Suspense } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Package, 
-  FileBarChart, 
-  Settings, 
-  Menu, 
-  X,
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  FileBarChart,
+  Settings,
+  Menu,
   Stethoscope,
   LogOut,
   Loader2
@@ -16,16 +15,16 @@ import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { cn } from "@/shared/utils/cn";
 
-const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => void }) => {
+const menuItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Users, label: "Pacientes", path: "/patients" },
+  { icon: Package, label: "Insumos & Farmácia", path: "/inventory" },
+  { icon: FileBarChart, label: "Relatórios", path: "/reports" },
+  { icon: Settings, label: "Administração", path: "/users" },
+];
+
+const Sidebar = ({ className, onClose }: { className?: string; onClose?: () => void }) => {
   const location = useLocation();
-  
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-    { icon: Users, label: "Pacientes", path: "/patients" },
-    { icon: Package, label: "Insumos & Farmácia", path: "/inventory" },
-    { icon: FileBarChart, label: "Relatórios", path: "/reports" },
-    { icon: Settings, label: "Administração", path: "/users" },
-  ];
 
   return (
     <div className={cn("flex flex-col h-full bg-white border-r", className)}>
@@ -35,7 +34,7 @@ const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => v
         </div>
         <span className="font-bold text-xl text-primary">Cuidar +</span>
       </div>
-      
+
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -46,8 +45,8 @@ const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => v
               onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                isActive 
-                  ? "bg-primary/10 text-primary" 
+                isActive
+                  ? "bg-primary/10 text-primary"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               )}
             >
@@ -59,7 +58,10 @@ const Sidebar = ({ className, onClose }: { className?: string, onClose?: () => v
       </nav>
 
       <div className="p-4 border-t">
-        <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+        >
           <LogOut className="h-4 w-4" />
           Sair
         </Button>
@@ -73,14 +75,11 @@ const AppLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Desktop Sidebar */}
       <aside className="hidden md:block w-64 h-full">
         <Sidebar className="h-full" />
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 bg-white border-b">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
@@ -88,7 +87,7 @@ const AppLayout = () => {
             </div>
             <span className="font-bold text-lg text-primary">Cuidar +</span>
           </div>
-          
+
           <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -102,11 +101,13 @@ const AppLayout = () => {
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Suspense fallback={
-            <div className="flex h-full w-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="flex h-full w-full items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            }
+          >
             <Outlet />
           </Suspense>
         </main>

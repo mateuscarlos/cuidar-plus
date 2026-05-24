@@ -1,10 +1,6 @@
-/**
- * Mock User Data
- */
-
 import { User, UserRole, UserStatus } from '../domain';
 
-export const mockUsers: User[] = [
+const initialUsers: User[] = [
   {
     id: '1',
     name: 'Dr. João Silva',
@@ -16,12 +12,8 @@ export const mockUsers: User[] = [
     avatar: 'https://i.pravatar.cc/150?img=12',
     lastLogin: '2025-01-02T08:30:00Z',
     permissions: [
-      'patients.view',
-      'patients.create',
-      'patients.edit',
-      'inventory.view',
-      'reports.view',
-      'reports.generate',
+      'patients.view', 'patients.create', 'patients.edit',
+      'inventory.view', 'reports.view', 'reports.generate',
     ],
     createdAt: '2024-01-15T00:00:00Z',
     updatedAt: '2025-01-02T08:30:00Z',
@@ -37,11 +29,8 @@ export const mockUsers: User[] = [
     avatar: 'https://i.pravatar.cc/150?img=47',
     lastLogin: '2025-01-02T07:45:00Z',
     permissions: [
-      'patients.view',
-      'patients.create',
-      'patients.edit',
-      'inventory.view',
-      'inventory.edit',
+      'patients.view', 'patients.create', 'patients.edit',
+      'inventory.view', 'inventory.edit',
     ],
     createdAt: '2024-02-10T00:00:00Z',
     updatedAt: '2025-01-02T07:45:00Z',
@@ -57,20 +46,10 @@ export const mockUsers: User[] = [
     avatar: 'https://i.pravatar.cc/150?img=33',
     lastLogin: '2025-01-02T09:00:00Z',
     permissions: [
-      'patients.view',
-      'patients.create',
-      'patients.edit',
-      'patients.delete',
-      'inventory.view',
-      'inventory.create',
-      'inventory.edit',
-      'inventory.delete',
-      'reports.view',
-      'reports.generate',
-      'users.view',
-      'users.create',
-      'users.edit',
-      'users.delete',
+      'patients.view', 'patients.create', 'patients.edit', 'patients.delete',
+      'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete',
+      'reports.view', 'reports.generate',
+      'users.view', 'users.create', 'users.edit', 'users.delete',
     ],
     createdAt: '2023-12-01T00:00:00Z',
     updatedAt: '2025-01-02T09:00:00Z',
@@ -84,12 +63,29 @@ export const mockUsers: User[] = [
     role: UserRole.RECEPTIONIST,
     status: UserStatus.ACTIVE,
     lastLogin: '2025-01-02T06:00:00Z',
-    permissions: [
-      'patients.view',
-      'patients.create',
-      'reports.view',
-    ],
+    permissions: ['patients.view', 'patients.create', 'reports.view'],
     createdAt: '2024-06-20T00:00:00Z',
     updatedAt: '2025-01-02T06:00:00Z',
   },
 ];
+
+// Store mutável para suportar adição/edição no mock
+let mockStore: User[] = [...initialUsers];
+
+export const getMockUsers = (): User[] => mockStore;
+
+export const addMockUser = (user: User): void => {
+  mockStore = [...mockStore, user];
+};
+
+export const updateMockUser = (id: string, updates: Partial<User>): User | null => {
+  const index = mockStore.findIndex(u => u.id === id);
+  if (index === -1) return null;
+  const updated = { ...mockStore[index], ...updates, updatedAt: new Date().toISOString() };
+  mockStore = [...mockStore.slice(0, index), updated, ...mockStore.slice(index + 1)];
+  return updated;
+};
+
+export const deleteMockUser = (id: string): void => {
+  mockStore = mockStore.filter(u => u.id !== id);
+};
