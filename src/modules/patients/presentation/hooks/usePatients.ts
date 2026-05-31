@@ -21,9 +21,6 @@ export function usePatients(filters: PatientFilters = {}) {
     queryFn: async () => {
       // Se mock está habilitado, retorna dados mockados
       if (ENV.ENABLE_MOCK_DATA) {
-        // Simular delay de rede
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
         // Filtrar dados mockados
         let filtered = [...mockPatients];
         
