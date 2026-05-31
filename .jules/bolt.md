@@ -5,3 +5,7 @@
 ## 2025-02-18 - Nested Suspense for Layouts
 **Learning:** Placing a `Suspense` boundary inside the Layout component (wrapping `Outlet`) instead of just at the top level allows the sidebar/header to remain visible while the page content loads.
 **Action:** Identify Layout components and wrap their `Outlet` in `Suspense` to avoid "white screen" flashes during navigation.
+
+## 2025-02-18 - List Component Memoization
+**Learning:** List components (like `PatientList`) and their items (`PatientCard`) were re-rendering unnecessarily on parent state changes (e.g., opening modals) due to unstable callback references (`handleViewDetails`) passed from the page.
+**Action:** When implementing lists, always memoize the list component, the item component, and use `useCallback` for any event handlers passed down from the parent container.
