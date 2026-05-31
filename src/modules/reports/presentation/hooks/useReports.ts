@@ -16,8 +16,6 @@ export function useReports(filters: ReportFilters = {}) {
     queryKey: QUERY_KEYS.REPORTS.list(filters),
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
         let filtered = [...mockReports];
         
         if (filters.type) {
@@ -49,7 +47,6 @@ export function useReport(id: string) {
     queryKey: QUERY_KEYS.REPORTS.detail(id),
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 300));
         const report = mockReports.find(r => r.id === id);
         if (!report) throw new Error('Relatório não encontrado');
         return report;
@@ -92,7 +89,6 @@ export function useReportSummary(startDate: string, endDate: string) {
     queryKey: ['reports', 'summary', startDate, endDate],
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 500));
         return mockReportSummary;
       }
       return ReportService.getSummary(startDate, endDate);
