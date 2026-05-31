@@ -16,8 +16,6 @@ export function useInventoryItems(filters: InventoryFilters = {}) {
     queryKey: QUERY_KEYS.INVENTORY.list(filters),
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
         let filtered = [...mockInventoryItems];
         
         if (filters.search) {
