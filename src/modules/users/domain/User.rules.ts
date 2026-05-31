@@ -37,8 +37,11 @@ export class UserValidator {
 
     if (!password) {
       errors.push('Senha obrigatória');
-    } else if (!isStrongPassword(password)) {
-      errors.push('Senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula e número');
+    } else {
+      const validation = isStrongPassword(password);
+      if (!validation.isValid) {
+        errors.push(...validation.errors);
+      }
     }
 
     return errors;
