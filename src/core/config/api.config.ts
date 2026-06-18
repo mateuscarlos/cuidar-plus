@@ -73,11 +73,11 @@ apiClient.interceptors.response.use(
         // Tentar refresh do token
         const refreshToken = localStorage.getItem(ENV.REFRESH_TOKEN_KEY);
         if (refreshToken) {
-          const response = await axios.post(`${ENV.API_BASE_URL}/auth/refresh`, {
-            refreshToken,
+          const response = await axios.post(`${ENV.API_BASE_URL}/api/v1/auth/refresh`, {
+            refresh_token: refreshToken,
           });
 
-          const { token } = response.data;
+          const { access_token: token } = response.data;
           localStorage.setItem(ENV.TOKEN_KEY, token);
 
           // Retry request original

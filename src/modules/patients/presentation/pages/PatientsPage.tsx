@@ -5,14 +5,17 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Plus } from 'lucide-react';
 import { PatientList, PatientFilters } from '../components';
 import { usePatients } from '../hooks';
 import { PatientStatus, PatientPriority, PatientFilters as IPatientFilters } from '../../domain';
+import { ROUTES } from '@/core/constants/routes';
 
 export function PatientsPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<IPatientFilters>({
     page: 1,
     pageSize: 20,
@@ -41,13 +44,11 @@ export function PatientsPage() {
   };
 
   const handleViewDetails = (id: string) => {
-    // TODO: Navegar para página de detalhes ou abrir modal
-    console.log('Ver detalhes do paciente:', id);
+    navigate(ROUTES.PATIENTS.DETAIL(id));
   };
 
   const handleCreatePatient = () => {
-    // TODO: Abrir modal ou navegar para página de criação
-    console.log('Criar novo paciente');
+    navigate(ROUTES.PATIENTS.CREATE);
   };
 
   return (

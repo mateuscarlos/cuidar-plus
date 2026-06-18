@@ -8,6 +8,7 @@ import { queryClient } from "@/core/lib/query-client";
 import { validateEnv } from "@/core/config/env.config";
 import { AppLayout } from "@/shared/layouts";
 import { NotFound } from "@/shared/pages";
+import { AuthProvider, LoginPage, ProtectedRoute } from "@/modules/auth";
 
 const DashboardPage = lazy(() =>
   import("@/modules/dashboard").then(m => ({ default: m.DashboardPage }))
@@ -33,16 +34,21 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/patients" element={<PatientsPage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/users" element={<UsersPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<DashboardPage />} />
+                <Route path="/patients" element={<PatientsPage />} />
+                <Route path="/inventory" element={<InventoryPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/users" element={<UsersPage />} />
+              </Route>
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

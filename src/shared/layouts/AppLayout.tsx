@@ -14,6 +14,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
 import { cn } from "@/shared/utils/cn";
+import { useAuth } from "@/modules/auth";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -25,6 +26,7 @@ const menuItems = [
 
 const Sidebar = ({ className, onClose }: { className?: string; onClose?: () => void }) => {
   const location = useLocation();
+  const { logout } = useAuth();
 
   return (
     <div className={cn("flex flex-col h-full bg-white border-r", className)}>
@@ -61,6 +63,7 @@ const Sidebar = ({ className, onClose }: { className?: string; onClose?: () => v
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+          onClick={logout}
         >
           <LogOut className="h-4 w-4" />
           Sair
