@@ -10,7 +10,7 @@ import { MESSAGES } from '@/core/constants';
 import { ENV } from '@/core/config';
 import { PatientService } from '../../data/patient.service';
 import { mockPatients } from '../../data/patient.mock';
-import type { PatientFilters, CreatePatientDTO, UpdatePatientDTO } from '../../domain';
+import { PatientStatus, type PatientFilters, type CreatePatientDTO, type UpdatePatientDTO } from '../../domain';
 
 /**
  * Hook para buscar lista de pacientes
@@ -193,12 +193,16 @@ export function usePatientStats() {
     queryFn: async () => {
       if (ENV.ENABLE_MOCK_DATA) {
         await new Promise(resolve => setTimeout(resolve, 300));
-        return {
-          total: mockPatients.length,
-          active: mockPatients.filter(p => p.status === 'Ativo').length,
-          discharged: mockPatients.filter(p => p.status === 'Alta').length,
-          pending: mockPatients.filter(p => p.status === 'Pendente').length,
-        };
+        return mockPatients.reduce(
+          (acc, patient) => {
+            acc.total++;
+            if (patient.status === PatientStatus.ACTIVE) acc.active++;
+            else if (patient.status === PatientStatus.DISCHARGED) acc.discharged++;
+            else if (patient.status === PatientStatus.PENDING) acc.pending++;
+            return acc;
+          },
+          { total: 0, active: 0, discharged: 0, pending: 0 }
+        );
       }
       return PatientService.getPatientStats();
     },
